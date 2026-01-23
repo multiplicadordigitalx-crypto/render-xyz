@@ -126,7 +126,7 @@ const App: React.FC = () => {
   const [pricingPlans, setPricingPlans] = useState<PricingPlan[]>(DEFAULT_PRICING_PLANS);
   const [creditPackages, setCreditPackages] = useState<CreditPackage[]>(DEFAULT_CREDIT_PACKAGES);
 
-  useScrollReveal();
+  useScrollReveal(isLoggedIn);
 
   useEffect(() => {
     // 1. Check API Key

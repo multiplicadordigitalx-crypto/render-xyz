@@ -198,18 +198,56 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                                 <img src={tempLanding.showcaseAfter} alt="Preview After" className="w-full h-full object-cover" />
                                             </div>
                                         </div>
-                                        <div className="bg-white p-6 md:p-8 rounded-[30px] border border-[#B6B09F]/20 shadow-sm space-y-4">
-                                            <label className="text-[9px] font-black uppercase tracking-widest text-[#B6B09F] block">Hero: Vídeo MP4 (Anexo)</label>
-                                            <input type="file" ref={fileInputVideoRef} onChange={(e) => handleFileUpload(e, 'heroVideoUrl')} className="hidden" accept="video/mp4" />
-                                            <button onClick={() => fileInputVideoRef.current?.click()} className="w-full py-4 bg-[#F2F2F2] border-2 border-dashed border-[#B6B09F]/30 rounded-2xl flex items-center justify-center space-x-3 hover:border-black transition-all">
-                                                <FileVideo className="w-5 h-5" /> <span className="text-[10px] font-black uppercase tracking-widest">Anexar Vídeo</span>
-                                            </button>
-                                            <div className="aspect-video rounded-xl overflow-hidden border border-[#B6B09F]/10 bg-[#F2F2F2] flex items-center justify-center">
-                                                {tempLanding.heroVideoUrl.startsWith('data:video') || tempLanding.heroVideoUrl.includes('.mp4') ? (
-                                                    <video className="w-full h-full object-cover" muted><source src={tempLanding.heroVideoUrl} /></video>
+                                        <div className="bg-white p-6 md:p-8 rounded-[30px] border border-[#B6B09F]/20 shadow-sm space-y-6">
+                                            <div>
+                                                <label className="text-[9px] font-black uppercase tracking-widest text-[#B6B09F] block mb-2">Fluxo: Vídeo MP4 (Direto ou URL)</label>
+                                                <div className="space-y-4">
+                                                    <div className="flex flex-col space-y-2">
+                                                        <input
+                                                            type="text"
+                                                            placeholder="Cole aqui a URL do Vídeo (YouTube ou Direct .mp4)"
+                                                            value={tempLanding.heroVideoUrl}
+                                                            onChange={(e) => setTempLanding(prev => ({ ...prev, heroVideoUrl: e.target.value }))}
+                                                            className="w-full py-4 px-6 bg-[#F2F2F2] rounded-2xl text-[11px] font-bold focus:outline-none border border-transparent focus:border-black transition-all"
+                                                        />
+                                                        <p className="text-[8px] font-black text-[#B6B09F] uppercase tracking-widest pl-2">YouTube: use o link de compartilhamento ou da barra de endereços</p>
+                                                    </div>
+
+                                                    <div className="relative">
+                                                        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex items-center px-4 pointer-events-none">
+                                                            <div className="flex-1 border-t border-[#B6B09F]/20"></div>
+                                                            <span className="mx-4 text-[8px] font-black text-[#B6B09F]">OU ANEXAR ARQUIVO</span>
+                                                            <div className="flex-1 border-t border-[#B6B09F]/20"></div>
+                                                        </div>
+                                                        <div className="h-8"></div>
+                                                    </div>
+
+                                                    <input type="file" ref={fileInputVideoRef} onChange={(e) => handleFileUpload(e, 'heroVideoUrl')} className="hidden" accept="video/mp4" />
+                                                    <button onClick={() => fileInputVideoRef.current?.click()} className="w-full py-4 bg-[#F2F2F2] border-2 border-dashed border-[#B6B09F]/30 rounded-2xl flex items-center justify-center space-x-3 hover:border-black transition-all group">
+                                                        <Upload className="w-5 h-5 text-[#B6B09F] group-hover:text-black transition-colors" />
+                                                        <span className="text-[10px] font-black uppercase tracking-widest">Selecionar Arquivo MP4</span>
+                                                    </button>
+                                                    <p className="text-[8px] font-black text-amber-600 uppercase tracking-widest text-center">Aviso: Arquivos {'>'} 1MB podem não salvar devido ao limite do banco de dados.</p>
+                                                </div>
+                                            </div>
+
+                                            <div className="aspect-[9/16] max-w-[200px] mx-auto rounded-3xl overflow-hidden border-4 border-black bg-[#F2F2F2] flex items-center justify-center shadow-lg relative">
+                                                {tempLanding.heroVideoUrl ? (
+                                                    <div className="w-full h-full">
+                                                        {tempLanding.heroVideoUrl.includes('youtube.com') || tempLanding.heroVideoUrl.includes('youtu.be') ? (
+                                                            <div className="w-full h-full bg-zinc-900 flex items-center justify-center">
+                                                                <FileVideo className="text-white/20 w-12 h-12" />
+                                                            </div>
+                                                        ) : (
+                                                            <video key={tempLanding.heroVideoUrl} className="w-full h-full object-cover" muted autoPlay loop playsInline>
+                                                                <source src={tempLanding.heroVideoUrl} />
+                                                            </video>
+                                                        )}
+                                                    </div>
                                                 ) : (
-                                                    <div className="text-[9px] font-black text-[#B6B09F] uppercase">Vídeo pronto para preview</div>
+                                                    <div className="text-[9px] font-black text-[#B6B09F] uppercase text-center px-4">Preview indisponível</div>
                                                 )}
+                                                <div className="absolute top-4 left-1/2 -translate-x-1/2 w-12 h-1 bg-black/20 rounded-full" />
                                             </div>
                                         </div>
                                         <div className="bg-white p-6 md:p-8 rounded-[30px] border border-[#B6B09F]/20 shadow-sm space-y-4">

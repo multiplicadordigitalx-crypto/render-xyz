@@ -1,7 +1,7 @@
 
 import { useEffect } from 'react';
 
-export const useScrollReveal = () => {
+export const useScrollReveal = (dependency?: any) => {
     useEffect(() => {
         const observerOptions = {
             root: null,
@@ -9,12 +9,10 @@ export const useScrollReveal = () => {
             threshold: 0.1,
         };
 
-        const handleIntersect = (entries: IntersectionObserverEntry[], observer: IntersectionObserver) => {
+        const handleIntersect = (entries: IntersectionObserverEntry[]) => {
             entries.forEach((entry) => {
                 if (entry.isIntersecting) {
                     entry.target.classList.add('active');
-                    // Optional: unobserve if you only want the animation once
-                    // observer.unobserve(entry.target);
                 }
             });
         };
@@ -25,5 +23,5 @@ export const useScrollReveal = () => {
         targets.forEach((target) => observer.observe(target));
 
         return () => observer.disconnect();
-    }, []);
+    }, [dependency]);
 };
