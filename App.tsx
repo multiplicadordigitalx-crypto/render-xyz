@@ -13,7 +13,8 @@ import {
   Trash2,
   User,
   History,
-  LayoutDashboard
+  LayoutDashboard,
+  ShieldCheck
 } from 'lucide-react';
 
 // Firebase
@@ -344,6 +345,15 @@ const App: React.FC = () => {
             <img src="/assets/logo.png" alt="Render XYZ" className="h-6 md:h-8" />
           </a>
           <div className="flex items-center space-x-4 md:space-x-8">
+            {currentUser?.role === 'admin' && (
+              <button
+                onClick={() => setIsAdminMode(true)}
+                className="p-2 bg-black text-white rounded-full hover:bg-zinc-800 transition-all flex items-center justify-center"
+                title="Painel Admin"
+              >
+                <ShieldCheck className="w-4 h-4" />
+              </button>
+            )}
             <button
               onClick={() => setShowProfile(true)}
               className="p-2 bg-black/5 rounded-full hover:bg-black/10 transition-all"
@@ -367,13 +377,15 @@ const App: React.FC = () => {
           />
         )}
 
-        {showCreditModal && (
-          <CreditModal
-            creditPackages={creditPackages}
-            onBuyCredits={buyCredits}
-            onClose={() => setShowCreditModal(false)}
-          />
-        )}
+        {
+          showCreditModal && (
+            <CreditModal
+              creditPackages={creditPackages}
+              onBuyCredits={buyCredits}
+              onClose={() => setShowCreditModal(false)}
+            />
+          )
+        }
 
         <main className="max-w-7xl mx-auto px-4 md:px-6 py-8 md:py-12">
           <section className="mb-12 md:mb-20">
@@ -407,7 +419,7 @@ const App: React.FC = () => {
             )}
           </section>
         </main>
-      </div>
+      </div >
     );
   }
 
@@ -488,7 +500,7 @@ const App: React.FC = () => {
 
       <CTA onStartNow={() => { setAuthMode('register'); setShowAuth(true); }} />
 
-      <Footer onAdminClick={() => setIsAdminMode(true)} />
+      <Footer />
     </div>
   );
 };

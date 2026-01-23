@@ -63,7 +63,8 @@ export const authService = {
         cpf: data.cpf,
         credits: 3,
         plan: 'Essencial',
-        joinedAt: Date.now()
+        joinedAt: Date.now(),
+        role: 'user'
       };
 
       await setDoc(doc(db, "users", firebaseUser.uid), appUser);

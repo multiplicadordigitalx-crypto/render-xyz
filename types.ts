@@ -42,6 +42,7 @@ export interface AppUser {
   credits: number;
   joinedAt: number;
   plan: string;
+  role?: 'admin' | 'user';
 }
 
 export interface LandingSettings {
