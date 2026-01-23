@@ -1,7 +1,7 @@
 
 import { useEffect } from 'react';
 
-export const useScrollReveal = (dependency?: any) => {
+export const useScrollReveal = (deps: any[] = []) => {
     useEffect(() => {
         const observerOptions = {
             root: null,
@@ -23,5 +23,5 @@ export const useScrollReveal = (dependency?: any) => {
         targets.forEach((target) => observer.observe(target));
 
         return () => observer.disconnect();
-    }, [dependency]);
+    }, deps);
 };
