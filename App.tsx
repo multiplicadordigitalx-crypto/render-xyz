@@ -79,8 +79,8 @@ const DEFAULT_CREDIT_PACKAGES: CreditPackage[] = [
 ];
 
 const DEFAULT_LANDING: LandingSettings = {
-  showcaseBefore: "https://images.unsplash.com/photo-1541888941297-353270425026?q=80&w=2070&auto=format&fit=crop",
-  showcaseAfter: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2070&auto=format&fit=crop",
+  showcaseBefore: "/assets/projeto-sem-render.jpg",
+  showcaseAfter: "/assets/renderxyz-dia.jpg",
   heroVideoUrl: "https://assets.mixkit.co/videos/preview/mixkit-architect-working-on-a-digital-tablet-34444-large.mp4",
   heroVideoPoster: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1000&auto=format&fit=crop"
 };
