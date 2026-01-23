@@ -143,21 +143,21 @@ const App: React.FC = () => {
     };
     checkKey();
 
-    // 2. Firebase Auth Listener
-    const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
+    // 2. Firebase Auth Listener & Profile Sync
+    const unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
       if (firebaseUser) {
-        // User is signed in
         setIsLoggedIn(true);
 
-        // Fetch/Sync User Data
-        const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
-        if (userDoc.exists()) {
-          const userData = userDoc.data() as AppUser;
-          setCurrentUser(userData);
-          setCredits(userData.credits);
-        }
+        // Sub 1: Profile real-time
+        const unsubscribeProfile = onSnapshot(doc(db, "users", firebaseUser.uid), (doc) => {
+          if (doc.exists()) {
+            const userData = doc.data() as AppUser;
+            setCurrentUser(userData);
+            setCredits(userData.credits);
+          }
+        });
 
-        // Real-time History Listener
+        // Sub 2: History real-time
         const historyQuery = query(
           collection(db, "history"),
           where("userId", "==", firebaseUser.uid),
@@ -172,9 +172,11 @@ const App: React.FC = () => {
           setHistory(historyItems);
         });
 
-        return () => unsubscribeHistory();
+        return () => {
+          unsubscribeProfile();
+          unsubscribeHistory();
+        };
       } else {
-        // User is signed out
         setIsLoggedIn(false);
         setCurrentUser(null);
         setHistory([]);
