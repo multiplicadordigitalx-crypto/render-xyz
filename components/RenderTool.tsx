@@ -183,7 +183,7 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
               </div>
             ) : (
               <>
-                <Wand2 className="w-4 h-4 md:w-5 md:h-5 mr-2 md:mr-3" />
+                <img src="/assets/logo-icon.png" alt="" className="w-5 h-5 mr-3 invert" />
                 Gerar Render
               </>
             )}
@@ -215,7 +215,7 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
             {isRendering && (
               <div className="absolute inset-0 bg-[#F2F2F2]/90 backdrop-blur-md flex flex-col items-center justify-center space-y-8 z-20">
                 <div className="relative">
-                  <Wand2 className="w-16 h-16 text-[#000000] animate-bounce" />
+                  <img src="/assets/logo-icon.png" alt="Processando" className="w-16 h-16 md:w-20 md:h-20 object-contain animate-bounce" />
                   <div className="absolute -top-1 -right-1 w-4 h-4 bg-[#B6B09F] rounded-full animate-ping" />
                 </div>
                 <div className="text-center space-y-2">
