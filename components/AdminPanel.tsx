@@ -1,0 +1,258 @@
+
+import React, { useState, useRef } from 'react';
+import {
+    X,
+    ShieldCheck,
+    BarChart3,
+    Users,
+    DollarSign,
+    Layers,
+    Tag,
+    Coins,
+    Upload,
+    Image as ImageIconLucide,
+    FileVideo,
+    Save,
+    Plus
+} from 'lucide-react';
+import { doc, updateDoc, collection, getDocs, setDoc } from 'firebase/firestore';
+import { db } from '../services/firebase';
+import { PricingPlan, CreditPackage, AppUser, LandingSettings } from '../types';
+
+interface AdminPanelProps {
+    landingSettings: LandingSettings;
+    setLandingSettings: (settings: LandingSettings) => void;
+    pricingPlans: PricingPlan[];
+    setPricingPlans: (plans: PricingPlan[]) => void;
+    creditPackages: CreditPackage[];
+    setCreditPackages: (packs: CreditPackage[]) => void;
+    appUsers: AppUser[];
+    setAppUsers: (users: AppUser[]) => void;
+    onClose: () => void;
+}
+
+export const AdminPanel: React.FC<AdminPanelProps> = ({
+    landingSettings,
+    setLandingSettings,
+    pricingPlans,
+    setPricingPlans,
+    creditPackages,
+    setCreditPackages,
+    appUsers,
+    setAppUsers,
+    onClose
+}) => {
+    const [activeTab, setActiveTab] = useState<'stats' | 'users' | 'content' | 'pricing'>('content');
+    const [tempLanding, setTempLanding] = useState<LandingSettings>(landingSettings);
+    const [tempPricingPlans, setTempPricingPlans] = useState<PricingPlan[]>(pricingPlans);
+    const [tempCreditPackages, setTempCreditPackages] = useState<CreditPackage[]>(creditPackages);
+    const [searchTerm, setSearchTerm] = useState('');
+
+    const fileInputBeforeRef = useRef<HTMLInputElement>(null);
+    const fileInputAfterRef = useRef<HTMLInputElement>(null);
+    const fileInputVideoRef = useRef<HTMLInputElement>(null);
+    const fileInputPosterRef = useRef<HTMLInputElement>(null);
+
+    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, key: keyof LandingSettings) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = () => {
+                setTempLanding(prev => ({ ...prev, [key]: reader.result as string }));
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handlePlanPriceChange = (index: number, price: string) => {
+        const newPlans = [...tempPricingPlans];
+        newPlans[index].price = price;
+        setTempPricingPlans(newPlans);
+    };
+
+    const handleCreditPriceChange = (index: number, price: string) => {
+        const newPacks = [...tempCreditPackages];
+        newPacks[index].price = price;
+        setTempCreditPackages(newPacks);
+    };
+
+    const handleSaveAdmin = async () => {
+        try {
+            await setDoc(doc(db, "settings", "global"), {
+                landing: tempLanding,
+                pricing: tempPricingPlans,
+                credits: tempCreditPackages
+            }, { merge: true });
+
+            setLandingSettings(tempLanding);
+            setPricingPlans(tempPricingPlans);
+            setCreditPackages(tempCreditPackages);
+            onClose();
+        } catch (error) {
+            console.error("Error saving global settings:", error);
+            alert("Erro ao salvar configurações no Firestore.");
+        }
+    };
+
+    const handleUserUpdate = async (id: string, updates: Partial<AppUser>) => {
+        try {
+            await updateDoc(doc(db, "users", id), updates);
+            // Local state will be updated if App.tsx uses a listener for users (optional)
+            // For now let's update parents state manually to show change
+            const updated = appUsers.map(u => u.id === id ? { ...u, ...updates } : u);
+            setAppUsers(updated);
+        } catch (error) {
+            console.error("Error updating user:", error);
+        }
+    };
+
+    const filteredUsers = appUsers.filter(u =>
+        u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        u.email.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    return (
+        <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-xl flex items-center justify-center p-2 md:p-8">
+            <div className="bg-[#F2F2F2] w-full max-w-6xl h-full max-h-[95vh] rounded-[30px] md:rounded-[40px] shadow-2xl overflow-hidden flex flex-col">
+                <div className="p-4 md:p-8 border-b border-[#B6B09F]/20 flex justify-between items-center bg-white/50">
+                    <div className="flex items-center space-x-3 md:space-x-4">
+                        <div className="p-2 md:p-3 bg-black rounded-xl md:rounded-2xl"><ShieldCheck className="text-white w-5 h-5 md:w-6 md:h-6" /></div>
+                        <div>
+                            <h2 className="text-lg md:text-2xl font-black uppercase tracking-tighter">Render XYZ Control</h2>
+                            <p className="text-[8px] md:text-[10px] font-black text-[#B6B09F] uppercase tracking-[0.2em]">Painel de Gestão</p>
+                        </div>
+                    </div>
+                    <button onClick={onClose} className="p-3 md:p-4 bg-[#EAE4D5] rounded-full hover:bg-zinc-200 transition-all"><X className="w-5 h-5 md:w-6 md:h-6" /></button>
+                </div>
+                <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+                    <div className="w-full md:w-64 border-b md:border-b-0 md:border-r border-[#B6B09F]/20 p-2 md:p-6 flex flex-row md:flex-col space-x-2 md:space-x-0 md:space-y-2 bg-[#EAE4D5]/20 overflow-x-auto whitespace-nowrap">
+                        <button onClick={() => setActiveTab('stats')} className={`flex items-center space-x-3 p-3 md:p-4 rounded-xl font-black text-[9px] md:text-[10px] uppercase tracking-widest ${activeTab === 'stats' ? 'bg-black text-white' : 'text-[#B6B09F] hover:bg-black/5'}`}>
+                            <BarChart3 className="w-4 h-4" /><span>Estatísticas</span>
+                        </button>
+                        <button onClick={() => setActiveTab('users')} className={`flex items-center space-x-3 p-3 md:p-4 rounded-xl font-black text-[9px] md:text-[10px] uppercase tracking-widest ${activeTab === 'users' ? 'bg-black text-white' : 'text-[#B6B09F] hover:bg-black/5'}`}>
+                            <Users className="w-4 h-4" /><span>Usuários</span>
+                        </button>
+                        <button onClick={() => setActiveTab('pricing')} className={`flex items-center space-x-3 p-3 md:p-4 rounded-xl font-black text-[9px] md:text-[10px] uppercase tracking-widest ${activeTab === 'pricing' ? 'bg-black text-white' : 'text-[#B6B09F] hover:bg-black/5'}`}>
+                            <DollarSign className="w-4 h-4" /><span>Preços</span>
+                        </button>
+                        <button onClick={() => setActiveTab('content')} className={`flex items-center space-x-3 p-3 md:p-4 rounded-xl font-black text-[9px] md:text-[10px] uppercase tracking-widest ${activeTab === 'content' ? 'bg-black text-white' : 'text-[#B6B09F] hover:bg-black/5'}`}>
+                            <Layers className="w-4 h-4" /><span>Landing</span>
+                        </button>
+                    </div>
+                    <div className="flex-1 overflow-y-auto p-4 md:p-8 bg-white/30">
+                        {activeTab === 'pricing' && (
+                            <div className="space-y-10 pb-10">
+                                <div className="space-y-6">
+                                    <h3 className="text-xl font-black uppercase tracking-tight flex items-center"><Tag className="w-5 h-5 mr-3" /> Planos Landing</h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                        {tempPricingPlans.map((plan, idx) => (
+                                            <div key={idx} className="bg-white p-6 rounded-3xl border border-[#B6B09F]/20">
+                                                <label className="text-[9px] font-black uppercase tracking-widest text-[#B6B09F] block mb-2">{plan.name}</label>
+                                                <div className="flex items-center bg-[#F2F2F2] px-4 py-3 rounded-xl">
+                                                    <span className="font-bold text-xs mr-2">R$</span>
+                                                    <input type="text" value={plan.price} onChange={(e) => handlePlanPriceChange(idx, e.target.value)} className="bg-transparent w-full text-xs font-black focus:outline-none" />
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div className="space-y-6">
+                                    <h3 className="text-xl font-black uppercase tracking-tight flex items-center"><Coins className="w-5 h-5 mr-3" /> Pacotes de Créditos</h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                        {tempCreditPackages.map((pkg, idx) => (
+                                            <div key={idx} className="bg-white p-6 rounded-3xl border border-[#B6B09F]/20">
+                                                <label className="text-[9px] font-black uppercase tracking-widest text-[#B6B09F] block mb-2">{pkg.amount} Créditos</label>
+                                                <div className="flex items-center bg-[#F2F2F2] px-4 py-3 rounded-xl">
+                                                    <span className="font-bold text-xs mr-2">R$</span>
+                                                    <input type="text" value={pkg.price} onChange={(e) => handleCreditPriceChange(idx, e.target.value)} className="bg-transparent w-full text-xs font-black focus:outline-none" />
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                                <button onClick={handleSaveAdmin} className="w-full py-6 bg-black text-white rounded-[30px] font-black text-xs uppercase tracking-[0.3em] flex items-center justify-center shadow-xl"><Save className="w-5 h-5 mr-3" /> Salvar Configurações</button>
+                            </div>
+                        )}
+                        {activeTab === 'content' && (
+                            <div className="space-y-10 pb-10">
+                                <div className="space-y-8">
+                                    <h3 className="text-xl font-black uppercase tracking-tight flex items-center"><ImageIconLucide className="w-5 h-5 mr-3" /> Gerenciar Ativos da Landing</h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                        <div className="bg-white p-6 md:p-8 rounded-[30px] border border-[#B6B09F]/20 shadow-sm space-y-4">
+                                            <label className="text-[9px] font-black uppercase tracking-widest text-[#B6B09F] block">Slider: Imagem Antes (Anexo)</label>
+                                            <input type="file" ref={fileInputBeforeRef} onChange={(e) => handleFileUpload(e, 'showcaseBefore')} className="hidden" accept="image/*" />
+                                            <button onClick={() => fileInputBeforeRef.current?.click()} className="w-full py-4 bg-[#F2F2F2] border-2 border-dashed border-[#B6B09F]/30 rounded-2xl flex items-center justify-center space-x-3 hover:border-black transition-all">
+                                                <Upload className="w-5 h-5" /> <span className="text-[10px] font-black uppercase tracking-widest">Anexar Imagem</span>
+                                            </button>
+                                            <div className="aspect-video rounded-xl overflow-hidden border border-[#B6B09F]/10 bg-[#F2F2F2] group relative">
+                                                <img src={tempLanding.showcaseBefore} alt="Preview Before" className="w-full h-full object-cover" />
+                                            </div>
+                                        </div>
+                                        <div className="bg-white p-6 md:p-8 rounded-[30px] border border-[#B6B09F]/20 shadow-sm space-y-4">
+                                            <label className="text-[9px] font-black uppercase tracking-widest text-[#B6B09F] block">Slider: Imagem Depois (Anexo)</label>
+                                            <input type="file" ref={fileInputAfterRef} onChange={(e) => handleFileUpload(e, 'showcaseAfter')} className="hidden" accept="image/*" />
+                                            <button onClick={() => fileInputAfterRef.current?.click()} className="w-full py-4 bg-[#F2F2F2] border-2 border-dashed border-[#B6B09F]/30 rounded-2xl flex items-center justify-center space-x-3 hover:border-black transition-all">
+                                                <Upload className="w-5 h-5" /> <span className="text-[10px] font-black uppercase tracking-widest">Anexar Imagem</span>
+                                            </button>
+                                            <div className="aspect-video rounded-xl overflow-hidden border border-[#B6B09F]/10 bg-[#F2F2F2]">
+                                                <img src={tempLanding.showcaseAfter} alt="Preview After" className="w-full h-full object-cover" />
+                                            </div>
+                                        </div>
+                                        <div className="bg-white p-6 md:p-8 rounded-[30px] border border-[#B6B09F]/20 shadow-sm space-y-4">
+                                            <label className="text-[9px] font-black uppercase tracking-widest text-[#B6B09F] block">Hero: Vídeo MP4 (Anexo)</label>
+                                            <input type="file" ref={fileInputVideoRef} onChange={(e) => handleFileUpload(e, 'heroVideoUrl')} className="hidden" accept="video/mp4" />
+                                            <button onClick={() => fileInputVideoRef.current?.click()} className="w-full py-4 bg-[#F2F2F2] border-2 border-dashed border-[#B6B09F]/30 rounded-2xl flex items-center justify-center space-x-3 hover:border-black transition-all">
+                                                <FileVideo className="w-5 h-5" /> <span className="text-[10px] font-black uppercase tracking-widest">Anexar Vídeo</span>
+                                            </button>
+                                            <div className="aspect-video rounded-xl overflow-hidden border border-[#B6B09F]/10 bg-[#F2F2F2] flex items-center justify-center">
+                                                {tempLanding.heroVideoUrl.startsWith('data:video') || tempLanding.heroVideoUrl.includes('.mp4') ? (
+                                                    <video className="w-full h-full object-cover" muted><source src={tempLanding.heroVideoUrl} /></video>
+                                                ) : (
+                                                    <div className="text-[9px] font-black text-[#B6B09F] uppercase">Vídeo pronto para preview</div>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <div className="bg-white p-6 md:p-8 rounded-[30px] border border-[#B6B09F]/20 shadow-sm space-y-4">
+                                            <label className="text-[9px] font-black uppercase tracking-widest text-[#B6B09F] block">Hero: Poster do Vídeo (Anexo)</label>
+                                            <input type="file" ref={fileInputPosterRef} onChange={(e) => handleFileUpload(e, 'heroVideoPoster')} className="hidden" accept="image/*" />
+                                            <button onClick={() => fileInputPosterRef.current?.click()} className="w-full py-4 bg-[#F2F2F2] border-2 border-dashed border-[#B6B09F]/30 rounded-2xl flex items-center justify-center space-x-3 hover:border-black transition-all">
+                                                <ImageIconLucide className="w-5 h-5" /> <span className="text-[10px] font-black uppercase tracking-widest">Anexar Poster</span>
+                                            </button>
+                                            <div className="aspect-video rounded-xl overflow-hidden border border-[#B6B09F]/10 bg-[#F2F2F2]">
+                                                <img src={tempLanding.heroVideoPoster} alt="Preview Poster" className="w-full h-full object-cover" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button onClick={handleSaveAdmin} className="w-full py-6 bg-black text-white rounded-[30px] font-black text-xs uppercase tracking-[0.3em] flex items-center justify-center shadow-xl"><Save className="w-5 h-5 mr-3" /> Salvar Conteúdo da Landing</button>
+                            </div>
+                        )}
+                        {activeTab === 'stats' && <div className="text-center p-20 opacity-20"><BarChart3 className="w-20 h-20 mx-auto mb-4" /><p className="font-black uppercase tracking-widest text-xs">Aguardando dados de tráfego</p></div>}
+                        {activeTab === 'users' && (
+                            <div className="bg-white rounded-[30px] border border-[#B6B09F]/20 overflow-hidden shadow-sm">
+                                <table className="w-full text-left">
+                                    <thead className="bg-[#F2F2F2] border-b border-[#B6B09F]/10">
+                                        <tr>
+                                            <th className="px-8 py-5 text-[9px] font-black uppercase tracking-[0.3em] text-[#B6B09F]">Usuário</th>
+                                            <th className="px-8 py-5 text-[9px] font-black uppercase tracking-[0.3em] text-[#B6B09F]">Créditos</th>
+                                            <th className="px-8 py-5 text-[9px] font-black uppercase tracking-[0.3em] text-[#B6B09F] text-right">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-[#B6B09F]/10">
+                                        {filteredUsers.map((u) => (
+                                            <tr key={u.id}>
+                                                <td className="px-8 py-6"><p className="text-xs font-black uppercase">{u.name}</p><p className="text-[9px] text-[#B6B09F]">{u.email}</p></td>
+                                                <td className="px-8 py-6 font-black">{u.credits}</td>
+                                                <td className="px-8 py-6 text-right"><button onClick={() => handleUserUpdate(u.id, { credits: u.credits + 10 })} className="p-2 bg-[#EAE4D5] rounded-lg"><Plus className="w-4 h-4" /></button></td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};

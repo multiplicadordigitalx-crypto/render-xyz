@@ -1,0 +1,8 @@
+
+{
+  "name": "Render XYZ",
+  "description": "Transform simple images, sketches, or photos into professional realistic renders in seconds using advanced AI. Tailored for architects, designers, and real estate professionals.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
