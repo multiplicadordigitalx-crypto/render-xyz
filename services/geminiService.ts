@@ -2,12 +2,22 @@
 import { GoogleGenAI } from "@google/genai";
 import { RenderStyle, RenderResolution } from "../types";
 
+// MODO DE TESTE: Altere para 'false' para ativar a IA real
+const MOCK_MODE = true;
+
 export const renderImage = async (
   base64Image: string,
   mimeType: string,
   style: RenderStyle,
   resolution: RenderResolution = '1K'
 ): Promise<string> => {
+  if (MOCK_MODE) {
+    // Simular delay de processamento (3 segundos)
+    await new Promise(resolve => setTimeout(resolve, 3000));
+    // Retorna a própria imagem original para testar o fluxo sem gastar créditos de IA
+    return base64Image;
+  }
+
   // Always use a new instance right before the call to ensure the latest API key is used
   const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
   const ai = new GoogleGenAI(apiKey);
