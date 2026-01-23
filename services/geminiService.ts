@@ -3,7 +3,7 @@ import { GoogleGenAI } from "@google/genai";
 import { RenderStyle, RenderResolution } from "../types";
 
 // MODO DE TESTE: Altere para 'false' para ativar a IA real
-const MOCK_MODE = true;
+export const MOCK_MODE = true;
 
 export const renderImage = async (
   base64Image: string,

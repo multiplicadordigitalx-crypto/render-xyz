@@ -42,6 +42,7 @@ import { CTA } from './components/landing/CTA';
 import { Footer } from './components/landing/Footer';
 
 // Types & Services
+import { MOCK_MODE } from './services/geminiService';
 import { Toaster, toast } from 'react-hot-toast';
 import { useScrollReveal } from './services/scrollReveal';
 import { PricingPlan, RenderHistoryItem, RenderStyle, CreditPackage, AppUser, LandingSettings, AuthViewMode } from './types';
@@ -130,6 +131,11 @@ const App: React.FC = () => {
   useEffect(() => {
     // 1. Check API Key
     const checkKey = async () => {
+      if (MOCK_MODE) {
+        setHasApiKey(true);
+        return;
+      }
+
       if (typeof window.aistudio !== 'undefined' && window.aistudio.hasSelectedApiKey) {
         const hasKey = await window.aistudio.hasSelectedApiKey();
         setHasApiKey(hasKey);
