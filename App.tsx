@@ -224,6 +224,7 @@ const App: React.FC = () => {
     await authService.logout();
     setIsLoggedIn(false);
     setCurrentUser(null);
+    setIsAdminMode(false);
     toast.success('Sessão encerrada com sucesso', {
       style: {
         borderRadius: '15px',
@@ -348,6 +349,19 @@ const App: React.FC = () => {
 
     return (
       <div className="min-h-screen bg-[#F2F2F2] text-black">
+        {isAdminMode && (
+          <AdminPanel
+            landingSettings={landingSettings}
+            setLandingSettings={setLandingSettings}
+            pricingPlans={pricingPlans}
+            setPricingPlans={setPricingPlans}
+            creditPackages={creditPackages}
+            setCreditPackages={setCreditPackages}
+            appUsers={appUsers}
+            setAppUsers={setAppUsers}
+            onClose={() => setIsAdminMode(false)}
+          />
+        )}
         <header className="h-16 md:h-20 border-b border-[#B6B09F]/20 bg-[#EAE4D5]/80 backdrop-blur-md flex items-center justify-between px-4 md:px-8 sticky top-0 z-50">
           <a href="/" className="flex items-center hover:opacity-80 transition-opacity">
             <img src="/assets/logo.png" alt="Render XYZ" className="h-6 md:h-8" />
@@ -433,20 +447,6 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#F2F2F2] text-black overflow-x-hidden">
-      {isAdminMode && (
-        <AdminPanel
-          landingSettings={landingSettings}
-          setLandingSettings={setLandingSettings}
-          pricingPlans={pricingPlans}
-          setPricingPlans={setPricingPlans}
-          creditPackages={creditPackages}
-          setCreditPackages={setCreditPackages}
-          appUsers={appUsers}
-          setAppUsers={setAppUsers}
-          onClose={() => setIsAdminMode(false)}
-        />
-      )}
-
       <nav className="fixed top-0 w-full z-50 glass h-16 md:h-20 flex items-center justify-between px-4 md:px-8">
         <a href="/" className="flex items-center hover:opacity-80 transition-opacity">
           <img src="/assets/logo.png" alt="Render XYZ" className="h-8 md:h-10" />
