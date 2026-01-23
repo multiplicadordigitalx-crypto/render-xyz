@@ -41,6 +41,7 @@ import { CTA } from './components/landing/CTA';
 import { Footer } from './components/landing/Footer';
 
 // Types & Services
+import { Toaster, toast } from 'react-hot-toast';
 import { useScrollReveal } from './services/scrollReveal';
 import { PricingPlan, RenderHistoryItem, RenderStyle, CreditPackage, AppUser, LandingSettings, AuthViewMode } from './types';
 
@@ -214,6 +215,17 @@ const App: React.FC = () => {
     await authService.logout();
     setIsLoggedIn(false);
     setCurrentUser(null);
+    toast.success('Sessão encerrada com sucesso', {
+      style: {
+        borderRadius: '15px',
+        background: '#000',
+        color: '#fff',
+        fontSize: '10px',
+        fontWeight: '900',
+        textTransform: 'uppercase',
+        letterSpacing: '0.1em'
+      }
+    });
   };
 
   const onRenderComplete = async (url: string, style: RenderStyle, cost: number = 1) => {
@@ -328,10 +340,9 @@ const App: React.FC = () => {
     return (
       <div className="min-h-screen bg-[#F2F2F2] text-black">
         <header className="h-16 md:h-20 border-b border-[#B6B09F]/20 bg-[#EAE4D5]/80 backdrop-blur-md flex items-center justify-between px-4 md:px-8 sticky top-0 z-50">
-          <div className="flex items-center space-x-2 md:space-x-3">
-            <div className="w-6 h-6 md:w-7 md:h-7 bg-black rounded flex items-center justify-center"><Zap className="text-white w-3 h-3 md:w-4 md:h-4 fill-current" /></div>
-            <span className="font-black tracking-tighter text-sm md:text-lg uppercase">Render XYZ</span>
-          </div>
+          <a href="/" className="flex items-center hover:opacity-80 transition-opacity">
+            <img src="/assets/logo.png" alt="Render XYZ" className="h-6 md:h-8" />
+          </a>
           <div className="flex items-center space-x-4 md:space-x-8">
             <button
               onClick={() => setShowProfile(true)}
@@ -417,10 +428,9 @@ const App: React.FC = () => {
       )}
 
       <nav className="fixed top-0 w-full z-50 glass h-16 md:h-20 flex items-center justify-between px-4 md:px-8">
-        <div className="flex items-center space-x-2 md:space-x-3">
-          <div className="w-8 h-8 md:w-9 md:h-9 bg-black rounded-xl flex items-center justify-center"><Zap className="text-white w-4 h-4 fill-current" /></div>
-          <span className="text-xl md:text-2xl font-black uppercase tracking-tighter">Render XYZ</span>
-        </div>
+        <a href="/" className="flex items-center hover:opacity-80 transition-opacity">
+          <img src="/assets/logo.png" alt="Render XYZ" className="h-8 md:h-10" />
+        </a>
 
         <div className="md:hidden flex items-center space-x-4">
           <button onClick={() => { setAuthMode('login'); setShowAuth(true); }} className="bg-black text-white px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest">Acessar</button>
@@ -483,4 +493,11 @@ const App: React.FC = () => {
   );
 };
 
-export default App;
+export default function Root() {
+  return (
+    <>
+      <Toaster position="bottom-right" />
+      <App />
+    </>
+  );
+}

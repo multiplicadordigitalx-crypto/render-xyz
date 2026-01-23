@@ -115,13 +115,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-xl flex items-center justify-center p-2 md:p-8">
             <div className="bg-[#F2F2F2] w-full max-w-6xl h-full max-h-[95vh] rounded-[30px] md:rounded-[40px] shadow-2xl overflow-hidden flex flex-col">
                 <div className="p-4 md:p-8 border-b border-[#B6B09F]/20 flex justify-between items-center bg-white/50">
-                    <div className="flex items-center space-x-3 md:space-x-4">
-                        <div className="p-2 md:p-3 bg-black rounded-xl md:rounded-2xl"><ShieldCheck className="text-white w-5 h-5 md:w-6 md:h-6" /></div>
-                        <div>
-                            <h2 className="text-lg md:text-2xl font-black uppercase tracking-tighter">Render XYZ Control</h2>
-                            <p className="text-[8px] md:text-[10px] font-black text-[#B6B09F] uppercase tracking-[0.2em]">Painel de Gestão</p>
+                    <a href="/" className="flex items-center space-x-3 md:space-x-4 hover:opacity-80 transition-opacity">
+                        <img src="/assets/logo.png" alt="Render XYZ" className="h-8 md:h-12" />
+                        <div className="hidden sm:block border-l border-[#B6B09F]/20 pl-4">
+                            <h2 className="text-sm md:text-lg font-black uppercase tracking-tighter">Control</h2>
+                            <p className="text-[8px] md:text-[9px] font-black text-[#B6B09F] uppercase tracking-[0.2em]">Gestão</p>
                         </div>
-                    </div>
+                    </a>
                     <button onClick={onClose} className="p-3 md:p-4 bg-[#EAE4D5] rounded-full hover:bg-zinc-200 transition-all"><X className="w-5 h-5 md:w-6 md:h-6" /></button>
                 </div>
                 <div className="flex-1 flex flex-col md:flex-row overflow-hidden">

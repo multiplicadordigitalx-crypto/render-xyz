@@ -1,13 +1,13 @@
 
 import React, { useState } from 'react';
-import { 
-  ShieldCheck, 
-  Mail, 
-  Lock, 
-  User, 
-  Fingerprint, 
-  ArrowRight, 
-  ChevronLeft, 
+import {
+  ShieldCheck,
+  Mail,
+  Lock,
+  User,
+  Fingerprint,
+  ArrowRight,
+  ChevronLeft,
   AlertCircle,
   Loader2,
   CheckCircle2,
@@ -88,30 +88,27 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'login', onSuc
 
   return (
     <div className="min-h-screen flex flex-col lg:flex-row bg-[#F2F2F2]">
-      
+
       {/* PAINEL DE BENEFÍCIOS (ESQUERDA) - Visível apenas em Desktop */}
       <div className="hidden lg:flex lg:w-1/2 relative bg-black overflow-hidden flex-col justify-between p-16">
         <div className="absolute inset-0 z-0 opacity-40">
-          <img 
-            src="https://images.unsplash.com/photo-1600607687940-47a04b629753?q=80&w=2070&auto=format&fit=crop" 
-            alt="High-end Architecture" 
+          <img
+            src="https://images.unsplash.com/photo-1600607687940-47a04b629753?q=80&w=2070&auto=format&fit=crop"
+            alt="High-end Architecture"
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-br from-black via-black/80 to-transparent" />
         </div>
 
-        <div className="relative z-10 flex items-center space-x-3">
-          <div className="w-10 h-10 bg-[#B6B09F] rounded-xl flex items-center justify-center">
-            <Zap className="text-black w-6 h-6 fill-current" />
-          </div>
-          <span className="text-white text-2xl font-black tracking-tighter uppercase">Render XYZ</span>
-        </div>
+        <a href="/" className="relative z-10 flex items-center hover:opacity-80 transition-opacity">
+          <img src="/assets/logo.png" alt="Render XYZ" className="h-10 md:h-12 invert" />
+        </a>
 
         <div className="relative z-10">
           <h2 className="text-6xl font-black text-white uppercase tracking-tighter leading-[0.9] mb-12">
             Arquitetura de <br /> <span className="text-[#B6B09F]">Próximo Nível</span>
           </h2>
-          
+
           <div className="space-y-8">
             <div className="flex items-start space-x-5 group">
               <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center shrink-0 border border-white/10 group-hover:bg-[#B6B09F] transition-all">
@@ -147,9 +144,9 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'login', onSuc
 
         <div className="relative z-10 flex items-center justify-between border-t border-white/10 pt-8">
           <div className="flex -space-x-3">
-            {[1,2,3,4].map(i => (
+            {[1, 2, 3, 4].map(i => (
               <div key={i} className="w-10 h-10 rounded-full border-2 border-black bg-zinc-800 overflow-hidden shadow-xl">
-                <img src={`https://i.pravatar.cc/100?img=${i+10}`} alt="User" />
+                <img src={`https://i.pravatar.cc/100?img=${i + 10}`} alt="User" />
               </div>
             ))}
           </div>
@@ -162,7 +159,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'login', onSuc
 
       {/* FORMULÁRIO (DIREITA) */}
       <div className="flex-1 flex flex-col items-center justify-center p-6 md:p-12 lg:p-20 relative overflow-y-auto">
-        <button 
+        <button
           onClick={onBack}
           className="absolute top-8 left-8 flex items-center text-[#B6B09F] hover:text-black text-[9px] font-black uppercase tracking-[0.3em] transition-all z-20"
         >
@@ -171,7 +168,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'login', onSuc
 
         <div className="w-full max-w-md py-12">
           <div className="bg-white border border-[#B6B09F]/20 rounded-[40px] md:rounded-[60px] p-10 md:p-16 shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
-            
+
             <div className="text-center mb-10">
               <div className="inline-flex items-center justify-center w-14 h-14 bg-black rounded-2xl mb-6 shadow-xl">
                 {mode === 'login' ? <Fingerprint className="text-white w-7 h-7" /> : <User className="text-white w-7 h-7" />}
@@ -202,27 +199,27 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'login', onSuc
               {mode === 'register' && (
                 <div className="relative">
                   <User className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#B6B09F]" />
-                  <input 
+                  <input
                     type="text" required placeholder="NOME COMPLETO"
                     className="w-full pl-14 pr-6 py-5 bg-[#F2F2F2] border border-transparent rounded-2xl text-[10px] font-bold focus:bg-white focus:border-[#B6B09F]/30 focus:outline-none transition-all placeholder:text-[#B6B09F]/60"
-                    value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})}
+                    value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })}
                   />
                 </div>
               )}
 
               <div className="relative">
                 <Mail className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#B6B09F]" />
-                <input 
+                <input
                   type="email" required placeholder="E-MAIL"
                   className="w-full pl-14 pr-6 py-5 bg-[#F2F2F2] border border-transparent rounded-2xl text-[10px] font-bold focus:bg-white focus:border-[#B6B09F]/30 focus:outline-none transition-all placeholder:text-[#B6B09F]/60"
-                  value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})}
+                  value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })}
                 />
               </div>
 
               {mode === 'register' && (
                 <div className="relative">
                   <ShieldCheck className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#B6B09F]" />
-                  <input 
+                  <input
                     type="text" required placeholder="CPF"
                     className="w-full pl-14 pr-6 py-5 bg-[#F2F2F2] border border-transparent rounded-2xl text-[10px] font-bold focus:bg-white focus:border-[#B6B09F]/30 focus:outline-none transition-all placeholder:text-[#B6B09F]/60"
                     value={formData.cpf} onChange={handleCpfChange}
@@ -233,10 +230,10 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'login', onSuc
               {mode !== 'forgot-password' && (
                 <div className="relative">
                   <Lock className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#B6B09F]" />
-                  <input 
+                  <input
                     type="password" required placeholder="SENHA DE ACESSO"
                     className="w-full pl-14 pr-6 py-5 bg-[#F2F2F2] border border-transparent rounded-2xl text-[10px] font-bold focus:bg-white focus:border-[#B6B09F]/30 focus:outline-none transition-all placeholder:text-[#B6B09F]/60"
-                    value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})}
+                    value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })}
                   />
                 </div>
               )}
@@ -245,17 +242,17 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'login', onSuc
                 <div className="space-y-4">
                   <div className="relative">
                     <Lock className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#B6B09F]" />
-                    <input 
+                    <input
                       type="password" required placeholder="CONFIRMAR SENHA"
                       className="w-full pl-14 pr-6 py-5 bg-[#F2F2F2] border border-transparent rounded-2xl text-[10px] font-bold focus:bg-white focus:border-[#B6B09F]/30 focus:outline-none transition-all placeholder:text-[#B6B09F]/60"
-                      value={formData.confirmPassword} onChange={e => setFormData({...formData, confirmPassword: e.target.value})}
+                      value={formData.confirmPassword} onChange={e => setFormData({ ...formData, confirmPassword: e.target.value })}
                     />
                   </div>
                   <div className="flex items-start space-x-3 p-2 bg-[#F2F2F2]/50 rounded-xl">
-                    <input 
+                    <input
                       type="checkbox" id="terms" required
-                      className="mt-1 w-4 h-4 accent-black" 
-                      checked={formData.terms} onChange={e => setFormData({...formData, terms: e.target.checked})} 
+                      className="mt-1 w-4 h-4 accent-black"
+                      checked={formData.terms} onChange={e => setFormData({ ...formData, terms: e.target.checked })}
                     />
                     <label htmlFor="terms" className="text-[8px] font-bold text-[#B6B09F] uppercase tracking-widest leading-relaxed">
                       Eu li e concordo com os <span className="text-black underline cursor-pointer">Termos de Uso</span> e a <span className="text-black underline cursor-pointer">Política de Privacidade</span>.

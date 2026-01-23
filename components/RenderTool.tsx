@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Upload, Wand2, Download, RotateCcw, AlertCircle, CheckCircle2, Coins, ShieldCheck } from 'lucide-react';
 import { RenderStyle, RenderResolution } from '../types';
 import { renderImage } from '../services/geminiService';
+import { toast } from 'react-hot-toast';
 
 const STYLES: RenderStyle[] = ['Dia', 'Noite', 'Fim de Tarde', 'Nublado'];
 const RESOLUTIONS: { label: RenderResolution; cost: number }[] = [
@@ -49,17 +50,39 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
   const handleGenerate = async () => {
     if (!image) return;
     if (credits < selectedRes.cost) {
-      setError(`Créditos insuficientes (${selectedRes.cost} necessários)`);
+      toast.error(`Créditos insuficientes (${selectedRes.cost} necessários)`, {
+        style: {
+          borderRadius: '15px',
+          background: '#000',
+          color: '#fff',
+          fontSize: '10px',
+          fontWeight: '900',
+          textTransform: 'uppercase'
+        }
+      });
       return;
     }
 
     setIsRendering(true);
     setError(null);
+    const loadingToast = toast.loading('Processando render com IA...', {
+      style: {
+        borderRadius: '15px',
+        background: '#000',
+        color: '#fff',
+        fontSize: '10px',
+        fontWeight: '900',
+        textTransform: 'uppercase'
+      }
+    });
+
     try {
       const rendered = await renderImage(image, mimeType, style, resolution);
       setResult(rendered);
       onRenderComplete(rendered, style, selectedRes.cost);
+      toast.success('Renderizado com sucesso!', { id: loadingToast });
     } catch (err: any) {
+      toast.error('Erro ao processar imagem.', { id: loadingToast });
       const errorMsg = err.message || "";
       if (errorMsg.includes("Requested entity was not found")) {
         setError("Chave inválida. Selecione novamente.");
@@ -112,8 +135,8 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
                   key={r.label}
                   onClick={() => setResolution(r.label)}
                   className={`px-2 py-2.5 md:py-3 rounded-lg md:rounded-xl text-[8px] md:text-[9px] font-black transition-all uppercase tracking-widest border flex flex-col items-center justify-center ${resolution === r.label
-                      ? 'bg-[#000000] text-white border-[#000000] shadow-lg'
-                      : 'bg-[#F2F2F2] text-[#000000] border-[#B6B09F]/20 hover:border-[#B6B09F]/50'
+                    ? 'bg-[#000000] text-white border-[#000000] shadow-lg'
+                    : 'bg-[#F2F2F2] text-[#000000] border-[#B6B09F]/20 hover:border-[#B6B09F]/50'
                     }`}
                 >
                   <span>{r.label}</span>
@@ -190,9 +213,18 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
             )}
 
             {isRendering && (
-              <div className="absolute inset-0 bg-[#F2F2F2]/90 backdrop-blur-sm flex flex-col items-center justify-center space-y-4 md:space-y-6 z-20">
-                <Wand2 className="w-8 h-8 md:w-10 md:h-10 text-[#000000] animate-pulse" />
-                <p className="text-[#000000] font-black text-xl md:text-2xl tracking-tighter uppercase">Renderizando</p>
+              <div className="absolute inset-0 bg-[#F2F2F2]/90 backdrop-blur-md flex flex-col items-center justify-center space-y-8 z-20">
+                <div className="relative">
+                  <Wand2 className="w-16 h-16 text-[#000000] animate-bounce" />
+                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-[#B6B09F] rounded-full animate-ping" />
+                </div>
+                <div className="text-center space-y-2">
+                  <p className="text-[#000000] font-black text-2xl md:text-3xl tracking-tighter uppercase animate-pulse">Processando</p>
+                  <p className="text-[#B6B09F] font-black text-[9px] uppercase tracking-[0.3em]">IA em alta velocidade</p>
+                </div>
+                <div className="w-48 h-1 bg-black/10 rounded-full overflow-hidden">
+                  <div className="h-full bg-black animate-progress" />
+                </div>
               </div>
             )}
           </div>

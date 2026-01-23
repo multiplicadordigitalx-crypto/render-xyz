@@ -10,10 +10,9 @@ export const Footer: React.FC<FooterProps> = ({ onAdminClick }) => {
     return (
         <footer className="py-16 md:py-24 px-4 border-t border-[#B6B09F]/20 bg-[#EAE4D5]">
             <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center text-[#B6B09F] text-[9px] md:text-[10px] font-black uppercase tracking-widest">
-                <div className="flex items-center space-x-2 mb-8 md:mb-0">
-                    <Zap className="text-black w-4 h-4" />
-                    <span className="text-black text-xl font-black">Render XYZ</span>
-                </div>
+                <a href="/" className="flex items-center mb-8 md:mb-0 hover:opacity-80 transition-opacity">
+                    <img src="/assets/logo.png" alt="Render XYZ" className="h-6 md:h-8 grayscale hover:grayscale-0 transition-all" />
+                </a>
                 <div className="flex space-x-8 md:space-x-12 mb-8 md:mb-0">
                     <a href="#" className="hover:text-black">Portfólio</a>
                     <a href="#" className="hover:text-black">Termos</a>
