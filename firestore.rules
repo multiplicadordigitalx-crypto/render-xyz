@@ -1,0 +1,38 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // User Profiles
+    match /users/{userId} {
+      // Allow reading: 
+      // 1. The user themselves can read their own doc
+      // 2. ANY authenticated user can read other docs (needed to check if CPF exists)
+      //    NOTE: In a stricter production app, you might use a Cloud Function for this check.
+      //    For this MVP, allowing list queries for uniqueness check is acceptable if data isn't sensitive.
+      allow read: if request.auth != null;
+      
+      // Allow create: User can create their own document
+      allow create: if request.auth != null && request.auth.uid == userId;
+      
+      // Allow update: User can update their own document
+      allow update: if request.auth != null && request.auth.uid == userId;
+
+      // Allow delete: Only admins or the user themselves (if you implemented account deletion)
+      allow delete: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Render History
+    match /history/{historyId} {
+      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      // Allow delete if user owns it
+      allow delete: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+
+    // Global Settings (read-only for users)
+    match /settings/{document=**} {
+      allow read: if true;
+      allow write: if false; // Only manageable via Firebase Console for now
+    }
+  }
+}
