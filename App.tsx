@@ -158,6 +158,12 @@ const App: React.FC = () => {
             setCurrentUser(userData);
             setCredits(userData.credits);
           }
+        }, (error) => {
+          console.error("Error in Profile Snapshot:", error);
+          if (error.code === 'permission-denied') {
+            // Handle permission error (maybe logout or specific UI)
+            toast.error('Erro de permissão ao carregar perfil. Tentando reconectar...');
+          }
         });
 
         // Sub 2: History real-time
@@ -173,6 +179,8 @@ const App: React.FC = () => {
             ...doc.data()
           } as RenderHistoryItem));
           setHistory(historyItems);
+        }, (error) => {
+          console.error("Error in History Snapshot:", error);
         });
 
         return () => {
