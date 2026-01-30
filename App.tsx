@@ -224,307 +224,307 @@ const App: React.FC = () => {
 
     return () => unsubscribeUsers();
   }, [currentUser]);
-}, []);
 
-const handleAuthSuccess = (user: AppUser) => {
-  // onAuthStateChanged will handle the state update
-  setShowAuth(false);
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-};
 
-const handleLogout = async () => {
-  await authService.logout();
-  setIsLoggedIn(false);
-  setCurrentUser(null);
-  setIsAdminMode(false);
-  toast.success('Sessão encerrada com sucesso', {
-    style: {
-      borderRadius: '15px',
-      background: '#000',
-      color: '#fff',
-      fontSize: '10px',
-      fontWeight: '900',
-      textTransform: 'uppercase',
-      letterSpacing: '0.1em'
-    }
-  });
-};
+  const handleAuthSuccess = (user: AppUser) => {
+    // onAuthStateChanged will handle the state update
+    setShowAuth(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
-const onRenderComplete = async (url: string, style: RenderStyle, cost: number = 1) => {
-  if (!currentUser) return;
-
-  const newCredits = credits - cost;
-  setCredits(newCredits);
-
-  try {
-    // 1. Update Credits in Firestore
-    await updateDoc(doc(db, "users", currentUser.id), {
-      credits: newCredits
+  const handleLogout = async () => {
+    await authService.logout();
+    setIsLoggedIn(false);
+    setCurrentUser(null);
+    setIsAdminMode(false);
+    toast.success('Sessão encerrada com sucesso', {
+      style: {
+        borderRadius: '15px',
+        background: '#000',
+        color: '#fff',
+        fontSize: '10px',
+        fontWeight: '900',
+        textTransform: 'uppercase',
+        letterSpacing: '0.1em'
+      }
     });
+  };
 
-    // 2. Add to History in Firestore
-    await addDoc(collection(db, "history"), {
-      userId: currentUser.id,
-      url,
-      style,
-      timestamp: Date.now()
-    });
+  const onRenderComplete = async (url: string, style: RenderStyle, cost: number = 1) => {
+    if (!currentUser) return;
 
-    // Local state will be updated by the listener in useEffect
-  } catch (error) {
-    console.error("Error saving render data:", error);
-  }
-};
-
-const handleOpenSelectKey = async () => {
-  if (typeof window.aistudio !== 'undefined' && window.aistudio.openSelectKey) {
-    await window.aistudio.openSelectKey();
-    setHasApiKey(true);
-  }
-};
-
-const buyCredits = async (amount: number) => {
-  if (!currentUser) return;
-  const newCredits = credits + amount;
-
-  try {
-    await updateDoc(doc(db, "users", currentUser.id), {
-      credits: newCredits
-    });
+    const newCredits = credits - cost;
     setCredits(newCredits);
-  } catch (error) {
-    console.error("Error updating credits:", error);
-  }
-  setShowCreditModal(false);
-};
 
-const handlePlanSelection = (plan: PricingPlan) => {
-  if (!isLoggedIn) {
-    setAuthMode('register');
-    setShowAuth(true);
-    return;
-  }
-  setSelectedPlan(plan);
-};
+    try {
+      // 1. Update Credits in Firestore
+      await updateDoc(doc(db, "users", currentUser.id), {
+        credits: newCredits
+      });
 
-const confirmSubscription = async () => {
-  if (currentUser && selectedPlan) {
-    const planCredits = parseInt(selectedPlan.price) > 0 ? 60 : 3;
-    const newCredits = credits + planCredits;
+      // 2. Add to History in Firestore
+      await addDoc(collection(db, "history"), {
+        userId: currentUser.id,
+        url,
+        style,
+        timestamp: Date.now()
+      });
+
+      // Local state will be updated by the listener in useEffect
+    } catch (error) {
+      console.error("Error saving render data:", error);
+    }
+  };
+
+  const handleOpenSelectKey = async () => {
+    if (typeof window.aistudio !== 'undefined' && window.aistudio.openSelectKey) {
+      await window.aistudio.openSelectKey();
+      setHasApiKey(true);
+    }
+  };
+
+  const buyCredits = async (amount: number) => {
+    if (!currentUser) return;
+    const newCredits = credits + amount;
 
     try {
       await updateDoc(doc(db, "users", currentUser.id), {
-        plan: selectedPlan.name,
         credits: newCredits
       });
       setCredits(newCredits);
     } catch (error) {
-      console.error("Error updating subscription:", error);
+      console.error("Error updating credits:", error);
     }
-  }
-  setSelectedPlan(null);
-};
+    setShowCreditModal(false);
+  };
 
-const deleteFromHistory = async (id: string) => {
-  try {
-    await deleteDoc(doc(db, "history", id));
-  } catch (error) {
-    console.error("Error deleting history item:", error);
-  }
-};
+  const handlePlanSelection = (plan: PricingPlan) => {
+    if (!isLoggedIn) {
+      setAuthMode('register');
+      setShowAuth(true);
+      return;
+    }
+    setSelectedPlan(plan);
+  };
 
-const downloadHistoryImage = (url: string, style: RenderStyle) => {
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = `renderxyz-render-${style.toLowerCase().replace(/\s+/g, '-')}.png`;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-};
+  const confirmSubscription = async () => {
+    if (currentUser && selectedPlan) {
+      const planCredits = parseInt(selectedPlan.price) > 0 ? 60 : 3;
+      const newCredits = credits + planCredits;
 
-if (showAuth) return <AuthView initialMode={authMode} onSuccess={handleAuthSuccess} onBack={() => setShowAuth(false)} />;
+      try {
+        await updateDoc(doc(db, "users", currentUser.id), {
+          plan: selectedPlan.name,
+          credits: newCredits
+        });
+        setCredits(newCredits);
+      } catch (error) {
+        console.error("Error updating subscription:", error);
+      }
+    }
+    setSelectedPlan(null);
+  };
 
-if (isLoggedIn) {
-  if (!hasApiKey) {
-    return (
-      <div className="min-h-screen bg-[#F2F2F2] flex items-center justify-center p-4">
-        <div className="max-w-xl w-full bg-[#EAE4D5] border border-[#B6B09F]/30 rounded-[35px] p-8 md:p-12 text-center">
-          <div className="w-16 h-16 bg-black rounded-2xl flex items-center justify-center mx-auto mb-8"><Key className="text-white w-8 h-8" /></div>
-          <h2 className="text-2xl md:text-4xl font-black uppercase mb-4 tracking-tighter">Ativação</h2>
-          <p className="text-[#B6B09F] text-xs font-bold uppercase tracking-widest mb-10">Vincule uma chave API Studio para iniciar.</p>
-          <button onClick={handleOpenSelectKey} className="w-full py-5 bg-black text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl">Selecionar Chave</button>
-          <button onClick={handleLogout} className="mt-8 text-[9px] font-black uppercase tracking-widest text-[#B6B09F]">Sair</button>
+  const deleteFromHistory = async (id: string) => {
+    try {
+      await deleteDoc(doc(db, "history", id));
+    } catch (error) {
+      console.error("Error deleting history item:", error);
+    }
+  };
+
+  const downloadHistoryImage = (url: string, style: RenderStyle) => {
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `renderxyz-render-${style.toLowerCase().replace(/\s+/g, '-')}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  if (showAuth) return <AuthView initialMode={authMode} onSuccess={handleAuthSuccess} onBack={() => setShowAuth(false)} />;
+
+  if (isLoggedIn) {
+    if (!hasApiKey) {
+      return (
+        <div className="min-h-screen bg-[#F2F2F2] flex items-center justify-center p-4">
+          <div className="max-w-xl w-full bg-[#EAE4D5] border border-[#B6B09F]/30 rounded-[35px] p-8 md:p-12 text-center">
+            <div className="w-16 h-16 bg-black rounded-2xl flex items-center justify-center mx-auto mb-8"><Key className="text-white w-8 h-8" /></div>
+            <h2 className="text-2xl md:text-4xl font-black uppercase mb-4 tracking-tighter">Ativação</h2>
+            <p className="text-[#B6B09F] text-xs font-bold uppercase tracking-widest mb-10">Vincule uma chave API Studio para iniciar.</p>
+            <button onClick={handleOpenSelectKey} className="w-full py-5 bg-black text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl">Selecionar Chave</button>
+            <button onClick={handleLogout} className="mt-8 text-[9px] font-black uppercase tracking-widest text-[#B6B09F]">Sair</button>
+          </div>
         </div>
-      </div>
+      );
+    }
+
+    return (
+      <div className="min-h-screen bg-[#F2F2F2] text-black">
+        {isAdminMode && (
+          <AdminPanel
+            landingSettings={landingSettings}
+            setLandingSettings={setLandingSettings}
+            pricingPlans={pricingPlans}
+            setPricingPlans={setPricingPlans}
+            creditPackages={creditPackages}
+            setCreditPackages={setCreditPackages}
+            appUsers={appUsers}
+            setAppUsers={setAppUsers}
+            onClose={() => setIsAdminMode(false)}
+          />
+        )}
+        <header className="h-16 md:h-20 border-b border-[#B6B09F]/20 bg-[#EAE4D5]/80 backdrop-blur-md flex items-center justify-between px-4 md:px-8 sticky top-0 z-50">
+          <a href="/" className="flex items-center hover:opacity-80 transition-opacity">
+            <img src="/assets/logo.png" alt="Render XYZ" className="h-6 md:h-8" />
+          </a>
+          <div className="flex items-center space-x-4 md:space-x-8">
+            {currentUser?.role === 'admin' && (
+              <button
+                onClick={() => setIsAdminMode(true)}
+                className="p-2 bg-black text-white rounded-full hover:bg-zinc-800 transition-all flex items-center justify-center"
+                title="Painel Admin"
+              >
+                <ShieldCheck className="w-4 h-4" />
+              </button>
+            )}
+            <button
+              onClick={() => setShowProfile(true)}
+              className="p-2 bg-black/5 rounded-full hover:bg-black/10 transition-all"
+            >
+              <User className="w-4 h-4" />
+            </button>
+            <div className="flex items-center bg-black text-white px-3 md:px-5 py-1.5 md:py-2 rounded-xl shadow-lg">
+              <Coins className="w-3 h-3 md:w-4 md:h-4 mr-2 text-[#B6B09F]" />
+              <span className="text-xs md:text-sm font-black">{credits}</span>
+              <button onClick={() => setShowCreditModal(true)} className="ml-3 md:ml-6 bg-[#B6B09F] text-black p-1 rounded transition-all"><Plus className="w-3 h-3" /></button>
+            </div>
+            <button onClick={handleLogout} className="p-2 bg-black/5 rounded-full"><LogOut className="w-3 h-3" /></button>
+          </div>
+        </header>
+
+        {showProfile && currentUser && (
+          <UserProfile
+            user={currentUser}
+            onClose={() => setShowProfile(false)}
+            onLogout={handleLogout}
+          />
+        )}
+
+        {
+          showCreditModal && (
+            <CreditModal
+              creditPackages={creditPackages}
+              onBuyCredits={buyCredits}
+              onClose={() => setShowCreditModal(false)}
+            />
+          )
+        }
+
+        <main className="max-w-7xl mx-auto px-4 md:px-6 py-8 md:py-12">
+          <section className="mb-12 md:mb-20">
+            <div className="mb-6 md:mb-10 flex flex-col md:items-end md:flex-row justify-between border-b border-[#B6B09F]/20 pb-4 md:pb-6">
+              <div><h1 className="text-2xl md:text-4xl font-black tracking-tighter uppercase">Studio Pro</h1><p className="text-[#B6B09F] text-[9px] md:text-[11px] font-black uppercase tracking-widest">Fidelidade Extrema Ativa</p></div>
+              <div className="mt-4 md:mt-0 flex items-center bg-[#B6B09F]/10 px-4 py-2 rounded-xl text-[9px] font-black uppercase"><div className="w-2 h-2 bg-black rounded-full mr-2 animate-pulse" />ONLINE</div>
+            </div>
+            <div className="bg-[#EAE4D5] border border-[#B6B09F]/30 p-4 md:p-10 rounded-[35px] md:rounded-[50px]">
+              <RenderTool onRenderComplete={onRenderComplete} credits={credits} onKeyReset={() => setHasApiKey(false)} />
+            </div>
+          </section>
+
+          <section>
+            <div className="mb-6 border-b border-[#B6B09F]/20 pb-4"><h2 className="text-xl md:text-2xl font-black uppercase tracking-tighter">Galeria Recente</h2></div>
+            {history.length === 0 ? (
+              <div className="bg-[#EAE4D5]/40 border border-dashed border-[#B6B09F]/40 rounded-[30px] p-20 text-center text-[#B6B09F] font-black uppercase tracking-widest text-[10px]">Aguardando primeiro render</div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
+                {history.map((item) => (
+                  <div key={item.id} className="group bg-[#EAE4D5] border border-[#B6B09F]/30 rounded-[25px] overflow-hidden hover:border-black transition-all">
+                    <div className="aspect-[4/3] relative">
+                      <img src={item.url} alt="Render" className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center space-x-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button onClick={() => downloadHistoryImage(item.url, item.style)} className="p-3 bg-white rounded-xl"><Download className="w-5 h-5" /></button>
+                        <button onClick={() => deleteFromHistory(item.id)} className="p-3 bg-black text-white rounded-xl"><Trash2 className="w-5 h-5" /></button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        </main>
+      </div >
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#F2F2F2] text-black">
-      {isAdminMode && (
-        <AdminPanel
-          landingSettings={landingSettings}
-          setLandingSettings={setLandingSettings}
-          pricingPlans={pricingPlans}
-          setPricingPlans={setPricingPlans}
-          creditPackages={creditPackages}
-          setCreditPackages={setCreditPackages}
-          appUsers={appUsers}
-          setAppUsers={setAppUsers}
-          onClose={() => setIsAdminMode(false)}
-        />
-      )}
-      <header className="h-16 md:h-20 border-b border-[#B6B09F]/20 bg-[#EAE4D5]/80 backdrop-blur-md flex items-center justify-between px-4 md:px-8 sticky top-0 z-50">
+    <div className="min-h-screen bg-[#F2F2F2] text-black overflow-x-hidden">
+      <nav className="fixed top-0 w-full z-50 glass h-16 md:h-20 flex items-center justify-between px-4 md:px-8">
         <a href="/" className="flex items-center hover:opacity-80 transition-opacity">
-          <img src="/assets/logo.png" alt="Render XYZ" className="h-6 md:h-8" />
+          <img src="/assets/logo.png" alt="Render XYZ" className="h-8 md:h-10" />
         </a>
-        <div className="flex items-center space-x-4 md:space-x-8">
-          {currentUser?.role === 'admin' && (
-            <button
-              onClick={() => setIsAdminMode(true)}
-              className="p-2 bg-black text-white rounded-full hover:bg-zinc-800 transition-all flex items-center justify-center"
-              title="Painel Admin"
-            >
-              <ShieldCheck className="w-4 h-4" />
-            </button>
-          )}
-          <button
-            onClick={() => setShowProfile(true)}
-            className="p-2 bg-black/5 rounded-full hover:bg-black/10 transition-all"
-          >
-            <User className="w-4 h-4" />
-          </button>
-          <div className="flex items-center bg-black text-white px-3 md:px-5 py-1.5 md:py-2 rounded-xl shadow-lg">
-            <Coins className="w-3 h-3 md:w-4 md:h-4 mr-2 text-[#B6B09F]" />
-            <span className="text-xs md:text-sm font-black">{credits}</span>
-            <button onClick={() => setShowCreditModal(true)} className="ml-3 md:ml-6 bg-[#B6B09F] text-black p-1 rounded transition-all"><Plus className="w-3 h-3" /></button>
-          </div>
-          <button onClick={handleLogout} className="p-2 bg-black/5 rounded-full"><LogOut className="w-3 h-3" /></button>
-        </div>
-      </header>
 
-      {showProfile && currentUser && (
-        <UserProfile
-          user={currentUser}
-          onClose={() => setShowProfile(false)}
-          onLogout={handleLogout}
+        <div className="md:hidden flex items-center space-x-4">
+          <button onClick={() => { setAuthMode('login'); setShowAuth(true); }} className="bg-black text-white px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest">Acessar</button>
+          <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="p-2"><Menu /></button>
+        </div>
+
+        <div className="hidden md:flex items-center space-x-12 text-[10px] font-black uppercase tracking-widest">
+          <a href="#demo" className="hover:text-[#B6B09F]">Portfólio</a>
+          <a href="#how-it-works" className="hover:text-[#B6B09F]">Processo</a>
+          <a href="#pricing" className="hover:text-[#B6B09F]">Preços</a>
+          <button onClick={() => { setAuthMode('login'); setShowAuth(true); }} className="bg-black text-white px-10 py-3.5 rounded-full hover:bg-zinc-800 transition-all shadow-xl">Acessar App</button>
+        </div>
+      </nav>
+
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 z-[45] bg-[#EAE4D5] pt-24 px-8 md:hidden">
+          <div className="flex flex-col space-y-8 text-xl font-black uppercase tracking-tighter">
+            <a href="#demo" onClick={() => setMobileMenuOpen(false)}>Portfólio</a>
+            <a href="#how-it-works" onClick={() => setMobileMenuOpen(false)}>Processo</a>
+            <a href="#pricing" onClick={() => setMobileMenuOpen(false)}>Preços</a>
+            <button onClick={() => { setAuthMode('login'); setShowAuth(true); setMobileMenuOpen(false); }} className="w-full bg-black text-white py-6 rounded-2xl">Acessar App</button>
+          </div>
+        </div>
+      )}
+
+      <Hero
+        onStartNow={() => { setAuthMode('register'); setShowAuth(true); }}
+        onSeeInAction={() => { }}
+      />
+
+      <DemoSlider
+        showcaseBefore={landingSettings.showcaseBefore}
+        showcaseAfter={landingSettings.showcaseAfter}
+      />
+
+      <HowItWorks
+        heroVideoUrl={landingSettings.heroVideoUrl}
+        heroVideoPoster={landingSettings.heroVideoPoster}
+      />
+
+      <Testimonials />
+
+      <Pricing
+        plans={pricingPlans}
+        onSelectPlan={handlePlanSelection}
+      />
+
+      {selectedPlan && (
+        <CheckoutModal
+          plan={selectedPlan}
+          onConfirm={confirmSubscription}
+          onClose={() => setSelectedPlan(null)}
         />
       )}
 
-      {
-        showCreditModal && (
-          <CreditModal
-            creditPackages={creditPackages}
-            onBuyCredits={buyCredits}
-            onClose={() => setShowCreditModal(false)}
-          />
-        )
-      }
+      <FAQ items={FAQS} />
 
-      <main className="max-w-7xl mx-auto px-4 md:px-6 py-8 md:py-12">
-        <section className="mb-12 md:mb-20">
-          <div className="mb-6 md:mb-10 flex flex-col md:items-end md:flex-row justify-between border-b border-[#B6B09F]/20 pb-4 md:pb-6">
-            <div><h1 className="text-2xl md:text-4xl font-black tracking-tighter uppercase">Studio Pro</h1><p className="text-[#B6B09F] text-[9px] md:text-[11px] font-black uppercase tracking-widest">Fidelidade Extrema Ativa</p></div>
-            <div className="mt-4 md:mt-0 flex items-center bg-[#B6B09F]/10 px-4 py-2 rounded-xl text-[9px] font-black uppercase"><div className="w-2 h-2 bg-black rounded-full mr-2 animate-pulse" />ONLINE</div>
-          </div>
-          <div className="bg-[#EAE4D5] border border-[#B6B09F]/30 p-4 md:p-10 rounded-[35px] md:rounded-[50px]">
-            <RenderTool onRenderComplete={onRenderComplete} credits={credits} onKeyReset={() => setHasApiKey(false)} />
-          </div>
-        </section>
+      <CTA onStartNow={() => { setAuthMode('register'); setShowAuth(true); }} />
 
-        <section>
-          <div className="mb-6 border-b border-[#B6B09F]/20 pb-4"><h2 className="text-xl md:text-2xl font-black uppercase tracking-tighter">Galeria Recente</h2></div>
-          {history.length === 0 ? (
-            <div className="bg-[#EAE4D5]/40 border border-dashed border-[#B6B09F]/40 rounded-[30px] p-20 text-center text-[#B6B09F] font-black uppercase tracking-widest text-[10px]">Aguardando primeiro render</div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
-              {history.map((item) => (
-                <div key={item.id} className="group bg-[#EAE4D5] border border-[#B6B09F]/30 rounded-[25px] overflow-hidden hover:border-black transition-all">
-                  <div className="aspect-[4/3] relative">
-                    <img src={item.url} alt="Render" className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center space-x-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button onClick={() => downloadHistoryImage(item.url, item.style)} className="p-3 bg-white rounded-xl"><Download className="w-5 h-5" /></button>
-                      <button onClick={() => deleteFromHistory(item.id)} className="p-3 bg-black text-white rounded-xl"><Trash2 className="w-5 h-5" /></button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
-      </main>
-    </div >
+      <Footer />
+    </div>
   );
-}
-
-return (
-  <div className="min-h-screen bg-[#F2F2F2] text-black overflow-x-hidden">
-    <nav className="fixed top-0 w-full z-50 glass h-16 md:h-20 flex items-center justify-between px-4 md:px-8">
-      <a href="/" className="flex items-center hover:opacity-80 transition-opacity">
-        <img src="/assets/logo.png" alt="Render XYZ" className="h-8 md:h-10" />
-      </a>
-
-      <div className="md:hidden flex items-center space-x-4">
-        <button onClick={() => { setAuthMode('login'); setShowAuth(true); }} className="bg-black text-white px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest">Acessar</button>
-        <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="p-2"><Menu /></button>
-      </div>
-
-      <div className="hidden md:flex items-center space-x-12 text-[10px] font-black uppercase tracking-widest">
-        <a href="#demo" className="hover:text-[#B6B09F]">Portfólio</a>
-        <a href="#how-it-works" className="hover:text-[#B6B09F]">Processo</a>
-        <a href="#pricing" className="hover:text-[#B6B09F]">Preços</a>
-        <button onClick={() => { setAuthMode('login'); setShowAuth(true); }} className="bg-black text-white px-10 py-3.5 rounded-full hover:bg-zinc-800 transition-all shadow-xl">Acessar App</button>
-      </div>
-    </nav>
-
-    {mobileMenuOpen && (
-      <div className="fixed inset-0 z-[45] bg-[#EAE4D5] pt-24 px-8 md:hidden">
-        <div className="flex flex-col space-y-8 text-xl font-black uppercase tracking-tighter">
-          <a href="#demo" onClick={() => setMobileMenuOpen(false)}>Portfólio</a>
-          <a href="#how-it-works" onClick={() => setMobileMenuOpen(false)}>Processo</a>
-          <a href="#pricing" onClick={() => setMobileMenuOpen(false)}>Preços</a>
-          <button onClick={() => { setAuthMode('login'); setShowAuth(true); setMobileMenuOpen(false); }} className="w-full bg-black text-white py-6 rounded-2xl">Acessar App</button>
-        </div>
-      </div>
-    )}
-
-    <Hero
-      onStartNow={() => { setAuthMode('register'); setShowAuth(true); }}
-      onSeeInAction={() => { }}
-    />
-
-    <DemoSlider
-      showcaseBefore={landingSettings.showcaseBefore}
-      showcaseAfter={landingSettings.showcaseAfter}
-    />
-
-    <HowItWorks
-      heroVideoUrl={landingSettings.heroVideoUrl}
-      heroVideoPoster={landingSettings.heroVideoPoster}
-    />
-
-    <Testimonials />
-
-    <Pricing
-      plans={pricingPlans}
-      onSelectPlan={handlePlanSelection}
-    />
-
-    {selectedPlan && (
-      <CheckoutModal
-        plan={selectedPlan}
-        onConfirm={confirmSubscription}
-        onClose={() => setSelectedPlan(null)}
-      />
-    )}
-
-    <FAQ items={FAQS} />
-
-    <CTA onStartNow={() => { setAuthMode('register'); setShowAuth(true); }} />
-
-    <Footer />
-  </div>
-);
 };
 
 export default function Root() {
