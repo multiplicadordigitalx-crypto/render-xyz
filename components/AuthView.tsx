@@ -236,7 +236,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'login', onSuc
                             setLoading(true);
                             try {
                               const user = await authService.loginWithGoogle();
-                              if (!user.cpf) { setPendingGoogleUser(user); return; }
+                              // if (!user.cpf) { setPendingGoogleUser(user); return; } // Removed as per request
                               setSuccessMessage("Autenticação com Google realizada com sucesso!");
                               setTimeout(() => onSuccess(user), 1500);
                             } catch (err: any) { setError(err.message); setLoading(false); }
