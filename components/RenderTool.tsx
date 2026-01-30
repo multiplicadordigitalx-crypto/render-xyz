@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Upload, Wand2, Download, RotateCcw, AlertCircle, CheckCircle2, Coins, ShieldCheck } from 'lucide-react';
 import { RenderStyle, RenderResolution } from '../types';
 import { renderImage } from '../services/geminiService';
+import { storageService } from '../services/storageService';
 import { toast } from 'react-hot-toast';
 
 const STYLES: RenderStyle[] = ['Dia', 'Noite', 'Fim de Tarde', 'Nublado'];
@@ -78,9 +79,18 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
 
     try {
       const rendered = await renderImage(image, mimeType, style, resolution);
-      setResult(rendered);
-      onRenderComplete(rendered, style, selectedRes.cost);
-      toast.success('Renderizado com sucesso!', { id: loadingToast });
+
+      // Upload para R2
+      const response = await fetch(rendered);
+      const blob = await response.blob();
+      const filename = `render-${Date.now()}.png`;
+      const file = new File([blob], filename, { type: "image/png" });
+
+      const publicUrl = await storageService.uploadImage(file, "renders");
+
+      setResult(publicUrl);
+      onRenderComplete(publicUrl, style, selectedRes.cost);
+      toast.success('Renderizado e salvo com sucesso!', { id: loadingToast });
     } catch (err: any) {
       toast.error('Erro ao processar imagem.', { id: loadingToast });
       const errorMsg = err.message || "";

@@ -1,7 +1,10 @@
 
 import React from 'react';
-import { X, Plus } from 'lucide-react';
+import { X, Plus, Loader2 } from 'lucide-react';
 import { CreditPackage } from '../types';
+import { stripeService } from '../services/stripeService';
+import { toast } from 'react-hot-toast';
+import { auth } from '../services/firebase';
 
 interface CreditModalProps {
     creditPackages: CreditPackage[];
@@ -10,6 +13,32 @@ interface CreditModalProps {
 }
 
 export const CreditModal: React.FC<CreditModalProps> = ({ creditPackages, onBuyCredits, onClose }) => {
+    const [loadingId, setLoadingId] = React.useState<string | null>(null);
+
+    const handleBuy = async (pkg: CreditPackage) => {
+        if (!pkg.stripePriceId) {
+            toast.error("Pacote indisponível.");
+            return;
+        }
+
+        setLoadingId(pkg.id);
+        try {
+            await stripeService.redirectToCheckout({
+                priceId: pkg.stripePriceId,
+                mode: 'payment',
+                successUrl: `${window.location.origin}/?success=true`,
+                cancelUrl: `${window.location.origin}/?canceled=true`,
+                customerEmail: auth.currentUser?.email || undefined,
+                userId: auth.currentUser?.uid,
+                credits: pkg.amount
+            });
+        } catch (error) {
+            console.error(error);
+            toast.error("Erro ao processar.");
+            setLoadingId(null);
+        }
+    };
+
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
@@ -28,10 +57,11 @@ export const CreditModal: React.FC<CreditModalProps> = ({ creditPackages, onBuyC
                             <p className="text-[#B6B09F] text-[10px] font-black uppercase mb-6 tracking-widest">{pkg.description}</p>
                             <div className="mb-8"><span className="text-4xl font-black">R$ {pkg.price}</span></div>
                             <button
-                                onClick={() => onBuyCredits(pkg.amount)}
-                                className="w-full py-4 bg-black text-white rounded-xl font-black text-[10px] uppercase tracking-widest"
+                                onClick={() => handleBuy(pkg)}
+                                disabled={!!loadingId}
+                                className="w-full py-4 bg-black text-white rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center disabled:opacity-70"
                             >
-                                Adquirir
+                                {loadingId === pkg.id ? <Loader2 className="w-4 h-4 animate-spin" /> : "Adquirir"}
                             </button>
                         </div>
                     ))}

@@ -1,7 +1,10 @@
 
 import React, { useState } from 'react';
-import { X, CheckCircle, ArrowRight, ShieldCheck, CreditCard } from 'lucide-react';
+import { X, CheckCircle, ArrowRight, ShieldCheck, CreditCard, Loader2 } from 'lucide-react';
 import { PricingPlan } from '../types';
+import { stripeService } from '../services/stripeService';
+import { toast } from 'react-hot-toast';
+import { auth } from '../services/firebase';
 
 interface CheckoutModalProps {
     plan: PricingPlan;
@@ -11,6 +14,30 @@ interface CheckoutModalProps {
 
 export const CheckoutModal: React.FC<CheckoutModalProps> = ({ plan, onConfirm, onClose }) => {
     const [step, setStep] = useState<'review' | 'payment'>('review');
+    const [loading, setLoading] = useState(false);
+
+    const handleStripeCheckout = async () => {
+        if (!plan.stripePriceId) {
+            toast.error("Plano indisponível para compra online.");
+            return;
+        }
+
+        setLoading(true);
+        try {
+            await stripeService.redirectToCheckout({
+                priceId: plan.stripePriceId,
+                mode: 'subscription',
+                successUrl: `${window.location.origin}/?success=true`,
+                cancelUrl: `${window.location.origin}/?canceled=true`,
+                customerEmail: auth.currentUser?.email || undefined,
+                userId: auth.currentUser?.uid
+            });
+        } catch (error) {
+            console.error(error);
+            toast.error("Erro ao iniciar pagamento.");
+            setLoading(false);
+        }
+    };
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -71,10 +98,11 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ plan, onConfirm, o
                             </div>
 
                             <button
-                                onClick={onConfirm}
-                                className="w-full py-6 bg-black text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl"
+                                onClick={handleStripeCheckout}
+                                disabled={loading}
+                                className="w-full py-6 bg-black text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl flex items-center justify-center disabled:opacity-70"
                             >
-                                Confirmar Assinatura
+                                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Confirmar Assinatura"}
                             </button>
 
                             <button

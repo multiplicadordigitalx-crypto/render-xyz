@@ -3,9 +3,11 @@ import {
   signInWithEmailAndPassword,
   sendPasswordResetEmail,
   signOut,
+  GoogleAuthProvider,
+  signInWithPopup,
   User as FirebaseUser
 } from "firebase/auth";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs } from "firebase/firestore";
 import { auth, db } from "./firebase";
 import { AppUser } from "../types";
 
@@ -114,5 +116,74 @@ export const authService = {
    */
   requestPasswordReset: async (email: string): Promise<void> => {
     await sendPasswordResetEmail(auth, email);
+  },
+
+  /**
+   * Login com Google
+   */
+  loginWithGoogle: async (): Promise<AppUser> => {
+    try {
+      const provider = new GoogleAuthProvider();
+      const userCredential = await signInWithPopup(auth, provider);
+      const firebaseUser = userCredential.user;
+
+      // Verificar se o usuário já existe no Firestore
+      const userDocRef = doc(db, "users", firebaseUser.uid);
+      const userDoc = await getDoc(userDocRef);
+
+      if (userDoc.exists()) {
+        return userDoc.data() as AppUser;
+      }
+
+      // Se não existir, criar novo usuário
+      const newUser: AppUser = {
+        id: firebaseUser.uid,
+        name: firebaseUser.displayName || "Usuário Google",
+        email: firebaseUser.email || "",
+        cpf: "", // CPF pendente para usuários Google
+        credits: 3,
+        plan: 'Essencial',
+        joinedAt: Date.now(),
+        role: 'user'
+      };
+
+      await setDoc(userDocRef, newUser);
+      return newUser;
+    } catch (error: any) {
+      throw new Error(error.message || "Erro ao realizar login com Google.");
+    }
+  },
+
+  /**
+   * Verifica se o CPF já está em uso por outro usuário
+   */
+  checkCpfInUse: async (cpf: string): Promise<boolean> => {
+    const q = query(collection(db, "users"), where("cpf", "==", cpf));
+    const querySnapshot = await getDocs(q);
+    return !querySnapshot.empty;
+  },
+
+  /**
+   * Atualiza o CPF do perfil (usado para completar cadastro Google)
+   */
+  updateProfileCpf: async (uid: string, cpf: string): Promise<AppUser> => {
+    // 1. Validar formato
+    if (!validateCPF(cpf)) {
+      throw new Error("O CPF informado é inválido matematicamente.");
+    }
+
+    // 2. Verificar duplicidade
+    const inUse = await authService.checkCpfInUse(cpf);
+    if (inUse) {
+      throw new Error("Este CPF já está associado a outra conta.");
+    }
+
+    // 3. Atualizar no Firestore
+    const userRef = doc(db, "users", uid);
+    await updateDoc(userRef, { cpf });
+
+    // 4. Retornar usuário atualizado
+    const userDoc = await getDoc(userRef);
+    return userDoc.data() as AppUser;
   }
 };

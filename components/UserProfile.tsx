@@ -44,7 +44,9 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onClose, onLogou
                                 <Shield className="w-4 h-4 text-[#B6B09F]" />
                                 <div className="flex-1">
                                     <p className="text-[8px] font-black uppercase text-[#B6B09F]">CPF</p>
-                                    <p className="text-[10px] font-bold">{user.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.***.***-$4")}</p>
+                                    <p className="text-[10px] font-bold">
+                                        {user.cpf ? user.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.***.***-$4") : "Não informado"}
+                                    </p>
                                 </div>
                             </div>
 
