@@ -164,8 +164,8 @@ const App: React.FC = () => {
         }, (error) => {
           console.error("Error in Profile Snapshot:", error);
           if (error.code === 'permission-denied') {
-            // Handle permission error (maybe logout or specific UI)
-            toast.error('Erro de permissão ao carregar perfil. Tentando reconectar...');
+            // Handle permission error (common during logout, so we ignore UI alert)
+            console.warn('Permission denied (likely logging out).');
           }
         });
 
@@ -391,8 +391,7 @@ const App: React.FC = () => {
             onClose={() => setIsAdminMode(false)}
           />
         )}
-          />
-        )}
+
         <div className="sticky top-0 z-50">
           {currentUser?.cpf === "" && (
             <div
