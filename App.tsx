@@ -432,149 +432,150 @@ const App: React.FC = () => {
               <button onClick={handleLogout} className="p-2 bg-black/5 rounded-full"><LogOut className="w-3 h-3" /></button>
             </div>
           </header>
+        </div>
 
-          {showProfile && currentUser && (
-            <UserProfile
-              user={currentUser}
-              onClose={() => setShowProfile(false)}
-              onLogout={handleLogout}
+        {showProfile && currentUser && (
+          <UserProfile
+            user={currentUser}
+            onClose={() => setShowProfile(false)}
+            onLogout={handleLogout}
+          />
+        )}
+
+        {showCpfModal && currentUser && (
+          <CpfModal
+            user={currentUser}
+            onSuccess={() => {
+              setShowCpfModal(false);
+              // If blocking was true (subscription flow), user can now proceed with checkout manually or we could auto-trigger.
+              // For now simpler is to let them click confirm again.
+            }}
+            onClose={() => setShowCpfModal(false)}
+            isBlocking={cpfBlocking}
+          />
+        )}
+
+        {
+          showCreditModal && (
+            <CreditModal
+              creditPackages={creditPackages}
+              onBuyCredits={buyCredits}
+              onClose={() => setShowCreditModal(false)}
             />
-          )}
+          )
+        }
 
-          {showCpfModal && currentUser && (
-            <CpfModal
-              user={currentUser}
-              onSuccess={() => {
-                setShowCpfModal(false);
-                // If blocking was true (subscription flow), user can now proceed with checkout manually or we could auto-trigger.
-                // For now simpler is to let them click confirm again.
-              }}
-              onClose={() => setShowCpfModal(false)}
-              isBlocking={cpfBlocking}
-            />
-          )}
+        <main className="max-w-7xl mx-auto px-4 md:px-6 py-8 md:py-12">
+          <section className="mb-12 md:mb-20">
+            <div className="mb-6 md:mb-10 flex flex-col md:items-end md:flex-row justify-between border-b border-[#B6B09F]/20 pb-4 md:pb-6">
+              <div><h1 className="text-2xl md:text-4xl font-black tracking-tighter uppercase">Studio Pro</h1><p className="text-[#B6B09F] text-[9px] md:text-[11px] font-black uppercase tracking-widest">Fidelidade Extrema Ativa</p></div>
+              <div className="mt-4 md:mt-0 flex items-center bg-[#B6B09F]/10 px-4 py-2 rounded-xl text-[9px] font-black uppercase"><div className="w-2 h-2 bg-black rounded-full mr-2 animate-pulse" />ONLINE</div>
+            </div>
+            <div className="bg-[#EAE4D5] border border-[#B6B09F]/30 p-4 md:p-10 rounded-[35px] md:rounded-[50px]">
+              <RenderTool onRenderComplete={onRenderComplete} credits={credits} onKeyReset={() => setHasApiKey(false)} />
+            </div>
+          </section>
 
-          {
-            showCreditModal && (
-              <CreditModal
-                creditPackages={creditPackages}
-                onBuyCredits={buyCredits}
-                onClose={() => setShowCreditModal(false)}
-              />
-            )
-          }
-
-          <main className="max-w-7xl mx-auto px-4 md:px-6 py-8 md:py-12">
-            <section className="mb-12 md:mb-20">
-              <div className="mb-6 md:mb-10 flex flex-col md:items-end md:flex-row justify-between border-b border-[#B6B09F]/20 pb-4 md:pb-6">
-                <div><h1 className="text-2xl md:text-4xl font-black tracking-tighter uppercase">Studio Pro</h1><p className="text-[#B6B09F] text-[9px] md:text-[11px] font-black uppercase tracking-widest">Fidelidade Extrema Ativa</p></div>
-                <div className="mt-4 md:mt-0 flex items-center bg-[#B6B09F]/10 px-4 py-2 rounded-xl text-[9px] font-black uppercase"><div className="w-2 h-2 bg-black rounded-full mr-2 animate-pulse" />ONLINE</div>
-              </div>
-              <div className="bg-[#EAE4D5] border border-[#B6B09F]/30 p-4 md:p-10 rounded-[35px] md:rounded-[50px]">
-                <RenderTool onRenderComplete={onRenderComplete} credits={credits} onKeyReset={() => setHasApiKey(false)} />
-              </div>
-            </section>
-
-            <section>
-              <div className="mb-6 border-b border-[#B6B09F]/20 pb-4"><h2 className="text-xl md:text-2xl font-black uppercase tracking-tighter">Galeria Recente</h2></div>
-              {history.length === 0 ? (
-                <div className="bg-[#EAE4D5]/40 border border-dashed border-[#B6B09F]/40 rounded-[30px] p-20 text-center text-[#B6B09F] font-black uppercase tracking-widest text-[10px]">Aguardando primeiro render</div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
-                  {history.map((item) => (
-                    <div key={item.id} className="group bg-[#EAE4D5] border border-[#B6B09F]/30 rounded-[25px] overflow-hidden hover:border-black transition-all">
-                      <div className="aspect-[4/3] relative">
-                        <img src={item.url} alt="Render" className="w-full h-full object-cover" />
-                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center space-x-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button onClick={() => downloadHistoryImage(item.url, item.style)} className="p-3 bg-white rounded-xl"><Download className="w-5 h-5" /></button>
-                          <button onClick={() => deleteFromHistory(item.id)} className="p-3 bg-black text-white rounded-xl"><Trash2 className="w-5 h-5" /></button>
-                        </div>
+          <section>
+            <div className="mb-6 border-b border-[#B6B09F]/20 pb-4"><h2 className="text-xl md:text-2xl font-black uppercase tracking-tighter">Galeria Recente</h2></div>
+            {history.length === 0 ? (
+              <div className="bg-[#EAE4D5]/40 border border-dashed border-[#B6B09F]/40 rounded-[30px] p-20 text-center text-[#B6B09F] font-black uppercase tracking-widest text-[10px]">Aguardando primeiro render</div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
+                {history.map((item) => (
+                  <div key={item.id} className="group bg-[#EAE4D5] border border-[#B6B09F]/30 rounded-[25px] overflow-hidden hover:border-black transition-all">
+                    <div className="aspect-[4/3] relative">
+                      <img src={item.url} alt="Render" className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center space-x-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button onClick={() => downloadHistoryImage(item.url, item.style)} className="p-3 bg-white rounded-xl"><Download className="w-5 h-5" /></button>
+                        <button onClick={() => deleteFromHistory(item.id)} className="p-3 bg-black text-white rounded-xl"><Trash2 className="w-5 h-5" /></button>
                       </div>
                     </div>
-                  ))}
-                </div>
-              )}
-            </section>
-          </main>
-        </div >
-        );
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        </main>
+      </div >
+    );
   }
 
-        return (
-        <div className="min-h-screen bg-[#F2F2F2] text-black overflow-x-hidden">
-          <nav className="fixed top-0 w-full z-50 glass h-16 md:h-20 flex items-center justify-between px-4 md:px-8">
-            <a href="/" className="flex items-center hover:opacity-80 transition-opacity">
-              <img src="/assets/logo.png" alt="Render XYZ" className="h-8 md:h-10" />
-            </a>
+  return (
+    <div className="min-h-screen bg-[#F2F2F2] text-black overflow-x-hidden">
+      <nav className="fixed top-0 w-full z-50 glass h-16 md:h-20 flex items-center justify-between px-4 md:px-8">
+        <a href="/" className="flex items-center hover:opacity-80 transition-opacity">
+          <img src="/assets/logo.png" alt="Render XYZ" className="h-8 md:h-10" />
+        </a>
 
-            <div className="md:hidden flex items-center space-x-4">
-              <button onClick={() => { setAuthMode('login'); setShowAuth(true); }} className="bg-black text-white px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest">Acessar</button>
-              <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="p-2"><Menu /></button>
-            </div>
-
-            <div className="hidden md:flex items-center space-x-12 text-[10px] font-black uppercase tracking-widest">
-              <a href="#demo" className="hover:text-[#B6B09F]">Portfólio</a>
-              <a href="#how-it-works" className="hover:text-[#B6B09F]">Processo</a>
-              <a href="#pricing" className="hover:text-[#B6B09F]">Preços</a>
-              <button onClick={() => { setAuthMode('login'); setShowAuth(true); }} className="bg-black text-white px-10 py-3.5 rounded-full hover:bg-zinc-800 transition-all shadow-xl">Acessar App</button>
-            </div>
-          </nav>
-
-          {mobileMenuOpen && (
-            <div className="fixed inset-0 z-[45] bg-[#EAE4D5] pt-24 px-8 md:hidden">
-              <div className="flex flex-col space-y-8 text-xl font-black uppercase tracking-tighter">
-                <a href="#demo" onClick={() => setMobileMenuOpen(false)}>Portfólio</a>
-                <a href="#how-it-works" onClick={() => setMobileMenuOpen(false)}>Processo</a>
-                <a href="#pricing" onClick={() => setMobileMenuOpen(false)}>Preços</a>
-                <button onClick={() => { setAuthMode('login'); setShowAuth(true); setMobileMenuOpen(false); }} className="w-full bg-black text-white py-6 rounded-2xl">Acessar App</button>
-              </div>
-            </div>
-          )}
-
-          <Hero
-            onStartNow={() => { setAuthMode('register'); setShowAuth(true); }}
-            onSeeInAction={() => { }}
-          />
-
-          <DemoSlider
-            showcaseBefore={landingSettings.showcaseBefore}
-            showcaseAfter={landingSettings.showcaseAfter}
-          />
-
-          <HowItWorks
-            heroVideoUrl={landingSettings.heroVideoUrl}
-            heroVideoPoster={landingSettings.heroVideoPoster}
-          />
-
-          <Testimonials />
-
-          <Pricing
-            plans={pricingPlans}
-            onSelectPlan={handlePlanSelection}
-          />
-
-          {selectedPlan && (
-            <CheckoutModal
-              plan={selectedPlan}
-              onConfirm={confirmSubscription}
-              onClose={() => setSelectedPlan(null)}
-            />
-          )}
-
-          <FAQ items={FAQS} />
-
-          <CTA onStartNow={() => { setAuthMode('register'); setShowAuth(true); }} />
-
-          <Footer />
+        <div className="md:hidden flex items-center space-x-4">
+          <button onClick={() => { setAuthMode('login'); setShowAuth(true); }} className="bg-black text-white px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest">Acessar</button>
+          <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="p-2"><Menu /></button>
         </div>
-        );
+
+        <div className="hidden md:flex items-center space-x-12 text-[10px] font-black uppercase tracking-widest">
+          <a href="#demo" className="hover:text-[#B6B09F]">Portfólio</a>
+          <a href="#how-it-works" className="hover:text-[#B6B09F]">Processo</a>
+          <a href="#pricing" className="hover:text-[#B6B09F]">Preços</a>
+          <button onClick={() => { setAuthMode('login'); setShowAuth(true); }} className="bg-black text-white px-10 py-3.5 rounded-full hover:bg-zinc-800 transition-all shadow-xl">Acessar App</button>
+        </div>
+      </nav>
+
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 z-[45] bg-[#EAE4D5] pt-24 px-8 md:hidden">
+          <div className="flex flex-col space-y-8 text-xl font-black uppercase tracking-tighter">
+            <a href="#demo" onClick={() => setMobileMenuOpen(false)}>Portfólio</a>
+            <a href="#how-it-works" onClick={() => setMobileMenuOpen(false)}>Processo</a>
+            <a href="#pricing" onClick={() => setMobileMenuOpen(false)}>Preços</a>
+            <button onClick={() => { setAuthMode('login'); setShowAuth(true); setMobileMenuOpen(false); }} className="w-full bg-black text-white py-6 rounded-2xl">Acessar App</button>
+          </div>
+        </div>
+      )}
+
+      <Hero
+        onStartNow={() => { setAuthMode('register'); setShowAuth(true); }}
+        onSeeInAction={() => { }}
+      />
+
+      <DemoSlider
+        showcaseBefore={landingSettings.showcaseBefore}
+        showcaseAfter={landingSettings.showcaseAfter}
+      />
+
+      <HowItWorks
+        heroVideoUrl={landingSettings.heroVideoUrl}
+        heroVideoPoster={landingSettings.heroVideoPoster}
+      />
+
+      <Testimonials />
+
+      <Pricing
+        plans={pricingPlans}
+        onSelectPlan={handlePlanSelection}
+      />
+
+      {selectedPlan && (
+        <CheckoutModal
+          plan={selectedPlan}
+          onConfirm={confirmSubscription}
+          onClose={() => setSelectedPlan(null)}
+        />
+      )}
+
+      <FAQ items={FAQS} />
+
+      <CTA onStartNow={() => { setAuthMode('register'); setShowAuth(true); }} />
+
+      <Footer />
+    </div>
+  );
 };
 
-        export default function Root() {
+export default function Root() {
   return (
-        <>
-          <Toaster position="bottom-right" />
-          <App />
-        </>
-        );
+    <>
+      <Toaster position="bottom-right" />
+      <App />
+    </>
+  );
 }
