@@ -578,6 +578,15 @@ const App: React.FC = () => {
           )
         }
 
+        {/* Checkout Modal for subscription plans - also shown in logged area after auth */}
+        {selectedPlan && (
+          <CheckoutModal
+            plan={selectedPlan}
+            onConfirm={confirmSubscription}
+            onClose={() => setSelectedPlan(null)}
+          />
+        )}
+
         <main className="max-w-7xl mx-auto px-4 md:px-6 py-8 md:py-12">
           <section className="mb-12 md:mb-20">
             <div className="mb-6 md:mb-10 flex flex-col md:items-end md:flex-row justify-between border-b border-[#B6B09F]/20 pb-4 md:pb-6">
