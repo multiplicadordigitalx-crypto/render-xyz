@@ -36,6 +36,8 @@ export interface CreditPackage {
   stripePriceId?: string;
 }
 
+export type UserPlan = 'free' | 'studio' | 'elite';
+
 export interface AppUser {
   id: string;
   email: string;
@@ -43,7 +45,7 @@ export interface AppUser {
   cpf: string; // Armazenado de forma segura no backend
   credits: number;
   joinedAt: number;
-  plan: string;
+  plan: UserPlan;
   role?: 'admin' | 'user';
 }
 

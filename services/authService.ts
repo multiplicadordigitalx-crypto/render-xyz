@@ -64,7 +64,7 @@ export const authService = {
         email: data.email,
         cpf: data.cpf,
         credits: 3,
-        plan: 'Essencial',
+        plan: 'free',
         joinedAt: Date.now(),
         role: 'user'
       };
@@ -142,7 +142,7 @@ export const authService = {
         email: firebaseUser.email || "",
         cpf: "", // CPF pendente para usuários Google
         credits: 3,
-        plan: 'Essencial',
+        plan: 'free',
         joinedAt: Date.now(),
         role: 'user'
       };
