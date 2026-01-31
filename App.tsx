@@ -142,18 +142,53 @@ const App: React.FC = () => {
     const subscriptionSuccess = params.get('success');
     const canceled = params.get('canceled');
 
+    // Store pending credits in sessionStorage BEFORE cleaning URL
+    // This ensures we don't lose the data if currentUser isn't ready yet
+    if (paymentSuccess === 'true' && creditsPurchased) {
+      const amount = parseInt(creditsPurchased, 10);
+      if (!isNaN(amount) && amount > 0) {
+        sessionStorage.setItem('pendingCredits', amount.toString());
+      }
+    }
+
+    // Store subscription success flag
+    if (subscriptionSuccess === 'true') {
+      sessionStorage.setItem('subscriptionSuccess', 'true');
+    }
+
     // Clean URL immediately to prevent duplicate processing
     if (paymentSuccess || subscriptionSuccess || canceled) {
       window.history.replaceState({}, '', window.location.pathname);
     }
 
-    // Process credit purchase
-    if (paymentSuccess === 'true' && creditsPurchased && currentUser) {
-      const amount = parseInt(creditsPurchased, 10);
+    // Process canceled payment (doesn't need currentUser)
+    if (canceled === 'true') {
+      toast.error('Pagamento cancelado', {
+        style: {
+          borderRadius: '15px',
+          background: '#000',
+          color: '#fff'
+        }
+      });
+    }
+  }, []); // Run once on mount
+
+  // Process pending credits when currentUser becomes available
+  useEffect(() => {
+    if (!currentUser) return;
+
+    const pendingCredits = sessionStorage.getItem('pendingCredits');
+    const subscriptionSuccess = sessionStorage.getItem('subscriptionSuccess');
+
+    // Process pending credit purchase
+    if (pendingCredits) {
+      const amount = parseInt(pendingCredits, 10);
+      sessionStorage.removeItem('pendingCredits'); // Remove immediately to prevent duplicate processing
+
       if (!isNaN(amount) && amount > 0) {
         const addPurchasedCredits = async () => {
           try {
-            // Get fresh user data to avoid race conditions
+            // Get fresh user data from Firestore to get accurate current credits
             const userDoc = await getDoc(doc(db, "users", currentUser.id));
             const currentCredits = userDoc.exists() ? (userDoc.data().credits || 0) : 0;
             const newCredits = currentCredits + amount;
@@ -183,7 +218,8 @@ const App: React.FC = () => {
     }
 
     // Process subscription success
-    if (subscriptionSuccess === 'true' && currentUser) {
+    if (subscriptionSuccess) {
+      sessionStorage.removeItem('subscriptionSuccess');
       toast.success('Pagamento confirmado!', {
         style: {
           borderRadius: '15px',
@@ -196,18 +232,7 @@ const App: React.FC = () => {
         }
       });
     }
-
-    // Process canceled payment
-    if (canceled === 'true') {
-      toast.error('Pagamento cancelado', {
-        style: {
-          borderRadius: '15px',
-          background: '#000',
-          color: '#fff'
-        }
-      });
-    }
-  }, [currentUser]); // Only depend on currentUser, not credits
+  }, [currentUser]); // Process when currentUser becomes available
 
   useEffect(() => {
     // 1. Check API Key
