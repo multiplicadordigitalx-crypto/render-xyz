@@ -134,6 +134,81 @@ const App: React.FC = () => {
 
   useScrollReveal([isLoggedIn, showAuth]);
 
+  // Process Stripe payment success from URL
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const paymentSuccess = params.get('payment_success');
+    const creditsPurchased = params.get('credits');
+    const subscriptionSuccess = params.get('success');
+    const canceled = params.get('canceled');
+
+    // Clean URL immediately to prevent duplicate processing
+    if (paymentSuccess || subscriptionSuccess || canceled) {
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+
+    // Process credit purchase
+    if (paymentSuccess === 'true' && creditsPurchased && currentUser) {
+      const amount = parseInt(creditsPurchased, 10);
+      if (!isNaN(amount) && amount > 0) {
+        const addPurchasedCredits = async () => {
+          try {
+            // Get fresh user data to avoid race conditions
+            const userDoc = await getDoc(doc(db, "users", currentUser.id));
+            const currentCredits = userDoc.exists() ? (userDoc.data().credits || 0) : 0;
+            const newCredits = currentCredits + amount;
+
+            await updateDoc(doc(db, "users", currentUser.id), {
+              credits: newCredits
+            });
+
+            toast.success(`${amount} créditos adicionados com sucesso!`, {
+              style: {
+                borderRadius: '15px',
+                background: '#000',
+                color: '#fff',
+                fontSize: '10px',
+                fontWeight: '900',
+                textTransform: 'uppercase',
+                letterSpacing: '0.1em'
+              }
+            });
+          } catch (error) {
+            console.error("Error updating credits:", error);
+            toast.error("Erro ao adicionar créditos. Contacte o suporte.");
+          }
+        };
+        addPurchasedCredits();
+      }
+    }
+
+    // Process subscription success
+    if (subscriptionSuccess === 'true' && currentUser) {
+      toast.success('Pagamento confirmado!', {
+        style: {
+          borderRadius: '15px',
+          background: '#000',
+          color: '#fff',
+          fontSize: '10px',
+          fontWeight: '900',
+          textTransform: 'uppercase',
+          letterSpacing: '0.1em'
+        }
+      });
+    }
+
+    // Process canceled payment
+    if (canceled === 'true') {
+      toast.error('Pagamento cancelado', {
+        style: {
+          borderRadius: '15px',
+          background: '#000',
+          color: '#fff'
+        }
+      });
+    }
+  }, [currentUser]); // Only depend on currentUser, not credits
+
   useEffect(() => {
     // 1. Check API Key
     const checkKey = async () => {

@@ -15,6 +15,7 @@ export interface PricingPlan {
   buttonText: string;
   isPopular?: boolean;
   resolutionLabel?: string;
+  stripePriceId?: string;
 }
 
 export type RenderStyle = 'Dia' | 'Noite' | 'Fim de Tarde' | 'Nublado';
@@ -32,6 +33,7 @@ export interface CreditPackage {
   amount: number;
   price: string;
   description: string;
+  stripePriceId?: string;
 }
 
 export interface AppUser {

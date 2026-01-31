@@ -26,7 +26,7 @@ export const CreditModal: React.FC<CreditModalProps> = ({ creditPackages, onBuyC
             await stripeService.redirectToCheckout({
                 priceId: pkg.stripePriceId,
                 mode: 'payment',
-                successUrl: `${window.location.origin}/?success=true`,
+                successUrl: `${window.location.origin}/?payment_success=true&credits=${pkg.amount}`,
                 cancelUrl: `${window.location.origin}/?canceled=true`,
                 customerEmail: auth.currentUser?.email || undefined,
                 userId: auth.currentUser?.uid,
