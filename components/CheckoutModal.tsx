@@ -100,14 +100,20 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ plan, onConfirm, o
                             <button
                                 onClick={handleStripeCheckout}
                                 disabled={loading}
-                                className="w-full py-6 bg-black text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl flex items-center justify-center disabled:opacity-70"
+                                className="w-full py-6 bg-black text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl flex items-center justify-center disabled:opacity-70 disabled:cursor-not-allowed"
                             >
-                                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Pagar e Continuar"}
+                                {loading ? (
+                                    <div className="flex items-center gap-2">
+                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                        <span>Redirecionando...</span>
+                                    </div>
+                                ) : "Pagar e Continuar"}
                             </button>
 
                             <button
                                 onClick={() => setStep('review')}
-                                className="w-full text-[9px] font-black uppercase tracking-widest text-[#7A756A]"
+                                disabled={loading}
+                                className="w-full text-[9px] font-black uppercase tracking-widest text-[#7A756A] disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 Voltar
                             </button>
