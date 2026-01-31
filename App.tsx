@@ -95,6 +95,7 @@ const DEFAULT_LANDING: LandingSettings = {
 const FAQS = [
   { q: "O que são créditos acumulativos (Rollover)?", a: "Diferente de outros serviços, na Render XYZ seus créditos não expiram no fim do mês. Se você não usar todos os seus renders, eles acumulam para o próximo ciclo." },
   { q: "Qual a diferença entre resoluções 1K, 2K e 4K?", a: "1K é ideal para testes. 2K HD é o padrão para apresentações digitais, e 4K Ultra oferece nitidez extrema para impressão em grandes formatos." },
+  { q: "E se eu precisar de mais créditos além do meu plano?", a: "Assinantes podem comprar créditos avulsos a qualquer momento e continuam usando os benefícios do plano. Por exemplo, Elite pode usar créditos extras em 4K, e Estúdio em 2K." },
   { q: "Como funciona o upgrade ou cancelamento?", a: "Você tem controle total. Pode fazer upgrade ou cancelar sua assinatura a qualquer momento diretamente no seu painel." },
   { q: "Existe um limite real no plano Elite?", a: "O plano Elite oferece um limite de Uso Justo de 250 renders por mês para garantir processamento em velocidade máxima para todos." }
 ];
