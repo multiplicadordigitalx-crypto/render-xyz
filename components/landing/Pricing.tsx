@@ -159,19 +159,20 @@ export const Pricing: React.FC<PricingProps> = ({ plans, creditPackages, onSelec
                     </div>
 
                     {/* Credits benefits */}
-                    <div className="flex flex-wrap justify-center gap-4 md:gap-8">
+                    <div className="flex flex-wrap justify-center gap-4 md:gap-8 mb-6">
                         <div className="flex items-center gap-2 text-[9px] font-bold uppercase tracking-widest text-[#B6B09F]">
                             <Clock className="w-3 h-3" />
                             <span>Sem data de validade</span>
                         </div>
                         <div className="flex items-center gap-2 text-[9px] font-bold uppercase tracking-widest text-[#B6B09F]">
-                            <Shield className="w-3 h-3" />
-                            <span>Resolução até 2K</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-[9px] font-bold uppercase tracking-widest text-[#B6B09F]">
                             <Coins className="w-3 h-3" />
                             <span>1 Crédito = 1 Render</span>
                         </div>
+                    </div>
+                    <div className="text-center">
+                        <p className="text-[8px] font-bold uppercase tracking-widest text-[#B6B09F]/70 max-w-md mx-auto">
+                            Assinantes mantêm os benefícios do plano ao comprar créditos extras (Elite = 4K, Estúdio = 2K)
+                        </p>
                     </div>
                 </div>
             </div>
