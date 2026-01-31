@@ -30,7 +30,7 @@ export const stripeService = {
 
             // 2. Redirect to Stripe Checkout using the URL directly
             if (url) {
-                window.location.href = url;
+                window.location.assign(url);
             } else {
                 throw new Error('No checkout URL returned from server');
             }

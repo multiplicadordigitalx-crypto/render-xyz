@@ -18,13 +18,15 @@ app.use(express.json());
 // Checkout Session Endpoint
 app.post('/api/create-checkout-session', async (req, res) => {
     try {
-        const { priceId, mode, successUrl, cancelUrl, customerEmail, userId, credits } = req.body;
+        const { priceId, mode, successUrl, cancelUrl, customerEmail, userId, credits, planName } = req.body;
 
         if (!priceId || !mode) {
             return res.status(400).json({ error: 'Missing required parameters' });
         }
 
         console.log('Creating checkout session:', { priceId, mode, customerEmail });
+
+        const successUrlWithSession = `${successUrl}${successUrl.includes('?') ? '&' : '?'}session_id={CHECKOUT_SESSION_ID}`;
 
         const sessionConfig = {
             payment_method_types: ['card'],
@@ -35,12 +37,13 @@ app.post('/api/create-checkout-session', async (req, res) => {
                 },
             ],
             mode: mode,
-            success_url: successUrl,
+            success_url: successUrlWithSession,
             cancel_url: cancelUrl,
             customer_email: customerEmail || undefined,
             metadata: {
                 userId: userId || '',
                 credits: credits ? credits.toString() : '0',
+                planName: planName || '',
             },
         };
 
@@ -48,6 +51,29 @@ app.post('/api/create-checkout-session', async (req, res) => {
 
         console.log('Session created:', session.id);
         return res.status(200).json({ sessionId: session.id, url: session.url });
+    } catch (error) {
+        console.error('Stripe Error:', error.message);
+        return res.status(500).json({ error: error.message || 'Internal Server Error' });
+    }
+});
+
+// Get Checkout Session Endpoint
+app.get('/api/get-checkout-session', async (req, res) => {
+    try {
+        const { session_id } = req.query;
+
+        if (!session_id) {
+            return res.status(400).json({ error: 'Missing session_id parameter' });
+        }
+
+        const session = await stripe.checkout.sessions.retrieve(session_id);
+
+        return res.status(200).json({
+            customerEmail: session.customer_email,
+            planName: session.metadata?.planName || '',
+            credits: session.metadata?.credits || '0',
+            paymentStatus: session.payment_status,
+        });
     } catch (error) {
         console.error('Stripe Error:', error.message);
         return res.status(500).json({ error: error.message || 'Internal Server Error' });
