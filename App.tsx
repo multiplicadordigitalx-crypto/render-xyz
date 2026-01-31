@@ -162,11 +162,19 @@ const App: React.FC = () => {
               planName: sessionData.planName || '',
               sessionId: sessionId,
             });
-            setAuthMode('register');
-            setShowAuth(true);
-            toast.success('Pagamento confirmado! Complete seu cadastro.', {
-              style: { borderRadius: '15px', background: '#000', color: '#fff' }
-            });
+
+            // Only open Auth if not logged in
+            if (!auth.currentUser) {
+              setAuthMode('register');
+              setShowAuth(true);
+              toast.success('Pagamento confirmado! Complete seu cadastro.', {
+                style: { borderRadius: '15px', background: '#000', color: '#fff' }
+              });
+            } else {
+              toast.success('Pagamento confirmado! Atualizando plano...', {
+                style: { borderRadius: '15px', background: '#000', color: '#fff' }
+              });
+            }
           }
         })
         .catch((error) => {
@@ -214,6 +222,13 @@ const App: React.FC = () => {
       });
     }
   }, []); // Run once on mount
+
+  // Process pending payment if user is logged in (Direct Checkout for Logged Users)
+  useEffect(() => {
+    if (currentUser && pendingPaymentData && currentUser.email === pendingPaymentData.email) {
+      handleAuthSuccess(currentUser);
+    }
+  }, [currentUser, pendingPaymentData]);
 
   // Process pending credits when currentUser becomes available
   useEffect(() => {
@@ -491,13 +506,7 @@ const App: React.FC = () => {
   };
 
   const handlePlanSelection = (plan: PricingPlan) => {
-    if (!isLoggedIn) {
-      // Save selected plan to sessionStorage so we can restore after auth
-      sessionStorage.setItem('pendingPlan', JSON.stringify(plan));
-      setAuthMode('register');
-      setShowAuth(true);
-      return;
-    }
+    // Direct checkout logic handles both guest and logged-in users properly now
     setSelectedPlan(plan);
   };
 

@@ -5,6 +5,8 @@ import { PricingPlan } from '../types';
 import { stripeService } from '../services/stripeService';
 import { toast } from 'react-hot-toast';
 
+import { auth } from '../services/firebase';
+
 interface CheckoutModalProps {
     plan: PricingPlan;
     onConfirm: () => void;
@@ -23,14 +25,15 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ plan, onConfirm, o
 
         setLoading(true);
         try {
-            // Direct checkout - no login required
-            // Email will be collected by Stripe and returned after payment
+            // Direct checkout - supports both guest and logged-in users
             await stripeService.redirectToCheckout({
                 priceId: plan.stripePriceId,
                 mode: 'subscription',
                 successUrl: `${window.location.origin}/?payment=success`,
                 cancelUrl: `${window.location.origin}/?payment=canceled`,
                 planName: plan.name, // Pass plan name for metadata
+                customerEmail: auth.currentUser?.email || undefined,
+                userId: auth.currentUser?.uid
             });
         } catch (error) {
             console.error(error);
