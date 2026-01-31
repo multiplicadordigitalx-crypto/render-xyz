@@ -20,6 +20,26 @@ import { Boxes } from './ui/BackgroundBoxes';
 import { AuthViewMode } from '../types';
 import { authService, validateCPF } from '../services/authService';
 
+// Password strength validation
+const validatePassword = (password: string): { valid: boolean; message: string } => {
+  if (password.length < 8) {
+    return { valid: false, message: "A senha deve ter no mínimo 8 caracteres." };
+  }
+  if (!/[A-Z]/.test(password)) {
+    return { valid: false, message: "A senha deve conter pelo menos uma letra maiúscula." };
+  }
+  if (!/[a-z]/.test(password)) {
+    return { valid: false, message: "A senha deve conter pelo menos uma letra minúscula." };
+  }
+  if (!/[0-9]/.test(password)) {
+    return { valid: false, message: "A senha deve conter pelo menos um número." };
+  }
+  if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+    return { valid: false, message: "A senha deve conter pelo menos um caractere especial (!@#$%^&*)." };
+  }
+  return { valid: true, message: "" };
+};
+
 interface AuthViewProps {
   initialMode?: AuthViewMode;
   onSuccess: (user: any) => void;
@@ -78,6 +98,8 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'login', onSuc
       if (mode === 'register') {
         if (!formData.name || !formData.email || !formData.cpf || !formData.password) throw new Error("Preencha todos os campos obrigatórios.");
         if (formData.password !== formData.confirmPassword) throw new Error("As senhas informadas não coincidem.");
+        const passwordCheck = validatePassword(formData.password);
+        if (!passwordCheck.valid) throw new Error(passwordCheck.message);
         if (!formData.terms) throw new Error("Você precisa aceitar os termos de uso para continuar.");
         if (!validateCPF(formData.cpf)) throw new Error("O CPF informado é inválido matematicamente.");
         const user = await authService.register(formData);

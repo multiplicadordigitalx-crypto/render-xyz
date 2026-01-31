@@ -338,6 +338,17 @@ const App: React.FC = () => {
 
 
   const handleAuthSuccess = (user: AppUser) => {
+    // Check for pending plan from sessionStorage
+    const pendingPlanStr = sessionStorage.getItem('pendingPlan');
+    if (pendingPlanStr) {
+      try {
+        const pendingPlan = JSON.parse(pendingPlanStr) as PricingPlan;
+        sessionStorage.removeItem('pendingPlan');
+        setSelectedPlan(pendingPlan);
+      } catch (e) {
+        console.error('Error parsing pending plan:', e);
+      }
+    }
     // onAuthStateChanged will handle the state update
     setShowAuth(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -411,6 +422,8 @@ const App: React.FC = () => {
 
   const handlePlanSelection = (plan: PricingPlan) => {
     if (!isLoggedIn) {
+      // Save selected plan to sessionStorage so we can restore after auth
+      sessionStorage.setItem('pendingPlan', JSON.stringify(plan));
       setAuthMode('register');
       setShowAuth(true);
       return;
