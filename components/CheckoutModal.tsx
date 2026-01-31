@@ -127,7 +127,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ plan, onConfirm, o
                                         {loadingMethod === 'card' && <Loader2 className="w-5 h-5 animate-spin" />}
                                     </div>
                                     <p className={`text-[10px] font-bold uppercase tracking-widest pl-[52px] ${loadingMethod === 'card' ? 'text-white/60' : 'text-[#7A756A]'}`}>
-                                        Até 12x no cartão
+                                        Crédito ou Débito
                                     </p>
                                 </button>
                             </div>
