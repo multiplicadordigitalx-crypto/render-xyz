@@ -98,11 +98,6 @@ export const Pricing: React.FC<PricingProps> = ({ plans, creditPackages, onSelec
                             <div><CheckCircle className="w-3 h-3 mx-auto text-green-600" /></div>
                             <div><CheckCircle className="w-3 h-3 mx-auto text-green-600" /></div>
 
-                            <div className="text-left text-[#7A756A]">Fila Prioritária</div>
-                            <div><X className="w-3 h-3 mx-auto text-red-400" /></div>
-                            <div><CheckCircle className="w-3 h-3 mx-auto text-green-600" /></div>
-                            <div><Zap className="w-3 h-3 mx-auto text-yellow-500" /></div>
-
                             <div className="text-left text-[#7A756A]">Créditos Acumulam</div>
                             <div><X className="w-3 h-3 mx-auto text-red-400" /></div>
                             <div><CheckCircle className="w-3 h-3 mx-auto text-green-600" /></div>

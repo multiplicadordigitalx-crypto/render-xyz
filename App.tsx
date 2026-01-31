@@ -62,7 +62,7 @@ const DEFAULT_PRICING_PLANS: PricingPlan[] = [
     name: "Estúdio",
     price: "79",
     period: "/mês",
-    features: ["60 renders/mês", "Qualidade 2K HD Pro", "Sem marca d'água", "Créditos acumulativos", "Fila de prioridade"],
+    features: ["60 renders/mês", "Qualidade 2K HD Pro", "Sem marca d'água", "Créditos acumulativos"],
     buttonText: "Assinar Agora",
     isPopular: true,
     resolutionLabel: "2K",
