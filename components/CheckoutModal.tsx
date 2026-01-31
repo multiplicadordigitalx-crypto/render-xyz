@@ -4,7 +4,6 @@ import { X, CheckCircle, ArrowRight, ShieldCheck, CreditCard, Loader2 } from 'lu
 import { PricingPlan } from '../types';
 import { stripeService } from '../services/stripeService';
 import { toast } from 'react-hot-toast';
-import { auth } from '../services/firebase';
 
 interface CheckoutModalProps {
     plan: PricingPlan;
@@ -24,13 +23,14 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ plan, onConfirm, o
 
         setLoading(true);
         try {
+            // Direct checkout - no login required
+            // Email will be collected by Stripe and returned after payment
             await stripeService.redirectToCheckout({
                 priceId: plan.stripePriceId,
                 mode: 'subscription',
-                successUrl: `${window.location.origin}/?success=true`,
-                cancelUrl: `${window.location.origin}/?canceled=true`,
-                customerEmail: auth.currentUser?.email || undefined,
-                userId: auth.currentUser?.uid
+                successUrl: `${window.location.origin}/?payment=success`,
+                cancelUrl: `${window.location.origin}/?payment=canceled`,
+                planName: plan.name, // Pass plan name for metadata
             });
         } catch (error) {
             console.error(error);
@@ -90,10 +90,10 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ plan, onConfirm, o
                                 </div>
                             </div>
 
-                            <div className="p-6 bg-yellow-50 border border-yellow-100 rounded-2xl flex items-start space-x-3">
-                                <ShieldCheck className="w-5 h-5 text-yellow-600 shrink-0" />
-                                <p className="text-[9px] font-bold uppercase text-yellow-700 leading-relaxed">
-                                    Esta é uma demonstração de checkout. Ao clicar em confirmar, o plano será simulado em sua conta de teste.
+                            <div className="p-6 bg-green-50 border border-green-100 rounded-2xl flex items-start space-x-3">
+                                <ShieldCheck className="w-5 h-5 text-green-600 shrink-0" />
+                                <p className="text-[9px] font-bold uppercase text-green-700 leading-relaxed">
+                                    Pagamento seguro via Stripe. Após a confirmação, você completará seu cadastro com nome, CPF e senha.
                                 </p>
                             </div>
 
@@ -102,7 +102,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ plan, onConfirm, o
                                 disabled={loading}
                                 className="w-full py-6 bg-black text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl flex items-center justify-center disabled:opacity-70"
                             >
-                                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Confirmar Assinatura"}
+                                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Pagar e Continuar"}
                             </button>
 
                             <button

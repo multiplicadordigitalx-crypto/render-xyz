@@ -47,7 +47,8 @@ import { Footer } from './components/landing/Footer';
 import { MOCK_MODE } from './services/geminiService';
 import { Toaster, toast } from 'react-hot-toast';
 import { useScrollReveal } from './services/scrollReveal';
-import { PricingPlan, RenderHistoryItem, RenderStyle, CreditPackage, AppUser, LandingSettings, AuthViewMode } from './types';
+import { PricingPlan, RenderHistoryItem, RenderStyle, CreditPackage, AppUser, LandingSettings, AuthViewMode, UserPlan } from './types';
+import { stripeService } from './services/stripeService';
 
 const DEFAULT_PRICING_PLANS: PricingPlan[] = [
   {
@@ -133,19 +134,59 @@ const App: React.FC = () => {
   const [showCpfModal, setShowCpfModal] = useState(false);
   const [cpfBlocking, setCpfBlocking] = useState(false);
 
+  // State for direct checkout flow (payment first, then register)
+  const [pendingPaymentData, setPendingPaymentData] = useState<{
+    email: string;
+    planName: string;
+    sessionId: string;
+  } | null>(null);
+
   useScrollReveal([isLoggedIn, showAuth]);
 
   // Process Stripe payment success from URL
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const paymentSuccess = params.get('payment_success');
+    const paymentSuccess = params.get('payment');
+    const sessionId = params.get('session_id');
+    const paymentCanceled = params.get('payment');
+
+    // NEW: Direct checkout flow - payment first, then register
+    if (paymentSuccess === 'success' && sessionId) {
+      // Fetch session data from Stripe to get email and plan
+      stripeService.getCheckoutSession(sessionId)
+        .then((sessionData) => {
+          if (sessionData.customerEmail && sessionData.paymentStatus === 'paid') {
+            // Store payment data and show registration with locked email
+            setPendingPaymentData({
+              email: sessionData.customerEmail,
+              planName: sessionData.planName || '',
+              sessionId: sessionId,
+            });
+            setAuthMode('register');
+            setShowAuth(true);
+            toast.success('Pagamento confirmado! Complete seu cadastro.', {
+              style: { borderRadius: '15px', background: '#000', color: '#fff' }
+            });
+          }
+        })
+        .catch((error) => {
+          console.error('Error fetching session:', error);
+          toast.error('Erro ao processar pagamento. Tente novamente.');
+        });
+
+      // Clean URL
+      window.history.replaceState({}, '', window.location.pathname);
+      return;
+    }
+
+    // LEGACY: Old payment flow for credits (still used for credit packages)
+    const legacyPaymentSuccess = params.get('payment_success');
     const creditsPurchased = params.get('credits');
     const subscriptionSuccess = params.get('success');
     const canceled = params.get('canceled');
 
     // Store pending credits in sessionStorage BEFORE cleaning URL
-    // This ensures we don't lose the data if currentUser isn't ready yet
-    if (paymentSuccess === 'true' && creditsPurchased) {
+    if (legacyPaymentSuccess === 'true' && creditsPurchased) {
       const amount = parseInt(creditsPurchased, 10);
       if (!isNaN(amount) && amount > 0) {
         sessionStorage.setItem('pendingCredits', amount.toString());
@@ -158,12 +199,12 @@ const App: React.FC = () => {
     }
 
     // Clean URL immediately to prevent duplicate processing
-    if (paymentSuccess || subscriptionSuccess || canceled) {
+    if (legacyPaymentSuccess || subscriptionSuccess || canceled || paymentCanceled === 'canceled') {
       window.history.replaceState({}, '', window.location.pathname);
     }
 
-    // Process canceled payment (doesn't need currentUser)
-    if (canceled === 'true') {
+    // Process canceled payment
+    if (canceled === 'true' || paymentCanceled === 'canceled') {
       toast.error('Pagamento cancelado', {
         style: {
           borderRadius: '15px',
@@ -338,8 +379,35 @@ const App: React.FC = () => {
   }, [currentUser]);
 
 
-  const handleAuthSuccess = (user: AppUser) => {
-    // Check for pending plan from sessionStorage
+  const handleAuthSuccess = async (user: AppUser) => {
+    // 1. Check for pending direct checkout payment
+    if (pendingPaymentData && pendingPaymentData.email === user.email) {
+      try {
+        // Update user plan based on payment
+        let plan: UserPlan = 'free';
+        if (pendingPaymentData.planName.toLowerCase().includes('estúdio') || pendingPaymentData.planName.toLowerCase().includes('studio')) {
+          plan = 'studio';
+        } else if (pendingPaymentData.planName.toLowerCase().includes('elite')) {
+          plan = 'elite';
+        }
+
+        if (plan !== 'free') {
+          await updateDoc(doc(db, "users", user.id), {
+            plan: plan,
+            // Add some credits as bonus if needed, or rely on subscription logic
+          });
+          toast.success(`Plano ${pendingPaymentData.planName} ativado com sucesso!`, {
+            style: { borderRadius: '15px', background: '#000', color: '#fff' }
+          });
+        }
+        setPendingPaymentData(null);
+      } catch (error) {
+        console.error('Error updating user plan after direct checkout:', error);
+        toast.error('Erro ao ativar plano. Entre em contato com o suporte.');
+      }
+    }
+
+    // 2. Check for pending plan from sessionStorage (Legacy flow)
     const pendingPlanStr = sessionStorage.getItem('pendingPlan');
     if (pendingPlanStr) {
       try {
@@ -350,6 +418,7 @@ const App: React.FC = () => {
         console.error('Error parsing pending plan:', e);
       }
     }
+
     // onAuthStateChanged will handle the state update
     setShowAuth(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -473,7 +542,19 @@ const App: React.FC = () => {
     document.body.removeChild(link);
   };
 
-  if (showAuth) return <AuthView initialMode={authMode} onSuccess={handleAuthSuccess} onBack={() => setShowAuth(false)} />;
+  if (showAuth) return (
+    <AuthView
+      initialMode={authMode}
+      onSuccess={handleAuthSuccess}
+      onBack={() => {
+        setShowAuth(false);
+        setPendingPaymentData(null); // Clear pending data if user cancels
+      }}
+      prefilledEmail={pendingPaymentData?.email}
+      lockedEmail={!!pendingPaymentData?.email}
+      pendingPlanName={pendingPaymentData?.planName}
+    />
+  );
 
   if (isLoggedIn) {
     if (!hasApiKey) {

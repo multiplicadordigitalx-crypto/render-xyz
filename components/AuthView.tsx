@@ -44,9 +44,19 @@ interface AuthViewProps {
   initialMode?: AuthViewMode;
   onSuccess: (user: any) => void;
   onBack: () => void;
+  prefilledEmail?: string;
+  lockedEmail?: boolean;
+  pendingPlanName?: string;
 }
 
-export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'login', onSuccess, onBack }) => {
+export const AuthView: React.FC<AuthViewProps> = ({
+  initialMode = 'login',
+  onSuccess,
+  onBack,
+  prefilledEmail,
+  lockedEmail = false,
+  pendingPlanName
+}) => {
   const [mode, setMode] = useState<AuthViewMode>(initialMode);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -55,7 +65,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'login', onSuc
   const [cpfForGoogle, setCpfForGoogle] = useState('');
   const [formData, setFormData] = useState({
     name: '',
-    email: '',
+    email: prefilledEmail || '',
     cpf: '',
     password: '',
     confirmPassword: '',
@@ -280,9 +290,33 @@ export const AuthView: React.FC<AuthViewProps> = ({ initialMode = 'login', onSuc
                         <input type="text" required placeholder="NOME COMPLETO" className="w-full pl-14 pr-6 py-3.5 bg-[#F2F2F2] border border-transparent rounded-2xl text-[10px] font-bold focus:bg-white focus:border-[#B6B09F]/30 focus:outline-none transition-all placeholder:text-[#7A756A]/60" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
                       </div>
                     )}
+                    {pendingPlanName && mode === 'register' && (
+                      <div className="mb-4 p-3 bg-black/5 rounded-xl flex items-center gap-3">
+                        <div className="w-8 h-8 flex items-center justify-center bg-black rounded-lg">
+                          <CheckCircle2 className="w-4 h-4 text-white" />
+                        </div>
+                        <div>
+                          <p className="text-[9px] font-bold uppercase text-[#7A756A] tracking-wider">Ativando Plano</p>
+                          <p className="text-xs font-black uppercase tracking-widest">{pendingPlanName}</p>
+                        </div>
+                      </div>
+                    )}
                     <div className="relative group">
-                      <Mail className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#7A756A] group-focus-within:text-black transition-colors" />
-                      <input type="email" required placeholder="E-MAIL" className="w-full pl-14 pr-6 py-3.5 bg-[#F2F2F2] border border-transparent rounded-2xl text-[10px] font-bold focus:bg-white focus:border-[#B6B09F]/30 focus:outline-none transition-all placeholder:text-[#7A756A]/60" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
+                      <Mail className={`absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors ${lockedEmail ? 'text-black' : 'text-[#7A756A] group-focus-within:text-black'}`} />
+                      <input
+                        type="email"
+                        required
+                        placeholder="E-MAIL"
+                        disabled={lockedEmail}
+                        readOnly={lockedEmail}
+                        className={`w-full pl-14 pr-6 py-3.5 border rounded-2xl text-[10px] font-bold outline-none transition-all placeholder:text-[#7A756A]/60 ${lockedEmail
+                            ? 'bg-black/5 border-black/10 text-black cursor-not-allowed opacity-70'
+                            : 'bg-[#F2F2F2] border-transparent focus:bg-white focus:border-[#B6B09F]/30'
+                          }`}
+                        value={formData.email}
+                        onChange={e => !lockedEmail && setFormData({ ...formData, email: e.target.value })}
+                      />
+                      {lockedEmail && <Lock className="absolute right-5 top-1/2 -translate-y-1/2 w-3 h-3 text-black/40" />}
                     </div>
                     {mode === 'register' && (
                       <div className="relative group">

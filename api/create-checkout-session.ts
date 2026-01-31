@@ -12,11 +12,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     try {
-        const { priceId, mode, successUrl, cancelUrl, customerEmail, userId, credits } = req.body;
+        const { priceId, mode, successUrl, cancelUrl, customerEmail, userId, credits, planName } = req.body;
 
         if (!priceId || !mode) {
             return res.status(400).json({ error: 'Missing required parameters' });
         }
+
+        // Build success URL with session_id placeholder (Stripe will replace it)
+        const successUrlWithSession = `${successUrl}${successUrl.includes('?') ? '&' : '?'}session_id={CHECKOUT_SESSION_ID}`;
 
         const sessionConfig: Stripe.Checkout.SessionCreateParams = {
             payment_method_types: ['card'],
@@ -27,12 +30,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 },
             ],
             mode: mode as 'payment' | 'subscription',
-            success_url: successUrl,
+            success_url: successUrlWithSession,
             cancel_url: cancelUrl,
             customer_email: customerEmail,
             metadata: {
-                userId: userId,
-                credits: credits ? credits.toString() : '0', // For one-time purchases
+                userId: userId || '',
+                credits: credits ? credits.toString() : '0',
+                planName: planName || '',
             },
         };
 

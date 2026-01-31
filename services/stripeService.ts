@@ -7,6 +7,7 @@ interface CheckoutSessionParams {
     customerEmail?: string;
     userId?: string;
     credits?: number;
+    planName?: string;
 }
 
 export const stripeService = {
@@ -28,7 +29,6 @@ export const stripeService = {
             }
 
             // 2. Redirect to Stripe Checkout using the URL directly
-            // (redirectToCheckout is deprecated in newer Stripe.js versions)
             if (url) {
                 window.location.href = url;
             } else {
@@ -36,6 +36,22 @@ export const stripeService = {
             }
         } catch (err) {
             console.error('Payment Error:', err);
+            throw err;
+        }
+    },
+
+    async getCheckoutSession(sessionId: string) {
+        try {
+            const response = await fetch(`/api/get-checkout-session?session_id=${sessionId}`);
+            const data = await response.json();
+
+            if (data.error) {
+                throw new Error(data.error);
+            }
+
+            return data;
+        } catch (err) {
+            console.error('Session Retrieve Error:', err);
             throw err;
         }
     },
