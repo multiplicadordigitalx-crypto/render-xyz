@@ -12,7 +12,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     try {
-        const { priceId, mode, successUrl, cancelUrl, customerEmail, userId, credits, planName } = req.body;
+        const { priceId, mode, successUrl, cancelUrl, customerEmail, userId, credits, planName, paymentMethod } = req.body;
 
         if (!priceId || !mode) {
             return res.status(400).json({ error: 'Missing required parameters' });
@@ -21,8 +21,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         // Build success URL with session_id placeholder (Stripe will replace it)
         const successUrlWithSession = `${successUrl}${successUrl.includes('?') ? '&' : '?'}session_id={CHECKOUT_SESSION_ID}`;
 
+        const paymentTypes: Stripe.Checkout.SessionCreateParams.PaymentMethodType[] =
+            paymentMethod === 'pix' ? ['pix'] : ['card'];
+
         const sessionConfig: Stripe.Checkout.SessionCreateParams = {
-            payment_method_types: ['card'],
+            payment_method_types: paymentTypes,
             line_items: [
                 {
                     price: priceId,

@@ -8,6 +8,7 @@ interface CheckoutSessionParams {
     userId?: string;
     credits?: number;
     planName?: string;
+    paymentMethod?: 'card' | 'pix';
 }
 
 export const stripeService = {

@@ -18,18 +18,18 @@ app.use(express.json());
 // Checkout Session Endpoint
 app.post('/api/create-checkout-session', async (req, res) => {
     try {
-        const { priceId, mode, successUrl, cancelUrl, customerEmail, userId, credits, planName } = req.body;
+        const { priceId, mode, successUrl, cancelUrl, customerEmail, userId, credits, planName, paymentMethod } = req.body;
 
         if (!priceId || !mode) {
             return res.status(400).json({ error: 'Missing required parameters' });
         }
 
-        console.log('Creating checkout session:', { priceId, mode, customerEmail });
+        console.log('Creating checkout session:', { priceId, mode, customerEmail, paymentMethod });
 
         const successUrlWithSession = `${successUrl}${successUrl.includes('?') ? '&' : '?'}session_id={CHECKOUT_SESSION_ID}`;
 
         const sessionConfig = {
-            payment_method_types: ['card'],
+            payment_method_types: paymentMethod === 'pix' ? ['pix'] : ['card'],
             line_items: [
                 {
                     price: priceId,

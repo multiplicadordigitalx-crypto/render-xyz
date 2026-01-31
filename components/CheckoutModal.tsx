@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { X, CheckCircle, ArrowRight, ShieldCheck, CreditCard, Loader2 } from 'lucide-react';
+import { X, CheckCircle, ArrowRight, ShieldCheck, CreditCard, Loader2, QrCode } from 'lucide-react';
 import { PricingPlan } from '../types';
 import { stripeService } from '../services/stripeService';
 import { toast } from 'react-hot-toast';
@@ -14,16 +14,16 @@ interface CheckoutModalProps {
 }
 
 export const CheckoutModal: React.FC<CheckoutModalProps> = ({ plan, onConfirm, onClose }) => {
-    const [step, setStep] = useState<'review' | 'payment'>('review');
-    const [loading, setLoading] = useState(false);
+    const [step, setStep] = useState<'review' | 'selection'>('review');
+    const [loadingMethod, setLoadingMethod] = useState<'card' | 'pix' | null>(null);
 
-    const handleStripeCheckout = async () => {
+    const handleStripeCheckout = async (method: 'card' | 'pix') => {
         if (!plan.stripePriceId) {
             toast.error("Plano indisponível para compra online.");
             return;
         }
 
-        setLoading(true);
+        setLoadingMethod(method);
         try {
             // Direct checkout - supports both guest and logged-in users
             await stripeService.redirectToCheckout({
@@ -33,27 +33,28 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ plan, onConfirm, o
                 cancelUrl: `${window.location.origin}/?payment=canceled`,
                 planName: plan.name, // Pass plan name for metadata
                 customerEmail: auth.currentUser?.email || undefined,
-                userId: auth.currentUser?.uid
+                userId: auth.currentUser?.uid,
+                paymentMethod: method
             });
         } catch (error) {
             console.error(error);
             toast.error("Erro ao iniciar pagamento.");
-            setLoading(false);
+            setLoadingMethod(null);
         }
     };
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => !loadingMethod && onClose()} />
             <div className="relative bg-[#F2F2F2] w-full max-w-2xl rounded-[35px] overflow-hidden shadow-2xl">
                 <div className="p-8 md:p-12">
                     <div className="flex justify-between items-center mb-10">
                         <h2 className="text-2xl md:text-3xl font-black uppercase tracking-tighter">Checkout Pro</h2>
-                        <button onClick={onClose} className="p-2 bg-[#EAE4D5] rounded-full"><X className="w-6 h-6" /></button>
+                        <button onClick={onClose} disabled={!!loadingMethod} className="p-2 bg-[#EAE4D5] rounded-full disabled:opacity-50"><X className="w-6 h-6" /></button>
                     </div>
 
                     {step === 'review' ? (
-                        <div className="space-y-8">
+                        <div className="space-y-8 animate-in fade-in slide-in-from-left-4">
                             <div className="bg-[#EAE4D5] p-8 rounded-[30px] border border-[#B6B09F]/30">
                                 <p className="text-[10px] font-black uppercase text-[#7A756A] mb-2 tracking-widest">Plano Selecionado</p>
                                 <div className="flex justify-between items-end">
@@ -74,49 +75,74 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ plan, onConfirm, o
                             </div>
 
                             <button
-                                onClick={() => setStep('payment')}
-                                className="w-full py-6 bg-black text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl flex items-center justify-center"
+                                onClick={() => setStep('selection')}
+                                className="w-full py-6 bg-black text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl flex items-center justify-center group"
                             >
-                                Prosseguir para Pagamento <ArrowRight className="ml-3 w-5 h-5" />
+                                Selecionar Pagamento <ArrowRight className="ml-3 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                             </button>
                         </div>
                     ) : (
                         <div className="space-y-8 animate-in fade-in slide-in-from-right-4">
-                            <div className="space-y-6">
-                                <div className="bg-white p-6 rounded-2xl border border-[#B6B09F]/20 flex items-center space-x-4">
-                                    <div className="w-12 h-12 bg-[#F2F2F2] rounded-xl flex items-center justify-center"><CreditCard className="w-6 h-6" /></div>
-                                    <div className="flex-1">
-                                        <p className="text-[10px] font-black uppercase text-[#7A756A]">Forma de Pagamento</p>
-                                        <p className="text-xs font-black uppercase">Cartão de Crédito ou Pix</p>
-                                    </div>
-                                    <ArrowRight className="w-4 h-4 opacity-20" />
-                                </div>
+                            <div className="text-center mb-6">
+                                <h3 className="text-xl font-black uppercase tracking-tight mb-2">Como deseja pagar?</h3>
+                                <p className="text-[#7A756A] text-[10px] font-bold uppercase tracking-widest">Selecione uma opção segura abaixo</p>
                             </div>
 
-                            <div className="p-6 bg-green-50 border border-green-100 rounded-2xl flex items-start space-x-3">
-                                <ShieldCheck className="w-5 h-5 text-green-600 shrink-0" />
+                            <div className="grid grid-cols-1 gap-4">
+                                {/* PIX OPTION */}
+                                <button
+                                    onClick={() => handleStripeCheckout('pix')}
+                                    disabled={!!loadingMethod}
+                                    className={`relative p-6 rounded-[25px] border-2 text-left transition-all group ${loadingMethod === 'pix' ? 'bg-black text-white border-black' : 'bg-white border-[#B6B09F]/20 hover:border-black hover:shadow-lg'
+                                        }`}
+                                >
+                                    <div className="flex items-center justify-between mb-2">
+                                        <div className="flex items-center space-x-3">
+                                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${loadingMethod === 'pix' ? 'bg-white/20' : 'bg-[#F2F2F2]'}`}>
+                                                <QrCode className={`w-5 h-5 ${loadingMethod === 'pix' ? 'text-white' : 'text-black'}`} />
+                                            </div>
+                                            <span className="font-black uppercase tracking-tight text-sm">Pix Instantâneo</span>
+                                        </div>
+                                        {loadingMethod === 'pix' && <Loader2 className="w-5 h-5 animate-spin" />}
+                                    </div>
+                                    <p className={`text-[10px] font-bold uppercase tracking-widest pl-[52px] ${loadingMethod === 'pix' ? 'text-white/60' : 'text-[#7A756A]'}`}>
+                                        Aprovação imediata via QR Code
+                                    </p>
+                                </button>
+
+                                {/* CARD OPTION */}
+                                <button
+                                    onClick={() => handleStripeCheckout('card')}
+                                    disabled={!!loadingMethod}
+                                    className={`relative p-6 rounded-[25px] border-2 text-left transition-all group ${loadingMethod === 'card' ? 'bg-black text-white border-black' : 'bg-white border-[#B6B09F]/20 hover:border-black hover:shadow-lg'
+                                        }`}
+                                >
+                                    <div className="flex items-center justify-between mb-2">
+                                        <div className="flex items-center space-x-3">
+                                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${loadingMethod === 'card' ? 'bg-white/20' : 'bg-[#F2F2F2]'}`}>
+                                                <CreditCard className={`w-5 h-5 ${loadingMethod === 'card' ? 'text-white' : 'text-black'}`} />
+                                            </div>
+                                            <span className="font-black uppercase tracking-tight text-sm">Cartão de Crédito</span>
+                                        </div>
+                                        {loadingMethod === 'card' && <Loader2 className="w-5 h-5 animate-spin" />}
+                                    </div>
+                                    <p className={`text-[10px] font-bold uppercase tracking-widest pl-[52px] ${loadingMethod === 'card' ? 'text-white/60' : 'text-[#7A756A]'}`}>
+                                        Até 12x no cartão
+                                    </p>
+                                </button>
+                            </div>
+
+                            <div className="p-4 bg-green-50 border border-green-100 rounded-2xl flex items-start space-x-3">
+                                <ShieldCheck className="w-4 h-4 text-green-600 shrink-0 mt-0.5" />
                                 <p className="text-[9px] font-bold uppercase text-green-700 leading-relaxed">
-                                    Pagamento seguro via Stripe. Após a confirmação, você completará seu cadastro com nome, CPF e senha.
+                                    Ambiente 100% seguro. Seus dados são processados diretamente pelo Stripe.
                                 </p>
                             </div>
 
                             <button
-                                onClick={handleStripeCheckout}
-                                disabled={loading}
-                                className="w-full py-6 bg-black text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl flex items-center justify-center disabled:opacity-70 disabled:cursor-not-allowed"
-                            >
-                                {loading ? (
-                                    <div className="flex items-center gap-2">
-                                        <Loader2 className="w-5 h-5 animate-spin" />
-                                        <span>Redirecionando...</span>
-                                    </div>
-                                ) : "Pagar e Continuar"}
-                            </button>
-
-                            <button
                                 onClick={() => setStep('review')}
-                                disabled={loading}
-                                className="w-full text-[9px] font-black uppercase tracking-widest text-[#7A756A] disabled:opacity-50 disabled:cursor-not-allowed"
+                                disabled={!!loadingMethod}
+                                className="w-full text-[9px] font-black uppercase tracking-widest text-[#7A756A] disabled:opacity-50"
                             >
                                 Voltar
                             </button>
