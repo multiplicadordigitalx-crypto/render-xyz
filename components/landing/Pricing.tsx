@@ -17,7 +17,7 @@ export const Pricing: React.FC<PricingProps> = ({ plans, creditPackages, onSelec
                 {/* Header */}
                 <div className="text-center mb-16 md:mb-24">
                     <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter mb-4">Escolha seu Caminho</h2>
-                    <p className="text-[#B6B09F] text-[10px] font-black uppercase tracking-widest max-w-xl mx-auto leading-relaxed">
+                    <p className="text-[#7A756A] text-[10px] font-black uppercase tracking-widest max-w-xl mx-auto leading-relaxed">
                         Para quem usa todo mês ou só de vez em quando — temos a opção certa para você
                     </p>
                 </div>
@@ -30,7 +30,7 @@ export const Pricing: React.FC<PricingProps> = ({ plans, creditPackages, onSelec
                             <span className="text-[10px] font-black uppercase tracking-widest">Recomendado para Escritórios</span>
                         </div>
                         <h3 className="text-2xl md:text-3xl font-black uppercase tracking-tight mb-3">Assinatura Mensal</h3>
-                        <p className="text-[#B6B09F] text-[10px] font-bold uppercase tracking-widest">
+                        <p className="text-[#7A756A] text-[10px] font-bold uppercase tracking-widest">
                             Créditos todo mês • Benefícios exclusivos • Cancele quando quiser
                         </p>
                     </div>
@@ -55,7 +55,7 @@ export const Pricing: React.FC<PricingProps> = ({ plans, creditPackages, onSelec
                                         ) : (
                                             <>
                                                 <span className="text-4xl md:text-5xl font-black">R$ {plan.price}</span>
-                                                <span className="text-[#B6B09F] ml-2 text-[10px] font-black uppercase">{plan.period}</span>
+                                                <span className="text-[#7A756A] ml-2 text-[10px] font-black uppercase">{plan.period}</span>
                                             </>
                                         )}
                                     </div>
@@ -84,31 +84,31 @@ export const Pricing: React.FC<PricingProps> = ({ plans, creditPackages, onSelec
                         <h4 className="text-center text-sm font-black uppercase tracking-widest mb-8">Compare os Benefícios</h4>
                         <div className="grid grid-cols-4 gap-4 text-center text-[9px] font-black uppercase">
                             <div></div>
-                            <div className="text-[#B6B09F]">Grátis</div>
+                            <div className="text-[#7A756A]">Grátis</div>
                             <div>Estúdio</div>
                             <div className="text-black">Elite</div>
 
-                            <div className="text-left text-[#B6B09F]">Resolução Máxima</div>
+                            <div className="text-left text-[#7A756A]">Resolução Máxima</div>
                             <div>1K</div>
                             <div className="text-green-600">2K HD</div>
                             <div className="text-green-600">4K Ultra</div>
 
-                            <div className="text-left text-[#B6B09F]">Sem Marca d'água</div>
+                            <div className="text-left text-[#7A756A]">Sem Marca d'água</div>
                             <div><X className="w-3 h-3 mx-auto text-red-400" /></div>
                             <div><CheckCircle className="w-3 h-3 mx-auto text-green-600" /></div>
                             <div><CheckCircle className="w-3 h-3 mx-auto text-green-600" /></div>
 
-                            <div className="text-left text-[#B6B09F]">Fila Prioritária</div>
+                            <div className="text-left text-[#7A756A]">Fila Prioritária</div>
                             <div><X className="w-3 h-3 mx-auto text-red-400" /></div>
                             <div><CheckCircle className="w-3 h-3 mx-auto text-green-600" /></div>
                             <div><Zap className="w-3 h-3 mx-auto text-yellow-500" /></div>
 
-                            <div className="text-left text-[#B6B09F]">Créditos Acumulam</div>
+                            <div className="text-left text-[#7A756A]">Créditos Acumulam</div>
                             <div><X className="w-3 h-3 mx-auto text-red-400" /></div>
                             <div><CheckCircle className="w-3 h-3 mx-auto text-green-600" /></div>
                             <div><CheckCircle className="w-3 h-3 mx-auto text-green-600" /></div>
 
-                            <div className="text-left text-[#B6B09F]">Suporte VIP</div>
+                            <div className="text-left text-[#7A756A]">Suporte VIP</div>
                             <div><X className="w-3 h-3 mx-auto text-red-400" /></div>
                             <div><X className="w-3 h-3 mx-auto text-red-400" /></div>
                             <div><CheckCircle className="w-3 h-3 mx-auto text-green-600" /></div>
@@ -120,7 +120,7 @@ export const Pricing: React.FC<PricingProps> = ({ plans, creditPackages, onSelec
                 <div className="flex items-center justify-center gap-6 mb-20 md:mb-32">
                     <div className="flex-1 h-px bg-[#B6B09F]/30" />
                     <div className="bg-[#F2F2F2] px-6 py-3 rounded-full border border-[#B6B09F]/20">
-                        <span className="text-[#B6B09F] text-[10px] font-black uppercase tracking-widest">Prefere Flexibilidade?</span>
+                        <span className="text-[#7A756A] text-[10px] font-black uppercase tracking-widest">Prefere Flexibilidade?</span>
                     </div>
                     <div className="flex-1 h-px bg-[#B6B09F]/30" />
                 </div>
@@ -133,7 +133,7 @@ export const Pricing: React.FC<PricingProps> = ({ plans, creditPackages, onSelec
                             <span className="text-[10px] font-black uppercase tracking-widest">Ideal para Freelancers</span>
                         </div>
                         <h3 className="text-2xl md:text-3xl font-black uppercase tracking-tight mb-3">Créditos Avulsos</h3>
-                        <p className="text-[#B6B09F] text-[10px] font-bold uppercase tracking-widest">
+                        <p className="text-[#7A756A] text-[10px] font-bold uppercase tracking-widest">
                             Sem assinatura • Compre quando precisar • Nunca expiram
                         </p>
                     </div>
@@ -145,9 +145,9 @@ export const Pricing: React.FC<PricingProps> = ({ plans, creditPackages, onSelec
                                 className={`bg-[#F2F2F2] border border-[#B6B09F]/30 rounded-[30px] p-8 text-center hover:border-black transition-all reveal reveal-fade stagger-${i + 1}`}
                             >
                                 <h4 className="text-3xl font-black mb-2">{pkg.amount}</h4>
-                                <p className="text-[#B6B09F] text-[9px] font-black uppercase tracking-widest mb-6">Créditos</p>
+                                <p className="text-[#7A756A] text-[9px] font-black uppercase tracking-widest mb-6">Créditos</p>
                                 <div className="text-2xl font-black mb-2">R$ {pkg.price}</div>
-                                <p className="text-[#B6B09F] text-[9px] font-bold uppercase tracking-widest mb-8">{pkg.description}</p>
+                                <p className="text-[#7A756A] text-[9px] font-bold uppercase tracking-widest mb-8">{pkg.description}</p>
                                 <button
                                     onClick={onBuyCredits}
                                     className="w-full py-4 bg-[#EAE4D5] text-black rounded-xl font-black text-[10px] uppercase tracking-widest border border-[#B6B09F]/30 hover:border-black hover:bg-black hover:text-white transition-all"
@@ -160,17 +160,17 @@ export const Pricing: React.FC<PricingProps> = ({ plans, creditPackages, onSelec
 
                     {/* Credits benefits */}
                     <div className="flex flex-wrap justify-center gap-4 md:gap-8 mb-6">
-                        <div className="flex items-center gap-2 text-[9px] font-bold uppercase tracking-widest text-[#B6B09F]">
+                        <div className="flex items-center gap-2 text-[9px] font-bold uppercase tracking-widest text-[#7A756A]">
                             <Clock className="w-3 h-3" />
                             <span>Sem data de validade</span>
                         </div>
-                        <div className="flex items-center gap-2 text-[9px] font-bold uppercase tracking-widest text-[#B6B09F]">
+                        <div className="flex items-center gap-2 text-[9px] font-bold uppercase tracking-widest text-[#7A756A]">
                             <Coins className="w-3 h-3" />
                             <span>1 Crédito = 1 Render</span>
                         </div>
                     </div>
                     <div className="text-center">
-                        <p className="text-[8px] font-bold uppercase tracking-widest text-[#B6B09F]/70 max-w-md mx-auto">
+                        <p className="text-[8px] font-bold uppercase tracking-widest text-[#7A756A]/70 max-w-md mx-auto">
                             Assinantes mantêm os benefícios do plano ao comprar créditos extras (Elite = 4K, Estúdio = 2K)
                         </p>
                     </div>

@@ -54,7 +54,7 @@ export const CreditModal: React.FC<CreditModalProps> = ({ creditPackages, onBuyC
                             className="bg-[#EAE4D5] border border-[#B6B09F]/30 p-8 rounded-[40px] flex flex-col items-center text-center hover:border-black transition-all"
                         >
                             <h3 className="text-2xl font-black mb-1">{pkg.amount} Créditos</h3>
-                            <p className="text-[#B6B09F] text-[10px] font-black uppercase mb-6 tracking-widest">{pkg.description}</p>
+                            <p className="text-[#7A756A] text-[10px] font-black uppercase mb-6 tracking-widest">{pkg.description}</p>
                             <div className="mb-8"><span className="text-4xl font-black">R$ {pkg.price}</span></div>
                             <button
                                 onClick={() => handleBuy(pkg)}

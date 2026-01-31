@@ -60,7 +60,7 @@ export const HowItWorks: React.FC<HowItWorksProps> = ({ heroVideoUrl, heroVideoP
                                 <div className="w-12 h-12 md:w-16 md:h-16 bg-black text-white rounded-2xl flex items-center justify-center shrink-0 font-black text-xl">{step.n}</div>
                                 <div>
                                     <h3 className="text-lg md:text-xl font-black uppercase mb-2 tracking-widest">{step.t}</h3>
-                                    <p className="text-[#B6B09F] text-xs font-bold uppercase tracking-wider leading-relaxed">{step.d}</p>
+                                    <p className="text-[#7A756A] text-xs font-bold uppercase tracking-wider leading-relaxed">{step.d}</p>
                                 </div>
                             </div>
                         ))}

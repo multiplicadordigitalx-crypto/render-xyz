@@ -32,7 +32,7 @@ export const FAQ: React.FC<FAQProps> = ({ items }) => {
                                 <Plus className={`w-5 h-5 shrink-0 transition-transform ${activeFaq === i ? 'rotate-45' : ''}`} />
                             </button>
                             {activeFaq === i && (
-                                <div className="px-8 md:px-10 pb-10 text-[#B6B09F] text-[11px] md:text-[12px] font-bold uppercase tracking-widest leading-loose animate-in slide-in-from-top-4">
+                                <div className="px-8 md:px-10 pb-10 text-[#7A756A] text-[11px] md:text-[12px] font-bold uppercase tracking-widest leading-loose animate-in slide-in-from-top-4">
                                     {faq.a}
                                 </div>
                             )}

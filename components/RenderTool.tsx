@@ -188,7 +188,7 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
                   >
                     {isLocked && <Lock className="absolute top-1 right-1 w-2.5 h-2.5 text-zinc-400" />}
                     <span>{r.label}</span>
-                    <span className={`text-[6px] md:text-[7px] mt-1 ${isLocked ? 'text-zinc-400' : resolution === r.label ? 'opacity-70' : 'text-[#B6B09F]'}`}>
+                    <span className={`text-[6px] md:text-[7px] mt-1 ${isLocked ? 'text-zinc-400' : resolution === r.label ? 'opacity-70' : 'text-[#7A756A]'}`}>
                       {isLocked ? 'Elite' : `${r.cost} ${r.cost === 1 ? 'crédito' : 'créditos'}`}
                     </span>
                   </button>
@@ -211,8 +211,8 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
                 htmlFor="image-upload"
                 className="flex flex-col items-center justify-center border-2 border-dashed border-[#B6B09F]/40 rounded-xl md:rounded-2xl p-6 md:p-10 cursor-pointer hover:border-[#000000] transition-all"
               >
-                <Upload className="w-6 h-6 md:w-8 md:h-8 text-[#B6B09F] mb-2 md:mb-3" />
-                <span className="text-[8px] md:text-[9px] font-black uppercase text-[#B6B09F] tracking-widest text-center">Selecionar Arquivo</span>
+                <Upload className="w-6 h-6 md:w-8 md:h-8 text-[#7A756A] mb-2 md:mb-3" />
+                <span className="text-[8px] md:text-[9px] font-black uppercase text-[#7A756A] tracking-widest text-center">Selecionar Arquivo</span>
               </label>
             </div>
           </div>
@@ -261,10 +261,10 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
             ) : image ? (
               <img src={image} alt="Original" className="max-w-full max-h-full object-contain opacity-30 blur-[1px]" />
             ) : (
-              <div className="text-[#B6B09F] flex flex-col items-center text-center px-6">
+              <div className="text-[#7A756A] flex flex-col items-center text-center px-6">
                 <Upload className="w-8 h-8 md:w-10 md:h-10 opacity-20 mb-4 md:mb-6" />
                 <p className="font-black uppercase text-[9px] md:text-[11px] tracking-widest text-[#000000]">Mesa de Trabalho</p>
-                <p className="text-[7px] md:text-[8px] text-[#B6B09F] mt-2 font-bold uppercase tracking-widest italic">Aguardando seu projeto</p>
+                <p className="text-[7px] md:text-[8px] text-[#7A756A] mt-2 font-bold uppercase tracking-widest italic">Aguardando seu projeto</p>
               </div>
             )}
 
@@ -276,7 +276,7 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
                 </div>
                 <div className="text-center space-y-2">
                   <p className="text-[#000000] font-black text-2xl md:text-3xl tracking-tighter uppercase animate-pulse">Processando</p>
-                  <p className="text-[#B6B09F] font-black text-[9px] uppercase tracking-[0.3em]">IA em alta velocidade</p>
+                  <p className="text-[#7A756A] font-black text-[9px] uppercase tracking-[0.3em]">IA em alta velocidade</p>
                 </div>
                 <div className="w-48 h-1 bg-black/10 rounded-full overflow-hidden">
                   <div className="h-full bg-black animate-progress" />

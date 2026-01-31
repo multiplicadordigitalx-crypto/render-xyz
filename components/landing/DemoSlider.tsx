@@ -14,7 +14,7 @@ export const DemoSlider: React.FC<DemoSliderProps> = ({ showcaseBefore, showcase
                 <div className="text-center mb-12 md:mb-24 px-4">
                     <h2 className="text-3xl md:text-5xl font-black mb-4 uppercase tracking-tighter">Comparação Real</h2>
                     <div className="w-16 h-1 bg-black mx-auto mb-6 rounded-full" />
-                    <p className="text-[#B6B09F] text-[9px] md:text-[11px] font-black uppercase tracking-[0.2em] max-w-xl mx-auto leading-relaxed">
+                    <p className="text-[#7A756A] text-[9px] md:text-[11px] font-black uppercase tracking-[0.2em] max-w-xl mx-auto leading-relaxed">
                         Fidelidade extrema preservando cada centímetro da sua geometria
                     </p>
                 </div>

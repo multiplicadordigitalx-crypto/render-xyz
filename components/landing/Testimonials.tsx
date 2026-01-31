@@ -69,9 +69,9 @@ export const Testimonials = ({ autoplay = true }: { autoplay?: boolean }) => {
             <div className="max-w-7xl mx-auto px-4 md:px-8">
                 <div className="mb-20 text-center">
                     <h2 className="text-3xl md:text-5xl font-black uppercase tracking-tighter mb-4">
-                        O que dizem <span className="text-[#B6B09F]">os Experts</span>
+                        O que dizem <span className="text-[#7A756A]">os Experts</span>
                     </h2>
-                    <p className="text-[#B6B09F] font-black uppercase tracking-widest text-[10px] md:text-xs">
+                    <p className="text-[#7A756A] font-black uppercase tracking-widest text-[10px] md:text-xs">
                         Junte-se a mais de 10.000 profissionais
                     </p>
                 </div>
@@ -129,7 +129,7 @@ export const Testimonials = ({ autoplay = true }: { autoplay?: boolean }) => {
                                     </h3>
                                     <div>
                                         <p className="text-lg font-bold uppercase tracking-wide">{testimonials[active].name}</p>
-                                        <p className="text-[#B6B09F] font-bold uppercase tracking-widest text-[10px] mt-1">
+                                        <p className="text-[#7A756A] font-bold uppercase tracking-widest text-[10px] mt-1">
                                             {testimonials[active].designation}
                                         </p>
                                     </div>

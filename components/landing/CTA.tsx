@@ -20,7 +20,7 @@ export const CTA: React.FC<CTAProps> = ({ onStartNow }) => {
                     >
                         Criar Conta Agora <ArrowRight className="ml-4 w-6 h-6 md:w-8 md:h-8" />
                     </button>
-                    <p className="text-[#B6B09F] text-[9px] md:text-[10px] font-black uppercase tracking-[0.4em] flex items-center">
+                    <p className="text-[#7A756A] text-[9px] md:text-[10px] font-black uppercase tracking-[0.4em] flex items-center">
                         <ShieldCheck className="w-4 h-4 md:w-5 md:h-5 mr-3" /> Transações Seguras SSL/LGPD
                     </p>
                 </div>

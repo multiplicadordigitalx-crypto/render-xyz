@@ -52,19 +52,19 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ plan, onConfirm, o
                     {step === 'review' ? (
                         <div className="space-y-8">
                             <div className="bg-[#EAE4D5] p-8 rounded-[30px] border border-[#B6B09F]/30">
-                                <p className="text-[10px] font-black uppercase text-[#B6B09F] mb-2 tracking-widest">Plano Selecionado</p>
+                                <p className="text-[10px] font-black uppercase text-[#7A756A] mb-2 tracking-widest">Plano Selecionado</p>
                                 <div className="flex justify-between items-end">
                                     <h3 className="text-3xl font-black uppercase">{plan.name}</h3>
                                     <div className="text-right">
                                         <span className="text-3xl font-black">R$ {plan.price}</span>
-                                        <span className="text-[#B6B09F] text-[10px] font-black uppercase ml-1">{plan.period}</span>
+                                        <span className="text-[#7A756A] text-[10px] font-black uppercase ml-1">{plan.period}</span>
                                     </div>
                                 </div>
                             </div>
 
                             <div className="space-y-4">
                                 {plan.features.map((feat, i) => (
-                                    <div key={i} className="flex items-center text-xs font-bold uppercase tracking-widest text-[#B6B09F]">
+                                    <div key={i} className="flex items-center text-xs font-bold uppercase tracking-widest text-[#7A756A]">
                                         <CheckCircle className="w-4 h-4 mr-3 text-black" /> {feat}
                                     </div>
                                 ))}
@@ -83,7 +83,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ plan, onConfirm, o
                                 <div className="bg-white p-6 rounded-2xl border border-[#B6B09F]/20 flex items-center space-x-4">
                                     <div className="w-12 h-12 bg-[#F2F2F2] rounded-xl flex items-center justify-center"><CreditCard className="w-6 h-6" /></div>
                                     <div className="flex-1">
-                                        <p className="text-[10px] font-black uppercase text-[#B6B09F]">Forma de Pagamento</p>
+                                        <p className="text-[10px] font-black uppercase text-[#7A756A]">Forma de Pagamento</p>
                                         <p className="text-xs font-black uppercase">Cartão de Crédito ou Pix</p>
                                     </div>
                                     <ArrowRight className="w-4 h-4 opacity-20" />
@@ -107,7 +107,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ plan, onConfirm, o
 
                             <button
                                 onClick={() => setStep('review')}
-                                className="w-full text-[9px] font-black uppercase tracking-widest text-[#B6B09F]"
+                                className="w-full text-[9px] font-black uppercase tracking-widest text-[#7A756A]"
                             >
                                 Voltar
                             </button>

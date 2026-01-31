@@ -27,23 +27,23 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onClose, onLogou
                             </div>
                             <div>
                                 <h3 className="text-lg font-black uppercase">{user.name}</h3>
-                                <p className="text-[10px] font-black text-[#B6B09F] uppercase tracking-widest">{user.plan || 'Plano Free'}</p>
+                                <p className="text-[10px] font-black text-[#7A756A] uppercase tracking-widest">{user.plan || 'Plano Free'}</p>
                             </div>
                         </div>
 
                         <div className="grid grid-cols-1 gap-4">
                             <div className="p-5 bg-[#EAE4D5]/50 rounded-2xl flex items-center space-x-4 border border-[#B6B09F]/20">
-                                <Mail className="w-4 h-4 text-[#B6B09F]" />
+                                <Mail className="w-4 h-4 text-[#7A756A]" />
                                 <div className="flex-1">
-                                    <p className="text-[8px] font-black uppercase text-[#B6B09F]">E-mail</p>
+                                    <p className="text-[8px] font-black uppercase text-[#7A756A]">E-mail</p>
                                     <p className="text-[10px] font-bold">{user.email}</p>
                                 </div>
                             </div>
 
                             <div className="p-5 bg-[#EAE4D5]/50 rounded-2xl flex items-center space-x-4 border border-[#B6B09F]/20">
-                                <Shield className="w-4 h-4 text-[#B6B09F]" />
+                                <Shield className="w-4 h-4 text-[#7A756A]" />
                                 <div className="flex-1">
-                                    <p className="text-[8px] font-black uppercase text-[#B6B09F]">CPF</p>
+                                    <p className="text-[8px] font-black uppercase text-[#7A756A]">CPF</p>
                                     <p className="text-[10px] font-bold">
                                         {user.cpf ? user.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.***.***-$4") : "Não informado"}
                                     </p>
@@ -51,9 +51,9 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, onClose, onLogou
                             </div>
 
                             <div className="p-5 bg-[#EAE4D5]/50 rounded-2xl flex items-center space-x-4 border border-[#B6B09F]/20">
-                                <Calendar className="w-4 h-4 text-[#B6B09F]" />
+                                <Calendar className="w-4 h-4 text-[#7A756A]" />
                                 <div className="flex-1">
-                                    <p className="text-[8px] font-black uppercase text-[#B6B09F]">Membro desde</p>
+                                    <p className="text-[8px] font-black uppercase text-[#7A756A]">Membro desde</p>
                                     <p className="text-[10px] font-bold">{new Date(user.joinedAt).toLocaleDateString('pt-BR')}</p>
                                 </div>
                             </div>

@@ -482,9 +482,9 @@ const App: React.FC = () => {
           <div className="max-w-xl w-full bg-[#EAE4D5] border border-[#B6B09F]/30 rounded-[35px] p-8 md:p-12 text-center">
             <div className="w-16 h-16 bg-black rounded-2xl flex items-center justify-center mx-auto mb-8"><Key className="text-white w-8 h-8" /></div>
             <h2 className="text-2xl md:text-4xl font-black uppercase mb-4 tracking-tighter">Ativação</h2>
-            <p className="text-[#B6B09F] text-xs font-bold uppercase tracking-widest mb-10">Vincule uma chave API Studio para iniciar.</p>
+            <p className="text-[#7A756A] text-xs font-bold uppercase tracking-widest mb-10">Vincule uma chave API Studio para iniciar.</p>
             <button onClick={handleOpenSelectKey} className="w-full py-5 bg-black text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl">Selecionar Chave</button>
-            <button onClick={handleLogout} className="mt-8 text-[9px] font-black uppercase tracking-widest text-[#B6B09F]">Sair</button>
+            <button onClick={handleLogout} className="mt-8 text-[9px] font-black uppercase tracking-widest text-[#7A756A]">Sair</button>
           </div>
         </div>
       );
@@ -539,7 +539,7 @@ const App: React.FC = () => {
                 <User className="w-4 h-4" />
               </button>
               <div className="flex items-center bg-black text-white px-3 md:px-5 py-1.5 md:py-2 rounded-xl shadow-lg">
-                <Coins className="w-3 h-3 md:w-4 md:h-4 mr-2 text-[#B6B09F]" />
+                <Coins className="w-3 h-3 md:w-4 md:h-4 mr-2 text-[#7A756A]" />
                 <span className="text-xs md:text-sm font-black">{credits}</span>
                 <button onClick={() => setShowCreditModal(true)} className="ml-3 md:ml-6 bg-[#B6B09F] text-black p-1 rounded transition-all"><Plus className="w-3 h-3" /></button>
               </div>
@@ -591,7 +591,7 @@ const App: React.FC = () => {
         <main className="max-w-7xl mx-auto px-4 md:px-6 py-8 md:py-12">
           <section className="mb-12 md:mb-20">
             <div className="mb-6 md:mb-10 flex flex-col md:items-end md:flex-row justify-between border-b border-[#B6B09F]/20 pb-4 md:pb-6">
-              <div><h1 className="text-2xl md:text-4xl font-black tracking-tighter uppercase">Studio Pro</h1><p className="text-[#B6B09F] text-[9px] md:text-[11px] font-black uppercase tracking-widest">Fidelidade Extrema Ativa</p></div>
+              <div><h1 className="text-2xl md:text-4xl font-black tracking-tighter uppercase">Studio Pro</h1><p className="text-[#7A756A] text-[9px] md:text-[11px] font-black uppercase tracking-widest">Fidelidade Extrema Ativa</p></div>
               <div className="mt-4 md:mt-0 flex items-center bg-[#B6B09F]/10 px-4 py-2 rounded-xl text-[9px] font-black uppercase"><div className="w-2 h-2 bg-black rounded-full mr-2 animate-pulse" />ONLINE</div>
             </div>
             <div className="bg-[#EAE4D5] border border-[#B6B09F]/30 p-4 md:p-10 rounded-[35px] md:rounded-[50px]">
@@ -602,7 +602,7 @@ const App: React.FC = () => {
           <section>
             <div className="mb-6 border-b border-[#B6B09F]/20 pb-4"><h2 className="text-xl md:text-2xl font-black uppercase tracking-tighter">Galeria Recente</h2></div>
             {history.length === 0 ? (
-              <div className="bg-[#EAE4D5]/40 border border-dashed border-[#B6B09F]/40 rounded-[30px] p-20 text-center text-[#B6B09F] font-black uppercase tracking-widest text-[10px]">Aguardando primeiro render</div>
+              <div className="bg-[#EAE4D5]/40 border border-dashed border-[#B6B09F]/40 rounded-[30px] p-20 text-center text-[#7A756A] font-black uppercase tracking-widest text-[10px]">Aguardando primeiro render</div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
                 {history.map((item) => (
@@ -637,9 +637,9 @@ const App: React.FC = () => {
         </div>
 
         <div className="hidden md:flex items-center space-x-12 text-[10px] font-black uppercase tracking-widest">
-          <a href="#demo" className="hover:text-[#B6B09F]">Portfólio</a>
-          <a href="#how-it-works" className="hover:text-[#B6B09F]">Processo</a>
-          <a href="#pricing" className="hover:text-[#B6B09F]">Preços</a>
+          <a href="#demo" className="hover:text-[#7A756A]">Portfólio</a>
+          <a href="#how-it-works" className="hover:text-[#7A756A]">Processo</a>
+          <a href="#pricing" className="hover:text-[#7A756A]">Preços</a>
           <button onClick={() => { setAuthMode('login'); setShowAuth(true); }} className="bg-black text-white px-10 py-3.5 rounded-full hover:bg-zinc-800 transition-all shadow-xl">Acessar App</button>
         </div>
       </nav>

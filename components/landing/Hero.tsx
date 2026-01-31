@@ -20,7 +20,7 @@ export const Hero: React.FC<HeroProps> = ({ onStartNow, onSeeInAction }) => {
                 <h1 className="text-4xl md:text-[7rem] font-black mb-8 md:mb-12 leading-[1.1] md:leading-[0.85] tracking-tighter uppercase">
                     Render Realista <br className="hidden md:block" /> <span className="gradient-text">com um Clique</span>
                 </h1>
-                <p className="text-[#B6B09F] text-sm md:text-xl mb-10 md:mb-16 max-w-3xl mx-auto font-bold uppercase tracking-[0.1em] leading-relaxed">
+                <p className="text-[#7A756A] text-sm md:text-xl mb-10 md:mb-16 max-w-3xl mx-auto font-bold uppercase tracking-[0.1em] leading-relaxed">
                     Poupe semanas de trabalho e milhares de reais. Render XYZ entrega visualizações de elite instantaneamente.
                 </p>
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4 md:gap-8">

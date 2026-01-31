@@ -62,7 +62,7 @@ export const CpfModal: React.FC<CpfModalProps> = ({ user, onSuccess, onClose, is
                         <ShieldCheck className="text-white w-6 h-6" />
                     </div>
                     <h2 className="text-2xl font-black uppercase tracking-tighter mb-2">Segurança</h2>
-                    <p className="text-[#B6B09F] text-[10px] font-black uppercase tracking-widest leading-relaxed">
+                    <p className="text-[#7A756A] text-[10px] font-black uppercase tracking-widest leading-relaxed">
                         Para sua segurança e conformidade, precisamos que você vincule seu CPF à conta antes de continuar.
                     </p>
                 </div>
@@ -76,12 +76,12 @@ export const CpfModal: React.FC<CpfModalProps> = ({ user, onSuccess, onClose, is
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="relative group">
-                        <ShieldCheck className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#B6B09F] group-focus-within:text-black transition-colors" />
+                        <ShieldCheck className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#7A756A] group-focus-within:text-black transition-colors" />
                         <input
                             type="text"
                             required
                             placeholder="SEU CPF"
-                            className="w-full pl-14 pr-6 py-4 bg-[#F2F2F2] border border-transparent rounded-2xl text-[11px] font-bold focus:bg-white focus:border-[#B6B09F]/30 focus:outline-none transition-all placeholder:text-[#B6B09F]/60"
+                            className="w-full pl-14 pr-6 py-4 bg-[#F2F2F2] border border-transparent rounded-2xl text-[11px] font-bold focus:bg-white focus:border-[#B6B09F]/30 focus:outline-none transition-all placeholder:text-[#7A756A]/60"
                             value={cpf}
                             onChange={handleCpfChange}
                         />
