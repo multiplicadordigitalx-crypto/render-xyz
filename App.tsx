@@ -685,7 +685,13 @@ const App: React.FC = () => {
               <div className="mt-4 md:mt-0 flex items-center bg-[#B6B09F]/10 px-4 py-2 rounded-xl text-[9px] font-black uppercase"><div className="w-2 h-2 bg-black rounded-full mr-2 animate-pulse" />ONLINE</div>
             </div>
             <div className="bg-[#EAE4D5] border border-[#B6B09F]/30 p-4 md:p-10 rounded-[35px] md:rounded-[50px]">
-              <RenderTool onRenderComplete={onRenderComplete} credits={credits} userPlan={currentUser?.plan || 'free'} onKeyReset={() => setHasApiKey(false)} />
+              <RenderTool
+                onRenderComplete={onRenderComplete}
+                credits={credits}
+                userPlan={currentUser?.plan || 'free'}
+                onKeyReset={() => setHasApiKey(false)}
+                onUpgrade={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}
+              />
             </div>
           </section>
 

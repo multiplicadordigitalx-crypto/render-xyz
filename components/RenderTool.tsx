@@ -5,6 +5,16 @@ import { RenderStyle, RenderResolution, UserPlan } from '../types';
 import { renderImage } from '../services/geminiService';
 import { storageService } from '../services/storageService';
 import { toast } from 'react-hot-toast';
+import { BatchProcessor } from './BatchProcessor';
+
+const fileToBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+};
 
 const STYLES: RenderStyle[] = ['Dia', 'Noite', 'Fim de Tarde', 'Nublado'];
 
@@ -20,6 +30,7 @@ interface RenderToolProps {
   credits: number;
   userPlan: UserPlan;
   onKeyReset: () => void;
+  onUpgrade?: () => void;
 }
 
 // Helper to check if user can use a resolution
@@ -35,7 +46,8 @@ const shouldShowWatermark = (userPlan: UserPlan): boolean => {
   return userPlan === 'free';
 };
 
-export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credits, userPlan, onKeyReset }) => {
+export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credits, userPlan, onKeyReset, onUpgrade }) => {
+  const [mode, setMode] = useState<'single' | 'batch'>('single');
   const [image, setImage] = useState<string | null>(null);
   const [mimeType, setMimeType] = useState<string>('');
   const [style, setStyle] = useState<RenderStyle>('Dia');
@@ -45,6 +57,31 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
   const [error, setError] = useState<string | null>(null);
 
   const selectedRes = RESOLUTIONS.find(r => r.label === resolution) || RESOLUTIONS[0];
+
+  const processBatchImage = async (file: File) => {
+    // Check credits
+    if (credits < selectedRes.cost) {
+      throw new Error(`Créditos insuficientes (${selectedRes.cost} necessários)`);
+    }
+
+    // Convert file
+    const base64 = await fileToBase64(file);
+    const type = file.type;
+
+    // Render (No toast here, BatchProcessor handles status)
+    const rendered = await renderImage(base64, type, style, resolution);
+
+    // Upload
+    const response = await fetch(rendered);
+    const blob = await response.blob();
+    const filename = `render-${Date.now()}-${Math.random().toString(36).substr(2, 5)}.png`;
+    const uploadFile = new File([blob], filename, { type: "image/png" });
+
+    const publicUrl = await storageService.uploadImage(uploadFile, "renders");
+
+    // Callback (updates credits and history)
+    onRenderComplete(publicUrl, style, selectedRes.cost);
+  };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -151,8 +188,24 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8 items-start relative">
         {/* Controls */}
         <div className="lg:col-span-4 space-y-4 md:space-y-6">
+          {/* Mode Toggle */}
+          <div className="flex bg-[#EAE4D5] rounded-xl p-1 border border-[#B6B09F]/20">
+            <button
+              onClick={() => setMode('single')}
+              className={`flex-1 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${mode === 'single' ? 'bg-black text-white shadow-md' : 'text-[#7A756A] hover:bg-black/5'}`}
+            >
+              Única
+            </button>
+            <button
+              onClick={() => setMode('batch')}
+              className={`flex-1 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${mode === 'batch' ? 'bg-black text-white shadow-md' : 'text-[#7A756A] hover:bg-black/5'}`}
+            >
+              Lote {userPlan === 'elite' && '(Elite)'}
+            </button>
+          </div>
+
           <div className="bg-[#EAE4D5] border border-[#B6B09F]/20 p-5 md:p-8 rounded-2xl md:rounded-3xl shadow-sm">
-            <label className="block text-[9px] md:text-[10px] font-black text-[#000000] mb-4 md:mb-5 uppercase tracking-widest">Atmosfera</label>
+            <label className="block text-[9px] md:text-[10px] font-black text-[#000000] mb-4 md:mb-5 uppercase tracking-widest">Atmosfera {mode === 'batch' && '(Global)'}</label>
             <div className="grid grid-cols-2 gap-2 md:gap-3">
               {STYLES.map((s) => (
                 <button
@@ -170,7 +223,7 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
           </div>
 
           <div className="bg-[#EAE4D5] border border-[#B6B09F]/20 p-5 md:p-8 rounded-2xl md:rounded-3xl shadow-sm">
-            <label className="block text-[9px] md:text-[10px] font-black text-[#000000] mb-4 md:mb-5 uppercase tracking-widest">Qualidade</label>
+            <label className="block text-[9px] md:text-[10px] font-black text-[#000000] mb-4 md:mb-5 uppercase tracking-widest">Qualidade {mode === 'batch' && '(Global)'}</label>
             <div className="grid grid-cols-3 gap-2 md:gap-3">
               {RESOLUTIONS.map((r) => {
                 const isLocked = !canUseResolution(r.label, userPlan);
@@ -197,46 +250,50 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
             </div>
           </div>
 
-          <div className="bg-[#EAE4D5] border border-[#B6B09F]/20 p-5 md:p-8 rounded-2xl md:rounded-3xl shadow-sm">
-            <label className="block text-[9px] md:text-[10px] font-black text-[#000000] mb-4 md:mb-5 uppercase tracking-widest">Projeto</label>
-            <div className="relative">
-              <input
-                type="file"
-                onChange={handleFileUpload}
-                className="hidden"
-                id="image-upload"
-                accept="image/*"
-              />
-              <label
-                htmlFor="image-upload"
-                className="flex flex-col items-center justify-center border-2 border-dashed border-[#B6B09F]/40 rounded-xl md:rounded-2xl p-6 md:p-10 cursor-pointer hover:border-[#000000] transition-all"
-              >
-                <Upload className="w-6 h-6 md:w-8 md:h-8 text-[#7A756A] mb-2 md:mb-3" />
-                <span className="text-[8px] md:text-[9px] font-black uppercase text-[#7A756A] tracking-widest text-center">Selecionar Arquivo</span>
-              </label>
-            </div>
-          </div>
-
-          <button
-            onClick={handleGenerate}
-            disabled={!image || isRendering || credits <= 0}
-            className={`w-full py-4 md:py-6 rounded-xl md:rounded-2xl flex items-center justify-center font-black text-xs md:text-sm uppercase tracking-widest transition-all ${!image || isRendering || credits <= 0
-              ? 'bg-zinc-200 text-zinc-400 cursor-not-allowed opacity-50'
-              : 'bg-[#000000] hover:bg-zinc-800 text-white shadow-xl'
-              }`}
-          >
-            {isRendering ? (
-              <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 md:w-4 md:h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                <span>Processando</span>
+          {mode === 'single' && (
+            <div className="bg-[#EAE4D5] border border-[#B6B09F]/20 p-5 md:p-8 rounded-2xl md:rounded-3xl shadow-sm">
+              <label className="block text-[9px] md:text-[10px] font-black text-[#000000] mb-4 md:mb-5 uppercase tracking-widest">Projeto</label>
+              <div className="relative">
+                <input
+                  type="file"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                  id="image-upload"
+                  accept="image/*"
+                />
+                <label
+                  htmlFor="image-upload"
+                  className="flex flex-col items-center justify-center border-2 border-dashed border-[#B6B09F]/40 rounded-xl md:rounded-2xl p-6 md:p-10 cursor-pointer hover:border-[#000000] transition-all"
+                >
+                  <Upload className="w-6 h-6 md:w-8 md:h-8 text-[#7A756A] mb-2 md:mb-3" />
+                  <span className="text-[8px] md:text-[9px] font-black uppercase text-[#7A756A] tracking-widest text-center">Selecionar Arquivo</span>
+                </label>
               </div>
-            ) : (
-              <>
-                <img src="/assets/logo-icon.png" alt="" className="w-5 h-5 mr-3 invert" />
-                Gerar Render
-              </>
-            )}
-          </button>
+            </div>
+          )}
+
+          {mode === 'single' && (
+            <button
+              onClick={handleGenerate}
+              disabled={!image || isRendering || credits <= 0}
+              className={`w-full py-4 md:py-6 rounded-xl md:rounded-2xl flex items-center justify-center font-black text-xs md:text-sm uppercase tracking-widest transition-all ${!image || isRendering || credits <= 0
+                ? 'bg-zinc-200 text-zinc-400 cursor-not-allowed opacity-50'
+                : 'bg-[#000000] hover:bg-zinc-800 text-white shadow-xl'
+                }`}
+            >
+              {isRendering ? (
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 md:w-4 md:h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <span>Processando</span>
+                </div>
+              ) : (
+                <>
+                  <img src="/assets/logo-icon.png" alt="" className="w-5 h-5 mr-3 invert" />
+                  Gerar Render
+                </>
+              )}
+            </button>
+          )}
 
           {/* Watermark notice for free users */}
           {shouldShowWatermark(userPlan) && (
@@ -254,38 +311,50 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
         </div>
 
         {/* Canvas Area */}
-        <div className="lg:col-span-8 bg-[#EAE4D5] border border-[#B6B09F]/20 rounded-[30px] md:rounded-[40px] p-4 md:p-6 min-h-[400px] md:min-h-[550px] flex flex-col relative overflow-hidden shadow-sm">
-          <div className="flex-1 relative flex items-center justify-center overflow-hidden rounded-2xl md:rounded-3xl bg-[#F2F2F2] border border-[#B6B09F]/10">
-            {result ? (
-              <img src={result} alt="Render Result" className="max-w-full max-h-full object-contain" />
-            ) : image ? (
-              <img src={image} alt="Original" className="max-w-full max-h-full object-contain opacity-30 blur-[1px]" />
-            ) : (
-              <div className="text-[#7A756A] flex flex-col items-center text-center px-6">
-                <Upload className="w-8 h-8 md:w-10 md:h-10 opacity-20 mb-4 md:mb-6" />
-                <p className="font-black uppercase text-[9px] md:text-[11px] tracking-widest text-[#000000]">Mesa de Trabalho</p>
-                <p className="text-[7px] md:text-[8px] text-[#7A756A] mt-2 font-bold uppercase tracking-widest italic">Aguardando seu projeto</p>
-              </div>
-            )}
+        <div className="lg:col-span-8 bg-[#EAE4D5] border border-[#B6B09F]/20 rounded-[30px] md:rounded-3xl p-4 md:p-6 min-h-[400px] md:min-h-[550px] flex flex-col relative overflow-hidden shadow-sm">
+          {mode === 'batch' ? (
+            <div className="flex-1 overflow-y-auto">
+              <BatchProcessor
+                onRender={processBatchImage}
+                isProcessing={isRendering}
+                style={style}
+                userPlan={userPlan}
+                onUpgrade={() => onUpgrade?.()}
+              />
+            </div>
+          ) : (
+            <div className="flex-1 relative flex items-center justify-center overflow-hidden rounded-2xl md:rounded-3xl bg-[#F2F2F2] border border-[#B6B09F]/10">
+              {result ? (
+                <img src={result} alt="Render Result" className="max-w-full max-h-full object-contain" />
+              ) : image ? (
+                <img src={image} alt="Original" className="max-w-full max-h-full object-contain opacity-30 blur-[1px]" />
+              ) : (
+                <div className="text-[#7A756A] flex flex-col items-center text-center px-6">
+                  <Upload className="w-8 h-8 md:w-10 md:h-10 opacity-20 mb-4 md:mb-6" />
+                  <p className="font-black uppercase text-[9px] md:text-[11px] tracking-widest text-[#000000]">Mesa de Trabalho</p>
+                  <p className="text-[7px] md:text-[8px] text-[#7A756A] mt-2 font-bold uppercase tracking-widest italic">Aguardando seu projeto</p>
+                </div>
+              )}
 
-            {isRendering && (
-              <div className="absolute inset-0 bg-[#F2F2F2]/90 backdrop-blur-md flex flex-col items-center justify-center space-y-8 z-20">
-                <div className="relative">
-                  <img src="/assets/logo-icon.png" alt="Processando" className="w-16 h-16 md:w-20 md:h-20 object-contain animate-bounce" />
-                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-[#B6B09F] rounded-full animate-ping" />
+              {isRendering && (
+                <div className="absolute inset-0 bg-[#F2F2F2]/90 backdrop-blur-md flex flex-col items-center justify-center space-y-8 z-20">
+                  <div className="relative">
+                    <img src="/assets/logo-icon.png" alt="Processando" className="w-16 h-16 md:w-20 md:h-20 object-contain animate-bounce" />
+                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-[#B6B09F] rounded-full animate-ping" />
+                  </div>
+                  <div className="text-center space-y-2">
+                    <p className="text-[#000000] font-black text-2xl md:text-3xl tracking-tighter uppercase animate-pulse">Processando</p>
+                    <p className="text-[#7A756A] font-black text-[9px] uppercase tracking-[0.3em]">IA em alta velocidade</p>
+                  </div>
+                  <div className="w-48 h-1 bg-black/10 rounded-full overflow-hidden">
+                    <div className="h-full bg-black animate-progress" />
+                  </div>
                 </div>
-                <div className="text-center space-y-2">
-                  <p className="text-[#000000] font-black text-2xl md:text-3xl tracking-tighter uppercase animate-pulse">Processando</p>
-                  <p className="text-[#7A756A] font-black text-[9px] uppercase tracking-[0.3em]">IA em alta velocidade</p>
-                </div>
-                <div className="w-48 h-1 bg-black/10 rounded-full overflow-hidden">
-                  <div className="h-full bg-black animate-progress" />
-                </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          )}
 
-          {result && !isRendering && (
+          {result && !isRendering && mode === 'single' && (
             <div className="mt-4 md:mt-6 flex flex-col sm:flex-row gap-3 md:gap-4 justify-between items-center bg-white/40 p-4 rounded-xl md:rounded-2xl">
               <div className="text-[8px] md:text-[10px] font-black text-[#000000] uppercase tracking-widest flex items-center space-x-4">
                 <span>ESTILO: {style}</span>
