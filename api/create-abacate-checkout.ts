@@ -2,6 +2,7 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 
 // AbacatePay API Base URL (from official docs)
+// Deploy timestamp: 2026-02-05T20:16:00
 const ABACATE_API_URL = 'https://api.abacatepay.com/v1';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
