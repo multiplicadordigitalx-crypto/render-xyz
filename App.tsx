@@ -31,6 +31,7 @@ import { AdminPanel } from './components/AdminPanel';
 import { CreditModal } from './components/CreditModal';
 import { UserProfile } from './components/UserProfile';
 import { CpfModal } from './components/CpfModal';
+import { PixPaymentModal } from './components/PixPaymentModal';
 
 // Landing Components
 import { Hero } from './components/landing/Hero';
@@ -134,6 +135,10 @@ const App: React.FC = () => {
   const [showCpfModal, setShowCpfModal] = useState(false);
   const [cpfBlocking, setCpfBlocking] = useState(false);
 
+  // PIX Payment Modal State
+  const [showPixModal, setShowPixModal] = useState(false);
+  const [pixPaymentData, setPixPaymentData] = useState<{ planName: string; amount: number } | null>(null);
+
   // State for direct checkout flow (payment first, then register)
   const [pendingPaymentData, setPendingPaymentData] = useState<{
     email: string;
@@ -143,45 +148,34 @@ const App: React.FC = () => {
 
   useScrollReveal([isLoggedIn, showAuth]);
 
-  // Process AbacatePay payment success from storage/URL
+  // Process pending PIX payment on page load (for returning users)
   useEffect(() => {
-    // Check for pending bill ID from storage (for when user returns from payment)
-    const pendingBillId = sessionStorage.getItem('pendingAbacateBillId');
+    const pendingPixId = sessionStorage.getItem('pendingPixPaymentId');
+    const pendingPlanName = sessionStorage.getItem('pendingPlanName');
 
-    if (pendingBillId) {
-      abacatePayService.getBill(pendingBillId)
-        .then((billData) => {
-          if (billData.paymentStatus === 'PAID') { // Check status
-            // Store payment data and show registration with locked email
-            setPendingPaymentData({
-              email: billData.customerEmail,
-              planName: billData.planName || '',
-              sessionId: pendingBillId, // Use billId as sessionId
+    if (pendingPixId) {
+      abacatePayService.checkPaymentStatus(pendingPixId)
+        .then((status) => {
+          if (status.status === 'PAID') {
+            sessionStorage.removeItem('pendingPixPaymentId');
+            sessionStorage.removeItem('pendingPlanName');
+            toast.success('Pagamento confirmado!', {
+              style: { borderRadius: '15px', background: '#000', color: '#fff' }
             });
 
-            // Clear storage
-            sessionStorage.removeItem('pendingAbacateBillId');
-
-            // Only open Auth if not logged in
+            // If not logged in, redirect to register
             if (!auth.currentUser) {
+              setPendingPaymentData({
+                email: '',
+                planName: pendingPlanName || '',
+                sessionId: pendingPixId
+              });
               setAuthMode('register');
               setShowAuth(true);
-              toast.success('Pagamento confirmado! Complete seu cadastro.', {
-                style: { borderRadius: '15px', background: '#000', color: '#fff' }
-              });
-            } else {
-              toast.success('Pagamento confirmado! Atualizando plano...', {
-                style: { borderRadius: '15px', background: '#000', color: '#fff' }
-              });
             }
-          } else if (billData.paymentStatus === 'PENDING') {
-            console.log("Payment still pending...");
-            // Maybe keep checking or show message? 
-            // For now, do nothing, wait for user to pay or webhook.
-            // But if user was redirected back, usually it is completed or canceled.
           }
         })
-        .catch(err => console.error("Error fetching bill:", err));
+        .catch(err => console.error('Error checking payment:', err));
     }
   }, []);
 
@@ -506,33 +500,60 @@ const App: React.FC = () => {
     setShowCreditModal(false);
   };
 
-  const handlePlanSelection = async (plan: PricingPlan) => {
-    // Direct checkout logic
-    try {
-      const priceString = plan.price.replace('R$', '').trim().replace('.', '').replace(',', '.');
-      const amountInCentavos = Math.round(parseFloat(priceString) * 100);
+  const handlePlanSelection = (plan: PricingPlan) => {
+    // Parse price to centavos
+    const priceString = plan.price.replace('R$', '').trim().replace('.', '').replace(',', '.');
+    const amountInCentavos = Math.round(parseFloat(priceString) * 100);
 
-      if (amountInCentavos === 0) {
-        // Free plan logic: Redirect to signup
-        setAuthMode('register');
-        setShowAuth(true);
-        // Clean any pending payment data just in case
-        setPendingPaymentData(null);
-        return;
+    if (amountInCentavos === 0) {
+      // Free plan: redirect to signup
+      setAuthMode('register');
+      setShowAuth(true);
+      setPendingPaymentData(null);
+      return;
+    }
+
+    // Open PIX payment modal
+    setPixPaymentData({
+      planName: plan.name,
+      amount: amountInCentavos
+    });
+    setShowPixModal(true);
+  };
+
+  const handlePixPaymentSuccess = async () => {
+    setShowPixModal(false);
+    setPixPaymentData(null);
+
+    toast.success('Pagamento confirmado! Ativando seu plano...', {
+      style: { borderRadius: '15px', background: '#000', color: '#fff' }
+    });
+
+    // If user is logged in, update their plan
+    if (currentUser && pixPaymentData) {
+      try {
+        let plan: UserPlan = 'free';
+        const planNameLower = pixPaymentData.planName.toLowerCase();
+        if (planNameLower.includes('estúdio') || planNameLower.includes('studio')) {
+          plan = 'studio';
+        } else if (planNameLower.includes('elite')) {
+          plan = 'elite';
+        }
+
+        if (plan !== 'free') {
+          await updateDoc(doc(db, "users", currentUser.id), {
+            plan: plan,
+            credits: plan === 'studio' ? 60 : plan === 'elite' ? 250 : 3
+          });
+        }
+      } catch (error) {
+        console.error('Error updating user plan:', error);
+        toast.error('Erro ao ativar plano. Entre em contato com o suporte.');
       }
-
-      await abacatePayService.createCheckoutSession({
-        priceId: plan.externalId || 'plan',
-        amount: amountInCentavos,
-        planName: plan.name,
-        description: `Assinatura ${plan.name}`,
-        customerEmail: currentUser?.email || undefined,
-        userId: currentUser?.id,
-        frequency: 'MONTHLY'
-      });
-    } catch (error) {
-      console.error(error);
-      toast.error(`Erro: ${error instanceof Error ? error.message : "Falha ao iniciar pagamento"}`);
+    } else {
+      // User not logged in - redirect to register
+      setAuthMode('register');
+      setShowAuth(true);
     }
   };
 
@@ -785,6 +806,19 @@ const App: React.FC = () => {
       <CTA onStartNow={() => { setAuthMode('register'); setShowAuth(true); }} />
 
       <Footer />
+
+      {/* PIX Payment Modal */}
+      {showPixModal && pixPaymentData && (
+        <PixPaymentModal
+          planName={pixPaymentData.planName}
+          amount={pixPaymentData.amount}
+          onSuccess={handlePixPaymentSuccess}
+          onClose={() => {
+            setShowPixModal(false);
+            setPixPaymentData(null);
+          }}
+        />
+      )}
     </div>
   );
 };

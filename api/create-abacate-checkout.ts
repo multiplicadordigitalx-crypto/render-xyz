@@ -1,83 +1,75 @@
 
 import { VercelRequest, VercelResponse } from '@vercel/node';
 
-const ABACATE_API_URL = 'https://api.abacatepay.com/v1';
+const ABACATE_API = 'https://api.abacatepay.com/v1';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     // CORS
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
     if (req.method === 'OPTIONS') return res.status(200).end();
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-    try {
-        const apiKey = process.env.ABACATE_PAY_API_KEY;
-        if (!apiKey) {
-            console.error('Missing ABACATE_PAY_API_KEY');
-            return res.status(500).json({ error: 'Configuração do servidor inválida' });
-        }
+    const apiKey = process.env.ABACATE_PAY_API_KEY;
+    if (!apiKey) {
+        console.error('Missing ABACATE_PAY_API_KEY');
+        return res.status(500).json({ error: 'Erro de configuração do servidor' });
+    }
 
+    try {
         const { amount, planName, description } = req.body;
 
-        if (!amount || typeof amount !== 'number') {
+        if (!amount || typeof amount !== 'number' || amount <= 0) {
             return res.status(400).json({ error: 'Valor inválido' });
         }
 
-        // Build URLs
-        const protocol = req.headers['x-forwarded-proto'] || 'https';
-        const host = req.headers['host'] || 'render-xyz.vercel.app';
-        const baseUrl = `${protocol}://${host}`;
+        console.log('Creating PIX QR Code:', { amount, planName });
 
-        // Payload conforme documentação oficial AbacatePay
-        // https://docs.abacatepay.com/api-reference/criar-uma-nova-cobrança
-        const payload = {
-            frequency: "ONE_TIME",
-            methods: ["PIX"],
-            products: [
-                {
-                    externalId: planName || 'plano-renderxyz',
-                    name: description || 'Plano RenderXYZ',
-                    description: description || 'Assinatura do plano RenderXYZ',
-                    quantity: 1,
-                    price: amount // Em centavos
-                }
-            ],
-            returnUrl: baseUrl,
-            completionUrl: `${baseUrl}/?payment=success`
-        };
-
-        console.log('AbacatePay Request:', JSON.stringify(payload, null, 2));
-
-        const response = await fetch(`${ABACATE_API_URL}/billing/create`, {
+        // Use PIX QR Code endpoint - simpler, no customer required
+        const response = await fetch(`${ABACATE_API}/pixQrCode/create`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${apiKey}`,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(payload)
+            body: JSON.stringify({
+                amount: amount,
+                description: description || `Plano ${planName || 'RenderXYZ'}`,
+                expiresIn: 3600, // 1 hour expiration
+                metadata: {
+                    planName: planName || 'credits',
+                    type: 'subscription'
+                }
+            })
         });
 
         const data = await response.json();
         console.log('AbacatePay Response:', JSON.stringify(data, null, 2));
 
-        if (!response.ok) {
+        if (!response.ok || data.error) {
             console.error('AbacatePay Error:', data);
-            return res.status(response.status).json({
-                error: data.error || data.message || 'Erro ao criar cobrança',
+            return res.status(response.status || 500).json({
+                error: data.error || data.message || 'Erro ao criar pagamento',
                 details: data
             });
         }
 
-        if (!data.data?.url) {
-            console.error('No URL in response:', data);
-            return res.status(500).json({ error: 'URL de pagamento não gerada' });
+        // PIX QR Code response has: brCode, qrCodeBase64, expiresAt, id
+        // Return a URL that shows the QR code or the brCode for copy/paste
+        const paymentData = data.data;
+
+        if (!paymentData) {
+            return res.status(500).json({ error: 'Resposta inválida do servidor de pagamento' });
         }
 
         return res.status(200).json({
-            url: data.data.url,
-            id: data.data.id
+            id: paymentData.id,
+            brCode: paymentData.brCode,
+            qrCodeBase64: paymentData.qrCodeBase64,
+            expiresAt: paymentData.expiresAt,
+            amount: paymentData.amount
         });
 
     } catch (error: any) {

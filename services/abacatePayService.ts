@@ -1,59 +1,53 @@
 
-interface CreateAbacateCheckoutParams {
-    priceId: string; // Used to identify the plan, though AbacatePay uses amount
-    amount: number; // AbacatePay needs amount in centavos
+interface CreateCheckoutParams {
+    amount: number;
     planName: string;
-    customerEmail?: string;
-    userId?: string;
-    credits?: number;
-    description: string;
-    frequency?: 'ONE_TIME' | 'MONTHLY' | 'YEARLY'; // AbacatePay frequency
+    description?: string;
+}
+
+interface PixPaymentResponse {
+    id: string;
+    brCode: string;
+    qrCodeBase64: string;
+    expiresAt: string;
+    amount: number;
 }
 
 export const abacatePayService = {
-    async createCheckoutSession(params: CreateAbacateCheckoutParams) {
-        try {
-            const response = await fetch('/api/create-abacate-checkout', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(params),
-            });
+    async createCheckoutSession(params: CreateCheckoutParams): Promise<PixPaymentResponse> {
+        const response = await fetch('/api/create-abacate-checkout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                amount: params.amount,
+                planName: params.planName,
+                description: params.description || `Assinatura ${params.planName}`
+            })
+        });
 
-            const data = await response.json();
+        const data = await response.json();
 
-            if (data.error) {
-                throw new Error(data.error);
-            }
-
-            if (data.url) {
-                if (data.id) {
-                    sessionStorage.setItem('pendingAbacateBillId', data.id);
-                }
-                window.location.href = data.url;
-            } else {
-                throw new Error('No checkout URL returned');
-            }
-        } catch (err) {
-            console.error('AbacatePay Checkout Error:', err);
-            throw err;
+        if (data.error) {
+            throw new Error(data.error);
         }
+
+        // Store payment ID for verification after payment
+        if (data.id) {
+            sessionStorage.setItem('pendingPixPaymentId', data.id);
+            sessionStorage.setItem('pendingPlanName', params.planName);
+        }
+
+        return data;
     },
 
-    async getBill(billId: string) {
-        try {
-            const response = await fetch(`/api/get-abacate-bill?billId=${billId}`);
-            const data = await response.json();
+    async checkPaymentStatus(pixId: string): Promise<{ status: string }> {
+        const response = await fetch(`/api/check-pix-status?id=${pixId}`);
+        const data = await response.json();
 
-            if (data.error) {
-                throw new Error(data.error);
-            }
-
-            return data;
-        } catch (err) {
-            console.error('Bill Retrieve Error:', err);
-            throw err;
+        if (data.error) {
+            throw new Error(data.error);
         }
+
+        return data;
     }
 };
