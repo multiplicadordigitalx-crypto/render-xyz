@@ -1,9 +1,9 @@
 
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import AbacatePay from 'abacatepay-nodejs-sdk';
+import * as AbacatePaySDK from 'abacatepay-nodejs-sdk';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-    // Set CORS headers immediately
+    // Set CORS headers
     res.setHeader('Access-Control-Allow-Credentials', 'true');
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
@@ -27,7 +27,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             return res.status(500).json({ error: 'Server Config Error: Missing Key' });
         }
 
-        // Initialize AbacatePay SDK (Function call, not class)
+        // Handle CJS/ESM interop: The SDK exports 'default', so we might get the module object
+        // cast to any to avoid TS errors during this runtime check
+        const SdkImport = AbacatePaySDK as any;
+        const AbacatePay = SdkImport.default || SdkImport;
+
+        if (typeof AbacatePay !== 'function') {
+            console.error("AbacatePay Import Error: Not a function", { type: typeof AbacatePay, keys: Object.keys(SdkImport) });
+            return res.status(500).json({ error: 'Internal Error: Payment SDK Init Failed' });
+        }
+
+        // Initialize AbacatePay SDK
         const abacatePay = AbacatePay(apiKey);
 
         const { amount, description, customerEmail, userId, credits, planName, frequency } = req.body;
