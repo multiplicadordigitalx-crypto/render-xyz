@@ -512,12 +512,11 @@ const App: React.FC = () => {
       const amountInCentavos = Math.round(parseFloat(priceString) * 100);
 
       if (amountInCentavos === 0) {
-        // Free plan logic if needed, or just redirect
-        // For now assuming all paid plans based on user request "comprar ou assinar"
-        // If price is 0, maybe just set plan directly?
-        // But existing logic seemed to require Stripe price ID for checkout.
-        // If manual plan selection (e.g. Free), we might need different logic.
-        // Let's assume paid plans.
+        // Free plan logic: Redirect to signup
+        setAuthMode('register');
+        setShowAuth(true);
+        // Clean any pending payment data just in case
+        setPendingPaymentData(null);
         return;
       }
 
