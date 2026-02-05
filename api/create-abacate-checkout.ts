@@ -6,14 +6,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(405).json({ error: 'Method not allowed' });
     }
 
-    // Production Logic: Strictly use environment variable
-    const apiKey = process.env.ABACATE_PAY_API_KEY;
-
-    if (!apiKey) {
-        console.error("CRITICAL: ABACATE_PAY_API_KEY is missing in Vercel Environment Variables.");
-        throw new Error('Server Configuration Error: Missing Payment Key');
-    }
-
     // Dynamic import
     const { AbacatePay } = await import('abacatepay');
     const abacatePay = new AbacatePay(apiKey);
