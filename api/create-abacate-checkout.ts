@@ -19,7 +19,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             return res.status(400).json({ error: 'Missing required parameters' });
         }
 
-        const returnUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+        // Determine base URL dynamically
+        const protocol = req.headers['x-forwarded-proto'] || 'http';
+        const host = req.headers['host'];
+        const returnUrl = process.env.NEXT_PUBLIC_APP_URL || `${protocol}://${host}`;
 
         const billing = await abacatePay.billing.create({
             frequency: frequency || 'ONE_TIME',
