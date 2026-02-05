@@ -532,7 +532,7 @@ const App: React.FC = () => {
       });
     } catch (error) {
       console.error(error);
-      toast.error("Erro ao iniciar pagamento.");
+      toast.error(`Erro: ${error instanceof Error ? error.message : "Falha ao iniciar pagamento"}`);
     }
   };
 
