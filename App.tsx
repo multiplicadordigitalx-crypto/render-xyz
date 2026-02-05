@@ -74,7 +74,7 @@ const DEFAULT_PRICING_PLANS: PricingPlan[] = [
     period: "/mês",
     features: ["250 renders/mês (Fair Use)", "Qualidade 4K Ultra Pro", "Créditos acumulativos", "Suporte VIP via WhatsApp", "Acesso Antecipado"],
     buttonText: "Acessar Elite",
-    resolutionLabel: "4K",
+
 
     externalId: "price_1Sv1PHEQ6obY8Ge93N3Sxiit"
   }
@@ -522,7 +522,7 @@ const App: React.FC = () => {
       }
 
       await abacatePayService.createCheckoutSession({
-        priceId: plan.stripePriceId || 'plan',
+        priceId: plan.externalId || 'plan',
         amount: amountInCentavos,
         planName: plan.name,
         description: `Assinatura ${plan.name}`,
