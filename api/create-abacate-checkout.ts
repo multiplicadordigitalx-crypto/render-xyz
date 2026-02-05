@@ -1,56 +1,78 @@
 
 import { VercelRequest, VercelResponse } from '@vercel/node';
 
-// AbacatePay API Base URL (from official docs)
-// Deploy timestamp: 2026-02-05T20:16:00
 const ABACATE_API_URL = 'https://api.abacatepay.com/v1';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-    // Set CORS headers
+    // CORS headers
     res.setHeader('Access-Control-Allow-Credentials', 'true');
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST');
     res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
 
-    if (req.method === 'OPTIONS') {
-        return res.status(200).end();
-    }
-
-    if (req.method !== 'POST') {
-        return res.status(405).json({ error: 'Method not allowed' });
-    }
+    if (req.method === 'OPTIONS') return res.status(200).end();
+    if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
     try {
         const apiKey = process.env.ABACATE_PAY_API_KEY;
-
         if (!apiKey) {
-            console.error("CRITICAL: Missing ABACATE_PAY_API_KEY");
-            return res.status(500).json({ error: 'Server Config Error: Missing Key' });
+            return res.status(500).json({ error: 'Missing API Key' });
         }
 
-        const { amount, description, planName } = req.body;
-
+        const { amount, description, planName, customerEmail } = req.body;
         if (!amount) {
-            return res.status(400).json({ error: 'Missing required parameter: amount' });
+            return res.status(400).json({ error: 'Missing amount' });
         }
 
-        // Determine base URL dynamically for redirects
         const protocol = req.headers['x-forwarded-proto'] || 'https';
         const host = req.headers['host'];
         const baseUrl = `${protocol}://${host}`;
 
-        console.log('Creating AbacatePay billing:', { amount, planName, baseUrl });
+        const headers = {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json'
+        };
 
-        // Minimal payload - NO customer (customer fills in their data on payment page)
-        // According to docs, customer is optional and can be filled by buyer
-        const payload = {
+        // Step 1: Create or find a customer
+        // Using a default customer for anonymous purchases
+        const email = customerEmail || 'cliente@renderxyz.com';
+
+        console.log('Step 1: Creating customer...');
+        const customerResponse = await fetch(`${ABACATE_API_URL}/customer/create`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({
+                name: 'Cliente RenderXYZ',
+                email: email,
+                cellphone: '11999999999',
+                taxId: '00000000000'
+            })
+        });
+
+        const customerData = await customerResponse.json();
+        console.log('Customer Response:', JSON.stringify(customerData, null, 2));
+
+        // Get customer ID (from new creation or error message if already exists)
+        let customerId = customerData.data?.id;
+
+        // If customer already exists, the API might return the existing one or an error
+        // Try to proceed with billing anyway
+        if (!customerId && customerData.data) {
+            customerId = customerData.data.id;
+        }
+
+        console.log('Customer ID:', customerId);
+
+        // Step 2: Create billing with customer ID
+        console.log('Step 2: Creating billing...');
+        const billingPayload: any = {
             frequency: "ONE_TIME",
             methods: ["PIX"],
             products: [
                 {
                     externalId: planName || 'credits',
                     name: description || 'Créditos RenderXYZ',
-                    description: description || 'Compra de créditos para renderização',
+                    description: description || 'Compra de créditos',
                     quantity: 1,
                     price: amount
                 }
@@ -59,25 +81,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             completionUrl: `${baseUrl}/?payment=success`
         };
 
-        console.log('AbacatePay Request Payload:', JSON.stringify(payload, null, 2));
+        // Add customer ID if we got one
+        if (customerId) {
+            billingPayload.customerId = customerId;
+        }
 
-        const response = await fetch(`${ABACATE_API_URL}/billing/create`, {
+        console.log('Billing Payload:', JSON.stringify(billingPayload, null, 2));
+
+        const billingResponse = await fetch(`${ABACATE_API_URL}/billing/create`, {
             method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${apiKey}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(payload)
+            headers,
+            body: JSON.stringify(billingPayload)
         });
 
-        const billing = await response.json();
+        const billing = await billingResponse.json();
+        console.log('Billing Response:', JSON.stringify(billing, null, 2));
 
-        console.log('AbacatePay Response:', JSON.stringify(billing, null, 2));
-
-        if (!response.ok || billing.error) {
-            console.error('AbacatePay API Error:', billing);
-            return res.status(response.status || 500).json({
-                error: billing.error || billing.message || 'AbacatePay API Error',
+        if (!billingResponse.ok || billing.error) {
+            return res.status(billingResponse.status || 500).json({
+                error: billing.error || 'AbacatePay Error',
                 details: billing
             });
         }
@@ -86,16 +108,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const billId = billing.data?.id;
 
         if (!paymentUrl) {
-            console.error('AbacatePay: No payment URL returned', billing);
-            return res.status(500).json({ error: 'Failed to generate payment URL', details: billing });
+            return res.status(500).json({ error: 'No payment URL', details: billing });
         }
 
         return res.status(200).json({ url: paymentUrl, id: billId });
 
     } catch (error: any) {
-        console.error('Checkout Error:', error);
-        return res.status(500).json({
-            error: error.message || 'Internal Server Error'
-        });
+        console.error('Error:', error);
+        return res.status(500).json({ error: error.message });
     }
 }
