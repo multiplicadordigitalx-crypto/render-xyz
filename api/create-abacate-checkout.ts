@@ -1,12 +1,14 @@
 
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import * as AbacatePaySDK from 'abacatepay-nodejs-sdk';
+
+// AbacatePay API Base URL (from SDK source)
+const ABACATE_API_URL = 'https://api.abacatepay.com/v1';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Set CORS headers
     res.setHeader('Access-Control-Allow-Credentials', 'true');
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST');
     res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
 
     if (req.method === 'OPTIONS') {
@@ -18,8 +20,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     try {
-        console.log("Starting AbacatePay Checkout...");
-
         const apiKey = process.env.ABACATE_PAY_API_KEY;
 
         if (!apiKey) {
@@ -27,71 +27,74 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             return res.status(500).json({ error: 'Server Config Error: Missing Key' });
         }
 
-        // Handle CJS/ESM interop: The SDK exports 'default', so we might get the module object
-        // cast to any to avoid TS errors during this runtime check
-        const SdkImport = AbacatePaySDK as any;
-        const AbacatePay = SdkImport.default || SdkImport;
-
-        if (typeof AbacatePay !== 'function') {
-            console.error("AbacatePay Import Error: Not a function", { type: typeof AbacatePay, keys: Object.keys(SdkImport) });
-            return res.status(500).json({ error: 'Internal Error: Payment SDK Init Failed' });
-        }
-
-        // Initialize AbacatePay SDK
-        const abacatePay = AbacatePay(apiKey);
-
         const { amount, description, customerEmail, userId, credits, planName, frequency } = req.body;
 
         if (!amount) {
-            return res.status(400).json({ error: 'Missing required parameters: amount' });
+            return res.status(400).json({ error: 'Missing required parameter: amount' });
         }
 
-        // Determine base URL dynamically
-        const protocol = req.headers['x-forwarded-proto'] || 'http';
+        // Determine base URL dynamically for redirects
+        const protocol = req.headers['x-forwarded-proto'] || 'https';
         const host = req.headers['host'];
-        const returnUrl = process.env.NEXT_PUBLIC_APP_URL || `${protocol}://${host}`;
+        const returnUrl = `${protocol}://${host}/?payment=success`;
 
-        console.log('Creating AbacatePay session:', { amount, planName, returnUrl });
+        console.log('Creating AbacatePay billing via direct API:', { amount, planName, returnUrl });
 
-        const billing = await abacatePay.billing.create({
-            frequency: frequency || 'ONE_TIME',
-            methods: ['PIX', 'CARD'],
-            products: [
-                {
-                    externalId: planName || 'default',
-                    name: description || 'Credits',
-                    quantity: 1,
-                    price: amount, // Amount in centavos
-                    description: description || 'Service',
-                }
-            ],
-            returnUrl: `${returnUrl}/?payment=success`,
-            completionUrl: `${returnUrl}/?payment=success`,
-            customer: {
-                email: customerEmail,
-                metadata: {
-                    userId: userId,
-                    credits: credits?.toString(),
-                    planName: planName
-                }
-            }
+        // Direct API call to AbacatePay
+        const response = await fetch(`${ABACATE_API_URL}/billing/create`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json',
+                'User-Agent': 'RenderXYZ/1.0'
+            },
+            body: JSON.stringify({
+                frequency: frequency || 'ONE_TIME',
+                methods: ['PIX'],
+                products: [
+                    {
+                        externalId: planName || 'default',
+                        name: description || 'Credits',
+                        quantity: 1,
+                        price: amount,
+                        description: description || 'Service',
+                    }
+                ],
+                returnUrl: returnUrl,
+                completionUrl: returnUrl,
+                customer: customerEmail ? {
+                    email: customerEmail
+                } : undefined
+            })
         });
 
+        const billing = await response.json();
+
+        console.log('AbacatePay Response:', JSON.stringify(billing, null, 2));
+
+        if (!response.ok || billing.error) {
+            console.error('AbacatePay API Error:', billing);
+            return res.status(response.status || 500).json({
+                error: billing.error || billing.message || 'AbacatePay API Error',
+                details: billing
+            });
+        }
+
+        // The API returns data.url and data.id
         const paymentUrl = billing.data?.url;
         const billId = billing.data?.id;
 
         if (!paymentUrl) {
-            console.error('AbacatePay verification:', billing);
-            throw new Error('Failed to generate payment URL - AbacatePay returned no URL');
+            console.error('AbacatePay: No payment URL returned', billing);
+            return res.status(500).json({ error: 'Failed to generate payment URL' });
         }
 
         return res.status(200).json({ url: paymentUrl, id: billId });
 
     } catch (error: any) {
-        console.error('AbacatePay API Error:', error);
+        console.error('Checkout Error:', error);
         return res.status(500).json({
-            error: error.message || 'Internal Server Error',
-            details: error.toString()
+            error: error.message || 'Internal Server Error'
         });
     }
 }

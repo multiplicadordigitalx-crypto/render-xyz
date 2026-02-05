@@ -1,6 +1,7 @@
 
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import * as AbacatePaySDK from 'abacatepay-nodejs-sdk';
+
+const ABACATE_API_URL = 'https://api.abacatepay.com/v1';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Set CORS headers
@@ -29,25 +30,33 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             return res.status(500).json({ error: 'Server Config Error: Missing Key' });
         }
 
-        // Handle CJS/ESM interop
-        const SdkImport = AbacatePaySDK as any;
-        const AbacatePay = SdkImport.default || SdkImport;
-        const abacatePay = AbacatePay(apiKey);
+        // Direct API call to list billings
+        const response = await fetch(`${ABACATE_API_URL}/billing/list`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json'
+            }
+        });
 
-        // Fetch bill details
-        const bills = await abacatePay.billing.list();
-        const bill = bills.data.find((b: any) => b.id === billId);
+        const result = await response.json();
+
+        if (!response.ok || result.error) {
+            return res.status(response.status || 500).json({ error: result.error || 'API Error' });
+        }
+
+        const bill = result.data?.find((b: any) => b.id === billId);
 
         if (!bill) {
             return res.status(404).json({ error: 'Bill not found' });
         }
 
         return res.status(200).json({
-            customerEmail: bill.customer?.metadata?.email || bill.customer?.email,
+            customerEmail: bill.customer?.email,
             planName: bill.products?.[0]?.externalId || '',
-            credits: bill.customer?.metadata?.credits || '0',
+            credits: bill.metadata?.credits || '0',
             paymentStatus: bill.status,
-            metadata: bill.customer?.metadata
+            metadata: bill.metadata
         });
 
     } catch (error: any) {
