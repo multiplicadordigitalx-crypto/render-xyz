@@ -1,6 +1,5 @@
 
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import { AbacatePay } from 'abacatepay';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (req.method !== 'POST') {
@@ -8,21 +7,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     try {
-        // Initialize AbacatePay
-        // Note: Assuming the SDK is initialized this way based on docs. 
-        // If not, we might need to adjust.
-        const abacatePay = new AbacatePay(process.env.ABACATE_PAY_API_KEY as string);
+        if (!process.env.ABACATE_PAY_API_KEY) {
+            throw new Error('Missing ABACATE_PAY_API_KEY environment variable');
+        }
+
+        // Dynamic import to prevent top-level crashes and catch import errors
+        const { AbacatePay } = await import('abacatepay');
+        const abacatePay = new AbacatePay(process.env.ABACATE_PAY_API_KEY);
 
         const { amount, description, customerEmail, userId, credits, planName, frequency } = req.body;
 
         if (!amount) {
-            return res.status(400).json({ error: 'Missing required parameters' });
+            return res.status(400).json({ error: 'Missing required parameters: amount' });
         }
 
         // Determine base URL dynamically
         const protocol = req.headers['x-forwarded-proto'] || 'http';
         const host = req.headers['host'];
         const returnUrl = process.env.NEXT_PUBLIC_APP_URL || `${protocol}://${host}`;
+
+        console.log('Creating AbacatePay session:', { amount, planName, returnUrl });
 
         const billing = await abacatePay.billing.create({
             frequency: frequency || 'ONE_TIME',
@@ -53,13 +57,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
         if (!paymentUrl) {
             console.error('AbacatePay verification:', billing);
-            throw new Error('Failed to generate payment URL');
+            throw new Error('Failed to generate payment URL - AbacatePay returned no URL');
         }
 
         return res.status(200).json({ url: paymentUrl, id: billId });
 
     } catch (error: any) {
-        console.error('AbacatePay Error:', error);
-        return res.status(500).json({ error: error.message || 'Internal Server Error' });
+        console.error('AbacatePay API Error:', error);
+        // Ensure we return JSON even for runtime errors
+        return res.status(500).json({
+            error: error.message || 'Internal Server Error',
+            details: error.toString()
+        });
     }
 }
