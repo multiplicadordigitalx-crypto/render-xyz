@@ -1,8 +1,18 @@
 
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import { AbacatePay } from 'abacatepay';
+import AbacatePay from 'abacatepay-nodejs-sdk';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+    // Set CORS headers
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
+
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+    }
+
     if (req.method !== 'GET') {
         return res.status(405).json({ error: 'Method not allowed' });
     }
@@ -14,7 +24,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             return res.status(400).json({ error: 'Missing billId parameter' });
         }
 
-        const abacatePay = new AbacatePay(process.env.ABACATE_PAY_API_KEY as string);
+        const apiKey = process.env.ABACATE_PAY_API_KEY;
+        if (!apiKey) {
+            return res.status(500).json({ error: 'Server Config Error: Missing Key' });
+        }
+
+        const abacatePay = AbacatePay(apiKey);
 
         // Fetch bill details
         const bills = await abacatePay.billing.list();

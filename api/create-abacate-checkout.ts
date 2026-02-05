@@ -1,8 +1,6 @@
 
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import { createRequire } from 'module';
-
-const require = createRequire(import.meta.url);
+import AbacatePay from 'abacatepay-nodejs-sdk';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Set CORS headers immediately
@@ -29,17 +27,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             return res.status(500).json({ error: 'Server Config Error: Missing Key' });
         }
 
-        // Robust Import Strategy
-        let AbacatePay;
-        try {
-            const pkg = require('abacatepay');
-            AbacatePay = pkg.AbacatePay || pkg.default?.AbacatePay || pkg;
-        } catch (importError: any) {
-            console.error("Import Error:", importError);
-            return res.status(500).json({ error: 'Failed to load Payment Module', details: importError.message });
-        }
-
-        const abacatePay = new AbacatePay(apiKey);
+        // Initialize AbacatePay SDK (Function call, not class)
+        const abacatePay = AbacatePay(apiKey);
 
         const { amount, description, customerEmail, userId, credits, planName, frequency } = req.body;
 
@@ -78,8 +67,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             }
         });
 
-        const paymentUrl = billing.data?.url || billing.url;
-        const billId = billing.data?.id || billing.id;
+        const paymentUrl = billing.data?.url;
+        const billId = billing.data?.id;
 
         if (!paymentUrl) {
             console.error('AbacatePay verification:', billing);
