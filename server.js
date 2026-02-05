@@ -1,63 +1,18 @@
+
 import express from 'express';
 import cors from 'cors';
-import Stripe from 'stripe';
 import dotenv from 'dotenv';
+// import { AbacatePay } from 'abacatepay'; // Dynamic import used
 
 dotenv.config({ path: '.env.local' });
 
 const app = express();
 const PORT = 3002;
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-    apiVersion: '2024-12-18.acacia',
-});
-
 app.use(cors());
 app.use(express.json());
 
-// Checkout Session Endpoint
-app.post('/api/create-checkout-session', async (req, res) => {
-    try {
-        const { priceId, mode, successUrl, cancelUrl, customerEmail, userId, credits, planName, paymentMethod } = req.body;
-
-        if (!priceId || !mode) {
-            return res.status(400).json({ error: 'Missing required parameters' });
-        }
-
-        console.log('Creating checkout session:', { priceId, mode, customerEmail, paymentMethod });
-
-        const successUrlWithSession = `${successUrl}${successUrl.includes('?') ? '&' : '?'}session_id={CHECKOUT_SESSION_ID}`;
-
-        const sessionConfig = {
-            payment_method_types: paymentMethod === 'pix' ? ['pix'] : ['card'],
-            line_items: [
-                {
-                    price: priceId,
-                    quantity: 1,
-                },
-            ],
-            mode: mode,
-            success_url: successUrlWithSession,
-            cancel_url: cancelUrl,
-            customer_email: customerEmail || undefined,
-            metadata: {
-                userId: userId || '',
-                credits: credits ? credits.toString() : '0',
-                planName: planName || '',
-            },
-        };
-
-        const session = await stripe.checkout.sessions.create(sessionConfig);
-
-        console.log('Session created:', session.id);
-        return res.status(200).json({ sessionId: session.id, url: session.url });
-    } catch (error) {
-        console.error('Stripe Error:', error.message);
-        return res.status(500).json({ error: error.message || 'Internal Server Error' });
-    }
-});
-
-// Get Checkout Session Endpoint
+// Create AbacatePay Checkout Session Endpoint
 app.post('/api/create-abacate-checkout', async (req, res) => {
     try {
         const { AbacatePay } = await import('abacatepay');
@@ -118,22 +73,8 @@ app.get('/api/get-abacate-bill', async (req, res) => {
         const abacatePay = new AbacatePay(process.env.ABACATE_PAY_API_KEY);
 
         // Fetch bill details
-        // Assuming abacatePay.billing.list({ id: billId }) or similar. 
-        // Docs say GET /billing/get with params? Or billing.retrieve(id)?
-        // Based on "API descomplicada": GET /billing/get.
-        // SDK probably has .billing.list() or .billing.retrieve(). 
-        // I will try .billing.list({ _id: billId }) if retrieve is not obvious, 
-        // but likely it is .billing.retrieve(billId) or .billing.get(billId).
-        // I'll guess .billing.list({ limit: 1 }) is safe if I can't filter by ID? 
-        // No, docs say GET /billing/get specific payment.
-        // I'll check if I can find usage. 
-        // For now I'll try .billing.retrieve(billId). If error, I'll fix during verification.
-        // Actually, looking at previous chunks: "abacatePay.billing.create".
-        // I'll assume `abacatePay.billing.list()` returns array.
-        // Let's rely on standard patterns.
-
-        // Implementation:
         const bills = await abacatePay.billing.list();
+        // Look for bill with matching ID manually if list logic doesn't support filtering by ID directly in this SDK version
         const bill = bills.data.find(b => b.id === billId);
 
         if (!bill) {
@@ -141,10 +82,10 @@ app.get('/api/get-abacate-bill', async (req, res) => {
         }
 
         return res.status(200).json({
-            customerEmail: bill.customer?.metadata?.email || bill.customer?.email, // Check structure
+            customerEmail: bill.customer?.metadata?.email || bill.customer?.email,
             planName: bill.products?.[0]?.externalId || '',
             credits: bill.customer?.metadata?.credits || '0',
-            paymentStatus: bill.status, // PENDING, PAID, etc.
+            paymentStatus: bill.status,
             metadata: bill.customer?.metadata
         });
 
@@ -154,30 +95,12 @@ app.get('/api/get-abacate-bill', async (req, res) => {
     }
 });
 
-// Get Checkout Session Endpoint
-app.get('/api/get-checkout-session', async (req, res) => {
-    try {
-        const { session_id } = req.query;
-
-        if (!session_id) {
-            return res.status(400).json({ error: 'Missing session_id parameter' });
-        }
-
-        const session = await stripe.checkout.sessions.retrieve(session_id);
-
-        return res.status(200).json({
-            customerEmail: session.customer_email,
-            planName: session.metadata?.planName || '',
-            credits: session.metadata?.credits || '0',
-            paymentStatus: session.payment_status,
-        });
-    } catch (error) {
-        console.error('Stripe Error:', error.message);
-        return res.status(500).json({ error: error.message || 'Internal Server Error' });
-    }
+// Health Check
+app.get('/api/health', (req, res) => {
+    res.status(200).json({ status: 'ok' });
 });
 
 app.listen(PORT, () => {
     console.log(`🚀 API Server running on http://localhost:${PORT}`);
-    console.log(`📦 Stripe Key: ${process.env.STRIPE_SECRET_KEY ? 'Configured ✓' : 'Missing ✗'}`);
+    console.log(`🥑 AbacatePay Key: ${process.env.ABACATE_PAY_API_KEY ? 'Configured ✓' : 'Missing ✗'}`);
 });

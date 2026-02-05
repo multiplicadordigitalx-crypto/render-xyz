@@ -66,7 +66,7 @@ const DEFAULT_PRICING_PLANS: PricingPlan[] = [
     buttonText: "Assinar Agora",
     isPopular: true,
     resolutionLabel: "2K",
-    stripePriceId: "price_1Sv1OpEQ6obY8Ge944QhB3SZ"
+    externalId: "price_1Sv1OpEQ6obY8Ge944QhB3SZ"
   },
   {
     name: "Elite",
@@ -75,14 +75,15 @@ const DEFAULT_PRICING_PLANS: PricingPlan[] = [
     features: ["250 renders/mês (Fair Use)", "Qualidade 4K Ultra Pro", "Créditos acumulativos", "Suporte VIP via WhatsApp", "Acesso Antecipado"],
     buttonText: "Acessar Elite",
     resolutionLabel: "4K",
-    stripePriceId: "price_1Sv1PHEQ6obY8Ge93N3Sxiit"
+
+    externalId: "price_1Sv1PHEQ6obY8Ge93N3Sxiit"
   }
 ];
 
 const DEFAULT_CREDIT_PACKAGES: CreditPackage[] = [
-  { id: 'p1', amount: 20, price: '14,90', description: 'Pack Iniciante', stripePriceId: 'price_1Sv1PwEQ6obY8Ge9m6L0F5V1' },
-  { id: 'p2', amount: 100, price: '44,90', description: 'Pack Profissional', stripePriceId: 'price_1Sv1QKEQ6obY8Ge9YxUdxd0A' },
-  { id: 'p3', amount: 300, price: '99,90', description: 'Pack Office', stripePriceId: 'price_1Sv1QiEQ6obY8Ge9gtui9ODr' },
+  { id: 'p1', amount: 20, price: '14,90', description: 'Pack Iniciante', externalId: 'price_1Sv1PwEQ6obY8Ge9m6L0F5V1' },
+  { id: 'p2', amount: 100, price: '44,90', description: 'Pack Profissional', externalId: 'price_1Sv1QKEQ6obY8Ge9YxUdxd0A' },
+  { id: 'p3', amount: 300, price: '99,90', description: 'Pack Office', externalId: 'price_1Sv1QiEQ6obY8Ge9gtui9ODr' },
 ];
 
 const DEFAULT_LANDING: LandingSettings = {

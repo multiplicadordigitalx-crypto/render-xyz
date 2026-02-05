@@ -23,7 +23,7 @@ export const CreditModal: React.FC<CreditModalProps> = ({ creditPackages, onBuyC
             const amountInCentavos = Math.round(parseFloat(priceString) * 100);
 
             await abacatePayService.createCheckoutSession({
-                priceId: pkg.stripePriceId || pkg.id,
+                priceId: pkg.externalId || pkg.id,
                 amount: amountInCentavos,
                 planName: pkg.description,
                 description: `Pacote de ${pkg.amount} Créditos`,
