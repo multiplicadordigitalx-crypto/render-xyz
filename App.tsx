@@ -30,7 +30,6 @@ import { AuthView } from './components/AuthView';
 import { AdminPanel } from './components/AdminPanel';
 import { CreditModal } from './components/CreditModal';
 import { UserProfile } from './components/UserProfile';
-import { CheckoutModal } from './components/CheckoutModal';
 import { CpfModal } from './components/CpfModal';
 
 // Landing Components
@@ -506,33 +505,35 @@ const App: React.FC = () => {
     setShowCreditModal(false);
   };
 
-  const handlePlanSelection = (plan: PricingPlan) => {
-    // Direct checkout logic handles both guest and logged-in users properly now
-    setSelectedPlan(plan);
-  };
+  const handlePlanSelection = async (plan: PricingPlan) => {
+    // Direct checkout logic
+    try {
+      const priceString = plan.price.replace('R$', '').trim().replace('.', '').replace(',', '.');
+      const amountInCentavos = Math.round(parseFloat(priceString) * 100);
 
-  const confirmSubscription = async () => {
-    if (currentUser && selectedPlan) {
-      if (!currentUser.cpf) {
-        setCpfBlocking(true);
-        setShowCpfModal(true);
+      if (amountInCentavos === 0) {
+        // Free plan logic if needed, or just redirect
+        // For now assuming all paid plans based on user request "comprar ou assinar"
+        // If price is 0, maybe just set plan directly?
+        // But existing logic seemed to require Stripe price ID for checkout.
+        // If manual plan selection (e.g. Free), we might need different logic.
+        // Let's assume paid plans.
         return;
       }
 
-      const planCredits = parseInt(selectedPlan.price) > 0 ? 60 : 3;
-      const newCredits = credits + planCredits;
-
-      try {
-        await updateDoc(doc(db, "users", currentUser.id), {
-          plan: selectedPlan.name,
-          credits: newCredits
-        });
-        setCredits(newCredits);
-      } catch (error) {
-        console.error("Error updating subscription:", error);
-      }
+      await abacatePayService.createCheckoutSession({
+        priceId: plan.stripePriceId || 'plan',
+        amount: amountInCentavos,
+        planName: plan.name,
+        description: `Assinatura ${plan.name}`,
+        customerEmail: currentUser?.email || undefined,
+        userId: currentUser?.id,
+        frequency: 'MONTHLY'
+      });
+    } catch (error) {
+      console.error(error);
+      toast.error("Erro ao iniciar pagamento.");
     }
-    setSelectedPlan(null);
   };
 
   const deleteFromHistory = async (id: string) => {
@@ -670,14 +671,15 @@ const App: React.FC = () => {
           )
         }
 
-        {/* Checkout Modal for subscription plans - also shown in logged area after auth */}
-        {selectedPlan && (
-          <CheckoutModal
-            plan={selectedPlan}
-            onConfirm={confirmSubscription}
-            onClose={() => setSelectedPlan(null)}
-          />
-        )}
+        {
+          showCreditModal && (
+            <CreditModal
+              creditPackages={creditPackages}
+              onBuyCredits={buyCredits}
+              onClose={() => setShowCreditModal(false)}
+            />
+          )
+        }
 
         <main className="max-w-7xl mx-auto px-4 md:px-6 py-8 md:py-12">
           <section className="mb-12 md:mb-20">
@@ -776,13 +778,12 @@ const App: React.FC = () => {
         onBuyCredits={() => { setAuthMode('register'); setShowAuth(true); }}
       />
 
-      {selectedPlan && (
-        <CheckoutModal
-          plan={selectedPlan}
-          onConfirm={confirmSubscription}
-          onClose={() => setSelectedPlan(null)}
-        />
-      )}
+      <Pricing
+        plans={pricingPlans}
+        creditPackages={creditPackages}
+        onSelectPlan={handlePlanSelection}
+        onBuyCredits={() => { setAuthMode('register'); setShowAuth(true); }}
+      />
 
       <FAQ items={FAQS} />
 
