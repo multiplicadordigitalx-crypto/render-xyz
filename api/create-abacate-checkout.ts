@@ -25,19 +25,35 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             return res.status(400).json({ error: 'Valor inválido' });
         }
 
-        console.log('Creating PIX QR Code:', { amount, planName });
+        // Build return URLs
+        const protocol = req.headers['x-forwarded-proto'] || 'https';
+        const host = req.headers['host'] || 'render-xyz.vercel.app';
+        const baseUrl = `${protocol}://${host}`;
 
-        // Use PIX QR Code endpoint - simpler, no customer required
-        const response = await fetch(`${ABACATE_API}/pixQrCode/create`, {
+        console.log('Creating billing with PIX + CARD:', { amount, planName });
+
+        // Use billing/create with both PIX and CARD methods
+        // Note: CARD is in beta according to docs
+        const response = await fetch(`${ABACATE_API}/billing/create`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${apiKey}`,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                amount: amount,
-                description: description || `Plano ${planName || 'RenderXYZ'}`,
-                expiresIn: 3600, // 1 hour expiration
+                frequency: "ONE_TIME",
+                methods: ["PIX", "CARD"], // Enable both payment methods
+                products: [
+                    {
+                        externalId: planName || 'plano-renderxyz',
+                        name: description || `Plano ${planName || 'RenderXYZ'}`,
+                        description: description || `Assinatura do plano ${planName || 'RenderXYZ'}`,
+                        quantity: 1,
+                        price: amount
+                    }
+                ],
+                returnUrl: baseUrl,
+                completionUrl: `${baseUrl}/?payment=success&plan=${encodeURIComponent(planName || '')}`,
                 metadata: {
                     planName: planName || 'credits',
                     type: 'subscription'
@@ -56,20 +72,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             });
         }
 
-        // PIX QR Code response has: brCode, qrCodeBase64, expiresAt, id
-        // Return a URL that shows the QR code or the brCode for copy/paste
+        // billing/create returns URL to payment page
         const paymentData = data.data;
 
-        if (!paymentData) {
-            return res.status(500).json({ error: 'Resposta inválida do servidor de pagamento' });
+        if (!paymentData || !paymentData.url) {
+            return res.status(500).json({ error: 'URL de pagamento não gerada', details: data });
         }
 
         return res.status(200).json({
-            id: paymentData.id,
-            brCode: paymentData.brCode,
-            qrCodeBase64: paymentData.qrCodeBase64,
-            expiresAt: paymentData.expiresAt,
-            amount: paymentData.amount
+            url: paymentData.url,
+            id: paymentData.id
         });
 
     } catch (error: any) {

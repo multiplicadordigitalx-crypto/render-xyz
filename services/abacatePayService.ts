@@ -5,16 +5,8 @@ interface CreateCheckoutParams {
     description?: string;
 }
 
-interface PixPaymentResponse {
-    id: string;
-    brCode: string;
-    qrCodeBase64: string;
-    expiresAt: string;
-    amount: number;
-}
-
 export const abacatePayService = {
-    async createCheckoutSession(params: CreateCheckoutParams): Promise<PixPaymentResponse> {
+    async createCheckoutSession(params: CreateCheckoutParams) {
         const response = await fetch('/api/create-abacate-checkout', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -31,17 +23,20 @@ export const abacatePayService = {
             throw new Error(data.error);
         }
 
-        // Store payment ID for verification after payment
-        if (data.id) {
-            sessionStorage.setItem('pendingPixPaymentId', data.id);
-            sessionStorage.setItem('pendingPlanName', params.planName);
+        // Redirect to AbacatePay payment page (has both PIX and CARD options)
+        if (data.url) {
+            if (data.id) {
+                sessionStorage.setItem('pendingBillId', data.id);
+                sessionStorage.setItem('pendingPlanName', params.planName);
+            }
+            window.location.href = data.url;
+        } else {
+            throw new Error('URL de pagamento não retornada');
         }
-
-        return data;
     },
 
-    async checkPaymentStatus(pixId: string): Promise<{ status: string }> {
-        const response = await fetch(`/api/check-pix-status?id=${pixId}`);
+    async checkPaymentStatus(billId: string): Promise<{ status: string }> {
+        const response = await fetch(`/api/check-pix-status?id=${billId}`);
         const data = await response.json();
 
         if (data.error) {
