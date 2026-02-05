@@ -1,174 +1,198 @@
 
 import React from 'react';
-import { CheckCircle, X, Zap, Crown, Coins, Sparkles, Clock, Shield } from 'lucide-react';
-import { PricingPlan, CreditPackage } from '../../types';
+import { CheckCircle, Zap, Coins, Sparkles, Clock, Shield, Gift, TrendingUp, Image } from 'lucide-react';
+import { CreditPackage } from '../../types';
 
 interface PricingProps {
-    plans: PricingPlan[];
     creditPackages: CreditPackage[];
-    onSelectPlan: (plan: PricingPlan) => void;
-    onBuyCredits: () => void;
+    onBuyCredits: (pkg: CreditPackage) => void;
 }
 
-export const Pricing: React.FC<PricingProps> = ({ plans, creditPackages, onSelectPlan, onBuyCredits }) => {
+export const Pricing: React.FC<PricingProps> = ({ creditPackages, onBuyCredits }) => {
+    // Calculate price per credit for each package
+    const getPricePerCredit = (price: string, amount: number) => {
+        const numericPrice = parseFloat(price.replace(',', '.'));
+        return (numericPrice / amount).toFixed(2).replace('.', ',');
+    };
+
+    // Determine if package is the best value
+    const getBestValue = (index: number) => index === 2; // Third package is best value
+
     return (
-        <section id="pricing" className="py-20 md:py-36 px-4 bg-[#EAE4D5]">
-            <div className="max-w-7xl mx-auto">
+        <section id="pricing" className="py-20 md:py-36 px-4 bg-gradient-to-b from-[#EAE4D5] to-[#F2F2F2]">
+            <div className="max-w-6xl mx-auto">
                 {/* Header */}
-                <div className="text-center mb-16 md:mb-24">
-                    <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter mb-4">Escolha seu Caminho</h2>
-                    <p className="text-[#7A756A] text-[10px] font-black uppercase tracking-widest max-w-xl mx-auto leading-relaxed">
-                        Para quem usa todo mês ou só de vez em quando — temos a opção certa para você
+                <div className="text-center mb-16 md:mb-20">
+                    <div className="inline-flex items-center gap-3 bg-black text-white px-6 py-3 rounded-full mb-8">
+                        <Coins className="w-4 h-4" />
+                        <span className="text-[10px] font-black uppercase tracking-widest">Simples & Flexível</span>
+                    </div>
+                    <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter mb-6">
+                        Compre Créditos
+                    </h2>
+                    <p className="text-[#7A756A] text-sm md:text-base max-w-2xl mx-auto leading-relaxed">
+                        Sem assinatura, sem compromisso. Compre créditos quando precisar e use no seu ritmo.
+                        <span className="block mt-2 font-bold">1 crédito = 1 render em alta qualidade.</span>
                     </p>
                 </div>
 
-                {/* SUBSCRIPTIONS SECTION */}
-                <div className="mb-20 md:mb-32">
-                    <div className="text-center mb-10 md:mb-16">
-                        <div className="inline-flex items-center gap-3 bg-black text-white px-6 py-3 rounded-full mb-6">
-                            <Crown className="w-4 h-4" />
-                            <span className="text-[10px] font-black uppercase tracking-widest">Recomendado para Escritórios</span>
+                {/* Free Credits Banner */}
+                <div className="bg-gradient-to-r from-emerald-500 to-teal-600 rounded-[25px] p-6 md:p-8 mb-12 text-white text-center reveal reveal-fade">
+                    <div className="flex flex-col md:flex-row items-center justify-center gap-4">
+                        <Gift className="w-8 h-8" />
+                        <div>
+                            <h3 className="text-lg md:text-xl font-black uppercase tracking-tight">
+                                Comece Grátis com 3 Créditos!
+                            </h3>
+                            <p className="text-white/80 text-[10px] md:text-xs font-bold uppercase tracking-widest">
+                                Crie sua conta e teste o poder do Render XYZ sem pagar nada
+                            </p>
                         </div>
-                        <h3 className="text-2xl md:text-3xl font-black uppercase tracking-tight mb-3">Assinatura Mensal</h3>
-                        <p className="text-[#7A756A] text-[10px] font-bold uppercase tracking-widest">
-                            Créditos todo mês • Benefícios exclusivos • Cancele quando quiser
-                        </p>
                     </div>
+                </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 mb-12">
-                        {plans.map((plan, i) => (
+                {/* Credit Packages */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 mb-16">
+                    {creditPackages.map((pkg, i) => {
+                        const isBestValue = getBestValue(i);
+                        const isPopular = i === 1;
+
+                        return (
                             <div
-                                key={i}
-                                className={`relative bg-[#F2F2F2] border ${plan.isPopular ? 'border-black shadow-2xl scale-100 md:scale-105 z-10' : 'border-[#B6B09F]/30'} rounded-[35px] md:rounded-[50px] p-10 md:p-12 flex flex-col reveal reveal-fade stagger-${i + 1}`}
+                                key={pkg.id}
+                                className={`relative bg-white border-2 ${isBestValue
+                                        ? 'border-emerald-500 shadow-2xl shadow-emerald-500/20 scale-100 md:scale-105 z-10'
+                                        : isPopular
+                                            ? 'border-black shadow-xl'
+                                            : 'border-[#B6B09F]/30'
+                                    } rounded-[35px] p-8 md:p-10 flex flex-col reveal reveal-fade stagger-${i + 1} transition-all hover:shadow-xl`}
                             >
-                                {plan.isPopular && (
-                                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-black text-white px-8 py-2.5 rounded-full text-[9px] font-black tracking-widest flex items-center gap-2">
-                                        <Sparkles className="w-3 h-3" />
-                                        MAIS ESCOLHIDO
+                                {/* Badge */}
+                                {isBestValue && (
+                                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-6 py-2 rounded-full text-[9px] font-black tracking-widest flex items-center gap-2 shadow-lg">
+                                        <TrendingUp className="w-3 h-3" />
+                                        MELHOR CUSTO-BENEFÍCIO
                                     </div>
                                 )}
-                                <div className="mb-8 md:mb-10 text-center">
-                                    <h3 className="text-xl font-black mb-4 uppercase tracking-widest">{plan.name}</h3>
-                                    <div className="flex items-baseline justify-center">
-                                        {plan.price === "0" ? (
-                                            <span className="text-4xl md:text-5xl font-black">Grátis</span>
-                                        ) : (
-                                            <>
-                                                <span className="text-4xl md:text-5xl font-black">R$ {plan.price}</span>
-                                                <span className="text-[#7A756A] ml-2 text-[10px] font-black uppercase">{plan.period}</span>
-                                            </>
+                                {isPopular && !isBestValue && (
+                                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-black text-white px-6 py-2 rounded-full text-[9px] font-black tracking-widest flex items-center gap-2">
+                                        <Sparkles className="w-3 h-3" />
+                                        MAIS POPULAR
+                                    </div>
+                                )}
+
+                                {/* Credits Amount */}
+                                <div className="text-center mb-6">
+                                    <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-[#EAE4D5] to-[#F2F2F2] rounded-full mb-4">
+                                        <span className="text-3xl font-black">{pkg.amount}</span>
+                                    </div>
+                                    <p className="text-[#7A756A] text-[10px] font-black uppercase tracking-widest">
+                                        Créditos
+                                    </p>
+                                </div>
+
+                                {/* Price */}
+                                <div className="text-center mb-6">
+                                    <div className="flex items-baseline justify-center gap-1">
+                                        <span className="text-[#7A756A] text-lg">R$</span>
+                                        <span className="text-5xl font-black">{pkg.price}</span>
+                                    </div>
+                                    <p className="text-[#7A756A] text-[10px] font-bold mt-2">
+                                        R$ {getPricePerCredit(pkg.price, pkg.amount)} por crédito
+                                    </p>
+                                </div>
+
+                                {/* Description */}
+                                <div className="flex-1 mb-8">
+                                    <p className="text-center text-sm font-bold text-[#7A756A] mb-6">
+                                        {pkg.description}
+                                    </p>
+
+                                    {/* Features */}
+                                    <div className="space-y-3">
+                                        <div className="flex items-center text-[11px] font-bold">
+                                            <CheckCircle className="w-4 h-4 mr-3 text-emerald-500 shrink-0" />
+                                            <span>Qualidade até 4K Ultra</span>
+                                        </div>
+                                        <div className="flex items-center text-[11px] font-bold">
+                                            <CheckCircle className="w-4 h-4 mr-3 text-emerald-500 shrink-0" />
+                                            <span>Sem marca d'água</span>
+                                        </div>
+                                        <div className="flex items-center text-[11px] font-bold">
+                                            <CheckCircle className="w-4 h-4 mr-3 text-emerald-500 shrink-0" />
+                                            <span>Créditos nunca expiram</span>
+                                        </div>
+                                        {i >= 1 && (
+                                            <div className="flex items-center text-[11px] font-bold">
+                                                <CheckCircle className="w-4 h-4 mr-3 text-emerald-500 shrink-0" />
+                                                <span>Suporte prioritário</span>
+                                            </div>
+                                        )}
+                                        {i >= 2 && (
+                                            <div className="flex items-center text-[11px] font-bold text-emerald-600">
+                                                <Gift className="w-4 h-4 mr-3 shrink-0" />
+                                                <span>+30 créditos bônus!</span>
+                                            </div>
                                         )}
                                     </div>
                                 </div>
-                                <div className="flex-1 space-y-4 md:space-y-5 mb-10 text-left">
-                                    {plan.features.map((feat, j) => (
-                                        <div key={j} className="flex items-center text-[10px] font-bold uppercase tracking-widest">
-                                            <CheckCircle className="w-4 h-4 mr-4 text-green-600 shrink-0" />
-                                            {feat}
-                                        </div>
-                                    ))}
-                                </div>
+
+                                {/* CTA Button */}
                                 <button
-                                    onClick={() => onSelectPlan(plan)}
-                                    className={`w-full py-5 md:py-6 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${plan.isPopular ? 'bg-black text-white hover:bg-zinc-800' : 'bg-[#EAE4D5] text-black border border-[#B6B09F]/30 hover:border-black'
+                                    onClick={() => onBuyCredits(pkg)}
+                                    className={`w-full py-5 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all ${isBestValue
+                                            ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:shadow-lg hover:shadow-emerald-500/30 hover:scale-[1.02]'
+                                            : isPopular
+                                                ? 'bg-black text-white hover:bg-zinc-800'
+                                                : 'bg-[#EAE4D5] text-black border border-[#B6B09F]/30 hover:border-black hover:bg-black hover:text-white'
                                         }`}
                                 >
-                                    {plan.buttonText}
+                                    Comprar Agora
                                 </button>
                             </div>
-                        ))}
-                    </div>
+                        );
+                    })}
+                </div>
 
-                    {/* Benefits comparison table */}
-                    <div className="bg-[#F2F2F2] rounded-[30px] p-8 md:p-12 border border-[#B6B09F]/20">
-                        <h4 className="text-center text-sm font-black uppercase tracking-widest mb-8">Compare os Benefícios</h4>
-                        <div className="grid grid-cols-4 gap-4 text-center text-[9px] font-black uppercase">
-                            <div></div>
-                            <div className="text-[#7A756A]">Grátis</div>
-                            <div>Estúdio</div>
-                            <div className="text-black">Elite</div>
-
-                            <div className="text-left text-[#7A756A]">Resolução Máxima</div>
-                            <div>1K</div>
-                            <div className="text-green-600">2K HD</div>
-                            <div className="text-green-600">4K Ultra</div>
-
-                            <div className="text-left text-[#7A756A]">Sem Marca d'água</div>
-                            <div><X className="w-3 h-3 mx-auto text-red-400" /></div>
-                            <div><CheckCircle className="w-3 h-3 mx-auto text-green-600" /></div>
-                            <div><CheckCircle className="w-3 h-3 mx-auto text-green-600" /></div>
-
-                            <div className="text-left text-[#7A756A]">Créditos Acumulam</div>
-                            <div><X className="w-3 h-3 mx-auto text-red-400" /></div>
-                            <div><CheckCircle className="w-3 h-3 mx-auto text-green-600" /></div>
-                            <div><CheckCircle className="w-3 h-3 mx-auto text-green-600" /></div>
-
-                            <div className="text-left text-[#7A756A]">Suporte VIP</div>
-                            <div><X className="w-3 h-3 mx-auto text-red-400" /></div>
-                            <div><X className="w-3 h-3 mx-auto text-red-400" /></div>
-                            <div><CheckCircle className="w-3 h-3 mx-auto text-green-600" /></div>
+                {/* Trust Badges */}
+                <div className="bg-white rounded-[25px] p-8 md:p-10 border border-[#B6B09F]/20">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
+                        <div className="text-center">
+                            <div className="w-12 h-12 bg-[#EAE4D5] rounded-xl flex items-center justify-center mx-auto mb-3">
+                                <Clock className="w-6 h-6" />
+                            </div>
+                            <p className="text-[10px] font-black uppercase tracking-widest">Nunca Expiram</p>
+                            <p className="text-[9px] text-[#7A756A] mt-1">Use quando quiser</p>
+                        </div>
+                        <div className="text-center">
+                            <div className="w-12 h-12 bg-[#EAE4D5] rounded-xl flex items-center justify-center mx-auto mb-3">
+                                <Image className="w-6 h-6" />
+                            </div>
+                            <p className="text-[10px] font-black uppercase tracking-widest">Alta Qualidade</p>
+                            <p className="text-[9px] text-[#7A756A] mt-1">Até 4K Ultra HD</p>
+                        </div>
+                        <div className="text-center">
+                            <div className="w-12 h-12 bg-[#EAE4D5] rounded-xl flex items-center justify-center mx-auto mb-3">
+                                <Zap className="w-6 h-6" />
+                            </div>
+                            <p className="text-[10px] font-black uppercase tracking-widest">Resultado Rápido</p>
+                            <p className="text-[9px] text-[#7A756A] mt-1">Renders em segundos</p>
+                        </div>
+                        <div className="text-center">
+                            <div className="w-12 h-12 bg-[#EAE4D5] rounded-xl flex items-center justify-center mx-auto mb-3">
+                                <Shield className="w-6 h-6" />
+                            </div>
+                            <p className="text-[10px] font-black uppercase tracking-widest">Pagamento Seguro</p>
+                            <p className="text-[9px] text-[#7A756A] mt-1">PIX ou Cartão</p>
                         </div>
                     </div>
                 </div>
 
-                {/* DIVIDER */}
-                <div className="flex items-center justify-center gap-6 mb-20 md:mb-32">
-                    <div className="flex-1 h-px bg-[#B6B09F]/30" />
-                    <div className="bg-[#F2F2F2] px-6 py-3 rounded-full border border-[#B6B09F]/20">
-                        <span className="text-[#7A756A] text-[10px] font-black uppercase tracking-widest">Prefere Flexibilidade?</span>
-                    </div>
-                    <div className="flex-1 h-px bg-[#B6B09F]/30" />
-                </div>
-
-                {/* CREDITS SECTION */}
-                <div>
-                    <div className="text-center mb-10 md:mb-16">
-                        <div className="inline-flex items-center gap-3 bg-[#F2F2F2] text-black px-6 py-3 rounded-full border border-[#B6B09F]/30 mb-6">
-                            <Coins className="w-4 h-4" />
-                            <span className="text-[10px] font-black uppercase tracking-widest">Ideal para Freelancers</span>
-                        </div>
-                        <h3 className="text-2xl md:text-3xl font-black uppercase tracking-tight mb-3">Créditos Avulsos</h3>
-                        <p className="text-[#7A756A] text-[10px] font-bold uppercase tracking-widest">
-                            Sem assinatura • Compre quando precisar • Nunca expiram
-                        </p>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 max-w-4xl mx-auto mb-12">
-                        {creditPackages.map((pkg, i) => (
-                            <div
-                                key={pkg.id}
-                                className={`bg-[#F2F2F2] border border-[#B6B09F]/30 rounded-[30px] p-8 text-center hover:border-black transition-all reveal reveal-fade stagger-${i + 1}`}
-                            >
-                                <h4 className="text-3xl font-black mb-2">{pkg.amount}</h4>
-                                <p className="text-[#7A756A] text-[9px] font-black uppercase tracking-widest mb-6">Créditos</p>
-                                <div className="text-2xl font-black mb-2">R$ {pkg.price}</div>
-                                <p className="text-[#7A756A] text-[9px] font-bold uppercase tracking-widest mb-8">{pkg.description}</p>
-                                <button
-                                    onClick={onBuyCredits}
-                                    className="w-full py-4 bg-[#EAE4D5] text-black rounded-xl font-black text-[10px] uppercase tracking-widest border border-[#B6B09F]/30 hover:border-black hover:bg-black hover:text-white transition-all"
-                                >
-                                    Adquirir
-                                </button>
-                            </div>
-                        ))}
-                    </div>
-
-                    {/* Credits benefits */}
-                    <div className="flex flex-wrap justify-center gap-4 md:gap-8 mb-6">
-                        <div className="flex items-center gap-2 text-[9px] font-bold uppercase tracking-widest text-[#7A756A]">
-                            <Clock className="w-3 h-3" />
-                            <span>Sem data de validade</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-[9px] font-bold uppercase tracking-widest text-[#7A756A]">
-                            <Coins className="w-3 h-3" />
-                            <span>1 Crédito = 1 Render</span>
-                        </div>
-                    </div>
-                    <div className="text-center">
-                        <p className="text-[8px] font-bold uppercase tracking-widest text-[#7A756A]/70 max-w-md mx-auto">
-                            Assinantes mantêm os benefícios do plano ao comprar créditos extras (Elite = 4K, Estúdio = 2K)
-                        </p>
-                    </div>
+                {/* Money Back Guarantee */}
+                <div className="text-center mt-10">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#7A756A]">
+                        🔒 Satisfação garantida ou seu dinheiro de volta em até 7 dias
+                    </p>
                 </div>
             </div>
         </section>

@@ -94,11 +94,14 @@ const DEFAULT_LANDING: LandingSettings = {
 };
 
 const FAQS = [
-  { q: "O que são créditos acumulativos (Rollover)?", a: "Diferente de outros serviços, na Render XYZ seus créditos não expiram no fim do mês. Se você não usar todos os seus renders, eles acumulam para o próximo ciclo." },
-  { q: "Qual a diferença entre resoluções 1K, 2K e 4K?", a: "1K é ideal para testes. 2K HD é o padrão para apresentações digitais, e 4K Ultra oferece nitidez extrema para impressão em grandes formatos." },
-  { q: "E se eu precisar de mais créditos além do meu plano?", a: "Assinantes podem comprar créditos avulsos a qualquer momento e continuam usando os benefícios do plano. Por exemplo, Elite pode usar créditos extras em 4K, e Estúdio em 2K." },
-  { q: "Como funciona o upgrade ou cancelamento?", a: "Você tem controle total. Pode fazer upgrade ou cancelar sua assinatura a qualquer momento diretamente no seu painel." },
-  { q: "Existe um limite real no plano Elite?", a: "O plano Elite oferece um limite de Uso Justo de 250 renders por mês para garantir processamento em velocidade máxima para todos." }
+  { q: "Como funcionam os créditos?", a: "Cada crédito permite gerar 1 render de alta qualidade. Você escolhe a resolução (1K, 2K ou 4K) na hora de criar o render. Créditos comprados nunca expiram." },
+  { q: "Qual a diferença entre resoluções 1K, 2K e 4K?", a: "1K é ideal para testes e visualizações rápidas. 2K HD é o padrão para apresentações digitais e redes sociais. 4K Ultra oferece nitidez extrema para impressão em grandes formatos e apresentações premium." },
+  { q: "Os créditos expiram?", a: "Não! Diferente de outros serviços, na Render XYZ seus créditos nunca expiram. Use no seu ritmo, quando precisar." },
+  { q: "Posso usar em projetos comerciais?", a: "Sim! Todos os renders gerados são seus para usar como quiser - portfólio, apresentações para clientes, redes sociais, impressão, etc." },
+  { q: "Como funciona a garantia de satisfação?", a: "Se você não estiver satisfeito com o serviço, entre em contato em até 7 dias após a compra e devolvemos seu dinheiro integralmente." },
+  { q: "Quanto tempo leva para gerar um render?", a: "Na maioria dos casos, seus renders ficam prontos em segundos. Em horários de pico, pode levar até alguns minutos." },
+];
+{ q: "Existe um limite real no plano Elite?", a: "O plano Elite oferece um limite de Uso Justo de 250 renders por mês para garantir processamento em velocidade máxima para todos." }
 ];
 
 // Declare aistudio globally
@@ -495,25 +498,17 @@ const App: React.FC = () => {
     setShowCreditModal(false);
   };
 
-  const handlePlanSelection = async (plan: PricingPlan) => {
-    // Parse price to centavos
-    const priceString = plan.price.replace('R$', '').trim().replace('.', '').replace(',', '.');
+  const handleBuyCreditsFromLanding = async (pkg: CreditPackage) => {
+    // Parse price to centavos (price is like "14,90")
+    const priceString = pkg.price.replace(',', '.');
     const amountInCentavos = Math.round(parseFloat(priceString) * 100);
-
-    if (amountInCentavos === 0) {
-      // Free plan: redirect to signup
-      setAuthMode('register');
-      setShowAuth(true);
-      setPendingPaymentData(null);
-      return;
-    }
 
     try {
       // Redirect to AbacatePay payment page (supports PIX + Card)
       await abacatePayService.createCheckoutSession({
         amount: amountInCentavos,
-        planName: plan.name,
-        description: `Assinatura ${plan.name} - RenderXYZ`
+        planName: `${pkg.amount} Créditos`,
+        description: `${pkg.amount} Créditos RenderXYZ - ${pkg.description}`
       });
     } catch (error: any) {
       console.error('Payment error:', error);
@@ -757,10 +752,8 @@ const App: React.FC = () => {
       <Testimonials />
 
       <Pricing
-        plans={pricingPlans}
         creditPackages={creditPackages}
-        onSelectPlan={handlePlanSelection}
-        onBuyCredits={() => { setAuthMode('register'); setShowAuth(true); }}
+        onBuyCredits={handleBuyCreditsFromLanding}
       />
 
 
