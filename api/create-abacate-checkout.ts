@@ -27,7 +27,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             return res.status(500).json({ error: 'Server Config Error: Missing Key' });
         }
 
-        const { amount, description, customerEmail, customerName, planName } = req.body;
+        const { amount, description, planName } = req.body;
 
         if (!amount) {
             return res.status(400).json({ error: 'Missing required parameter: amount' });
@@ -40,38 +40,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
         console.log('Creating AbacatePay billing:', { amount, planName, baseUrl });
 
-        // Build payload according to official documentation
-        // https://docs.abacatepay.com/pages/payment/create
-        const payload: any = {
-            frequency: "ONE_TIME", // Exactly as documented
-            methods: ["PIX"], // PIX is the only fully supported method
+        // Minimal payload - NO customer (customer fills in their data on payment page)
+        // According to docs, customer is optional and can be filled by buyer
+        const payload = {
+            frequency: "ONE_TIME",
+            methods: ["PIX"],
             products: [
                 {
-                    externalId: planName || 'product-1',
+                    externalId: planName || 'credits',
                     name: description || 'Créditos RenderXYZ',
-                    description: description || 'Compra de créditos',
+                    description: description || 'Compra de créditos para renderização',
                     quantity: 1,
-                    price: amount // Price in cents
+                    price: amount
                 }
             ],
             returnUrl: `${baseUrl}/?payment=success`,
             completionUrl: `${baseUrl}/?payment=success`
         };
 
-        // Only add customer if we have complete data (email at minimum)
-        // Customer is optional per docs
-        if (customerEmail) {
-            payload.customer = {
-                email: customerEmail,
-                name: customerName || 'Cliente',
-                cellphone: '11999999999', // Placeholder - could be collected in form
-                taxId: '00000000000' // Placeholder CPF
-            };
-        }
-
         console.log('AbacatePay Request Payload:', JSON.stringify(payload, null, 2));
 
-        // Direct API call to AbacatePay
         const response = await fetch(`${ABACATE_API_URL}/billing/create`, {
             method: 'POST',
             headers: {
@@ -93,7 +81,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             });
         }
 
-        // The API returns data.url and data.id per documentation
         const paymentUrl = billing.data?.url;
         const billId = billing.data?.id;
 
