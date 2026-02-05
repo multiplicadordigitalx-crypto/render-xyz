@@ -1,6 +1,6 @@
 
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import AbacatePay from 'abacatepay-nodejs-sdk';
+import * as AbacatePaySDK from 'abacatepay-nodejs-sdk';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Set CORS headers
@@ -29,6 +29,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             return res.status(500).json({ error: 'Server Config Error: Missing Key' });
         }
 
+        // Handle CJS/ESM interop
+        const SdkImport = AbacatePaySDK as any;
+        const AbacatePay = SdkImport.default || SdkImport;
         const abacatePay = AbacatePay(apiKey);
 
         // Fetch bill details
