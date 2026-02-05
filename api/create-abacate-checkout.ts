@@ -1,5 +1,6 @@
 
 import { VercelRequest, VercelResponse } from '@vercel/node';
+import { AbacatePay } from 'abacatepay';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (req.method !== 'POST') {
@@ -8,17 +9,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     try {
         // Production Logic: Strictly use environment variable
-        // The user must configure ABACATE_PAY_API_KEY in Vercel Project Settings
         const apiKey = process.env.ABACATE_PAY_API_KEY;
 
         if (!apiKey) {
             console.error("CRITICAL: ABACATE_PAY_API_KEY is missing in Vercel Environment Variables.");
-            // We return a clear error so the frontend can display it
             return res.status(500).json({ error: 'Server Configuration Error: Missing Payment Key' });
         }
 
-        // Dynamic import to prevent top-level crashes
-        const { AbacatePay } = await import('abacatepay');
+        // Initialize AbacatePay
         const abacatePay = new AbacatePay(apiKey);
 
         const { amount, description, customerEmail, userId, credits, planName, frequency } = req.body;
