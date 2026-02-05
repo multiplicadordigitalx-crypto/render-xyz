@@ -3,6 +3,23 @@ import { VercelRequest, VercelResponse } from '@vercel/node';
 
 const ABACATE_API = 'https://api.abacatepay.com/v1';
 
+// Helper to generate a valid CPF (for testing purposes)
+function generateValidCPF(): string {
+    const random = (n: number) => Math.floor(Math.random() * n);
+    const mod = (dividend: number, divisor: number) => Math.round(dividend - Math.floor(dividend / divisor) * divisor);
+
+    const n = Array(9).fill(0).map(() => random(9));
+    let d1 = n.reduce((acc, val, i) => acc + val * (10 - i), 0);
+    d1 = 11 - mod(d1, 11);
+    if (d1 >= 10) d1 = 0;
+
+    let d2 = n.reduce((acc, val, i) => acc + val * (11 - i), 0) + d1 * 2;
+    d2 = 11 - mod(d2, 11);
+    if (d2 >= 10) d2 = 0;
+
+    return `${n.join('')}${d1}${d2}`;
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     // CORS
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -18,8 +35,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(500).json({ error: 'Erro de configuração do servidor' });
     }
 
+    const headers = {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+    };
+
     try {
-        const { amount, planName, description } = req.body;
+        const { amount, planName, description, customerEmail } = req.body;
 
         if (!amount || typeof amount !== 'number' || amount <= 0) {
             return res.status(400).json({ error: 'Valor inválido' });
@@ -30,19 +52,48 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const host = req.headers['host'] || 'render-xyz.vercel.app';
         const baseUrl = `${protocol}://${host}`;
 
-        console.log('Creating billing with PIX + CARD:', { amount, planName });
+        console.log('Step 1: Creating customer...');
 
-        // Use billing/create with both PIX and CARD methods
-        // Note: CARD is in beta according to docs
-        const response = await fetch(`${ABACATE_API}/billing/create`, {
+        // Step 1: Create a customer first
+        // Using a generic customer for anonymous purchases
+        const email = customerEmail || `cliente_${Date.now()}@renderxyz.com`;
+        const cpf = generateValidCPF();
+
+        const customerResponse = await fetch(`${ABACATE_API}/customer/create`, {
             method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${apiKey}`,
-                'Content-Type': 'application/json'
-            },
+            headers,
+            body: JSON.stringify({
+                name: 'Cliente RenderXYZ',
+                email: email,
+                cellphone: '11999999999',
+                taxId: cpf
+            })
+        });
+
+        const customerData = await customerResponse.json();
+        console.log('Customer Response:', JSON.stringify(customerData, null, 2));
+
+        // Get customer ID
+        const customerId = customerData.data?.id;
+
+        if (!customerId) {
+            console.error('Failed to create customer:', customerData);
+            return res.status(500).json({
+                error: 'Não foi possível criar o cliente',
+                details: customerData
+            });
+        }
+
+        console.log('Customer ID:', customerId);
+        console.log('Step 2: Creating billing...');
+
+        // Step 2: Create billing with customerId
+        const billingResponse = await fetch(`${ABACATE_API}/billing/create`, {
+            method: 'POST',
+            headers,
             body: JSON.stringify({
                 frequency: "ONE_TIME",
-                methods: ["PIX", "CARD"], // Enable both payment methods
+                methods: ["PIX", "CARD"],
                 products: [
                     {
                         externalId: planName || 'plano-renderxyz',
@@ -54,29 +105,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 ],
                 returnUrl: baseUrl,
                 completionUrl: `${baseUrl}/?payment=success&plan=${encodeURIComponent(planName || '')}`,
-                metadata: {
-                    planName: planName || 'credits',
-                    type: 'subscription'
-                }
+                customerId: customerId // Use the customer ID we just created
             })
         });
 
-        const data = await response.json();
-        console.log('AbacatePay Response:', JSON.stringify(data, null, 2));
+        const billingData = await billingResponse.json();
+        console.log('Billing Response:', JSON.stringify(billingData, null, 2));
 
-        if (!response.ok || data.error) {
-            console.error('AbacatePay Error:', data);
-            return res.status(response.status || 500).json({
-                error: data.error || data.message || 'Erro ao criar pagamento',
-                details: data
+        if (!billingResponse.ok || billingData.error) {
+            console.error('AbacatePay Billing Error:', billingData);
+            return res.status(billingResponse.status || 500).json({
+                error: billingData.error || billingData.message || 'Erro ao criar cobrança',
+                details: billingData
             });
         }
 
-        // billing/create returns URL to payment page
-        const paymentData = data.data;
+        const paymentData = billingData.data;
 
         if (!paymentData || !paymentData.url) {
-            return res.status(500).json({ error: 'URL de pagamento não gerada', details: data });
+            return res.status(500).json({ error: 'URL de pagamento não gerada', details: billingData });
         }
 
         return res.status(200).json({
