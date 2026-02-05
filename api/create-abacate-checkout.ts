@@ -7,13 +7,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     try {
-        if (!process.env.ABACATE_PAY_API_KEY) {
+        const apiKey = process.env.ABACATE_PAY_API_KEY || "abc_dev_ubn1ahZyWkKKBr6GmJZeY2EG";
+
+        if (!apiKey) {
             throw new Error('Missing ABACATE_PAY_API_KEY environment variable');
         }
 
         // Dynamic import to prevent top-level crashes and catch import errors
         const { AbacatePay } = await import('abacatepay');
-        const abacatePay = new AbacatePay(process.env.ABACATE_PAY_API_KEY);
+        const abacatePay = new AbacatePay(apiKey);
 
         const { amount, description, customerEmail, userId, credits, planName, frequency } = req.body;
 
