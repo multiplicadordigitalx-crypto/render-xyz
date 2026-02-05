@@ -2,7 +2,7 @@
 import React from 'react';
 import { X, Plus, Loader2 } from 'lucide-react';
 import { CreditPackage } from '../types';
-import { stripeService } from '../services/stripeService';
+import { abacatePayService } from '../services/abacatePayService';
 import { toast } from 'react-hot-toast';
 import { auth } from '../services/firebase';
 
@@ -16,21 +16,21 @@ export const CreditModal: React.FC<CreditModalProps> = ({ creditPackages, onBuyC
     const [loadingId, setLoadingId] = React.useState<string | null>(null);
 
     const handleBuy = async (pkg: CreditPackage) => {
-        if (!pkg.stripePriceId) {
-            toast.error("Pacote indisponível.");
-            return;
-        }
-
         setLoadingId(pkg.id);
         try {
-            await stripeService.redirectToCheckout({
-                priceId: pkg.stripePriceId,
-                mode: 'payment',
-                successUrl: `${window.location.origin}/?payment_success=true&credits=${pkg.amount}`,
-                cancelUrl: `${window.location.origin}/?canceled=true`,
+            // Parse price string "29,90" -> 2990
+            const priceString = pkg.price.replace('R$', '').trim().replace('.', '').replace(',', '.');
+            const amountInCentavos = Math.round(parseFloat(priceString) * 100);
+
+            await abacatePayService.createCheckoutSession({
+                priceId: pkg.stripePriceId || pkg.id,
+                amount: amountInCentavos,
+                planName: pkg.description,
+                description: `Pacote de ${pkg.amount} Créditos`,
                 customerEmail: auth.currentUser?.email || undefined,
                 userId: auth.currentUser?.uid,
-                credits: pkg.amount
+                credits: pkg.amount,
+                frequency: 'ONE_TIME'
             });
         } catch (error) {
             console.error(error);

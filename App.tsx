@@ -48,7 +48,7 @@ import { MOCK_MODE } from './services/geminiService';
 import { Toaster, toast } from 'react-hot-toast';
 import { useScrollReveal } from './services/scrollReveal';
 import { PricingPlan, RenderHistoryItem, RenderStyle, CreditPackage, AppUser, LandingSettings, AuthViewMode, UserPlan } from './types';
-import { stripeService } from './services/stripeService';
+import { abacatePayService } from './services/abacatePayService';
 
 const DEFAULT_PRICING_PLANS: PricingPlan[] = [
   {
@@ -143,25 +143,24 @@ const App: React.FC = () => {
 
   useScrollReveal([isLoggedIn, showAuth]);
 
-  // Process Stripe payment success from URL
+  // Process AbacatePay payment success from storage/URL
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const paymentSuccess = params.get('payment');
-    const sessionId = params.get('session_id');
-    const paymentCanceled = params.get('payment');
+    // Check for pending bill ID from storage (for when user returns from payment)
+    const pendingBillId = sessionStorage.getItem('pendingAbacateBillId');
 
-    // NEW: Direct checkout flow - payment first, then register
-    if (paymentSuccess === 'success' && sessionId) {
-      // Fetch session data from Stripe to get email and plan
-      stripeService.getCheckoutSession(sessionId)
-        .then((sessionData) => {
-          if (sessionData.customerEmail && sessionData.paymentStatus === 'paid') {
+    if (pendingBillId) {
+      abacatePayService.getBill(pendingBillId)
+        .then((billData) => {
+          if (billData.paymentStatus === 'PAID') { // Check status
             // Store payment data and show registration with locked email
             setPendingPaymentData({
-              email: sessionData.customerEmail,
-              planName: sessionData.planName || '',
-              sessionId: sessionId,
+              email: billData.customerEmail,
+              planName: billData.planName || '',
+              sessionId: pendingBillId, // Use billId as sessionId
             });
+
+            // Clear storage
+            sessionStorage.removeItem('pendingAbacateBillId');
 
             // Only open Auth if not logged in
             if (!auth.currentUser) {
@@ -175,23 +174,25 @@ const App: React.FC = () => {
                 style: { borderRadius: '15px', background: '#000', color: '#fff' }
               });
             }
+          } else if (billData.paymentStatus === 'PENDING') {
+            console.log("Payment still pending...");
+            // Maybe keep checking or show message? 
+            // For now, do nothing, wait for user to pay or webhook.
+            // But if user was redirected back, usually it is completed or canceled.
           }
         })
-        .catch((error) => {
-          console.error('Error fetching session:', error);
-          toast.error('Erro ao processar pagamento. Tente novamente.');
-        });
-
-      // Clean URL
-      window.history.replaceState({}, '', window.location.pathname);
-      return;
+        .catch(err => console.error("Error fetching bill:", err));
     }
+  }, []);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
     // LEGACY: Old payment flow for credits (still used for credit packages)
     const legacyPaymentSuccess = params.get('payment_success');
     const creditsPurchased = params.get('credits');
     const subscriptionSuccess = params.get('success');
     const canceled = params.get('canceled');
+    const paymentCanceled = params.get('payment');
 
     // Store pending credits in sessionStorage BEFORE cleaning URL
     if (legacyPaymentSuccess === 'true' && creditsPurchased) {
@@ -221,7 +222,7 @@ const App: React.FC = () => {
         }
       });
     }
-  }, []); // Run once on mount
+  }, []);
 
   // Process pending payment if user is logged in (Direct Checkout for Logged Users)
   useEffect(() => {
