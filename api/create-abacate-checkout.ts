@@ -4,11 +4,10 @@ import { VercelRequest, VercelResponse } from '@vercel/node';
 const ABACATE_API_URL = 'https://api.abacatepay.com/v1';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-    // CORS headers
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    // CORS
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST');
-    res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
     if (req.method === 'OPTIONS') return res.status(200).end();
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
@@ -16,105 +15,73 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     try {
         const apiKey = process.env.ABACATE_PAY_API_KEY;
         if (!apiKey) {
-            return res.status(500).json({ error: 'Missing API Key' });
+            console.error('Missing ABACATE_PAY_API_KEY');
+            return res.status(500).json({ error: 'Configuração do servidor inválida' });
         }
 
-        const { amount, description, planName, customerEmail } = req.body;
-        if (!amount) {
-            return res.status(400).json({ error: 'Missing amount' });
+        const { amount, planName, description } = req.body;
+
+        if (!amount || typeof amount !== 'number') {
+            return res.status(400).json({ error: 'Valor inválido' });
         }
 
+        // Build URLs
         const protocol = req.headers['x-forwarded-proto'] || 'https';
-        const host = req.headers['host'];
+        const host = req.headers['host'] || 'render-xyz.vercel.app';
         const baseUrl = `${protocol}://${host}`;
 
-        const headers = {
-            'Authorization': `Bearer ${apiKey}`,
-            'Content-Type': 'application/json'
-        };
-
-        // Step 1: Create or find a customer
-        // Using a default customer for anonymous purchases
-        const email = customerEmail || 'cliente@renderxyz.com';
-
-        console.log('Step 1: Creating customer...');
-        const customerResponse = await fetch(`${ABACATE_API_URL}/customer/create`, {
-            method: 'POST',
-            headers,
-            body: JSON.stringify({
-                name: 'Cliente RenderXYZ',
-                email: email,
-                cellphone: '11999999999',
-                taxId: '00000000000'
-            })
-        });
-
-        const customerData = await customerResponse.json();
-        console.log('Customer Response:', JSON.stringify(customerData, null, 2));
-
-        // Get customer ID (from new creation or error message if already exists)
-        let customerId = customerData.data?.id;
-
-        // If customer already exists, the API might return the existing one or an error
-        // Try to proceed with billing anyway
-        if (!customerId && customerData.data) {
-            customerId = customerData.data.id;
-        }
-
-        console.log('Customer ID:', customerId);
-
-        // Step 2: Create billing with customer ID
-        console.log('Step 2: Creating billing...');
-        const billingPayload: any = {
+        // Payload conforme documentação oficial AbacatePay
+        // https://docs.abacatepay.com/api-reference/criar-uma-nova-cobrança
+        const payload = {
             frequency: "ONE_TIME",
             methods: ["PIX"],
             products: [
                 {
-                    externalId: planName || 'credits',
-                    name: description || 'Créditos RenderXYZ',
-                    description: description || 'Compra de créditos',
+                    externalId: planName || 'plano-renderxyz',
+                    name: description || 'Plano RenderXYZ',
+                    description: description || 'Assinatura do plano RenderXYZ',
                     quantity: 1,
-                    price: amount
+                    price: amount // Em centavos
                 }
             ],
-            returnUrl: `${baseUrl}/?payment=success`,
+            returnUrl: baseUrl,
             completionUrl: `${baseUrl}/?payment=success`
         };
 
-        // Add customer ID if we got one
-        if (customerId) {
-            billingPayload.customerId = customerId;
-        }
+        console.log('AbacatePay Request:', JSON.stringify(payload, null, 2));
 
-        console.log('Billing Payload:', JSON.stringify(billingPayload, null, 2));
-
-        const billingResponse = await fetch(`${ABACATE_API_URL}/billing/create`, {
+        const response = await fetch(`${ABACATE_API_URL}/billing/create`, {
             method: 'POST',
-            headers,
-            body: JSON.stringify(billingPayload)
+            headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
         });
 
-        const billing = await billingResponse.json();
-        console.log('Billing Response:', JSON.stringify(billing, null, 2));
+        const data = await response.json();
+        console.log('AbacatePay Response:', JSON.stringify(data, null, 2));
 
-        if (!billingResponse.ok || billing.error) {
-            return res.status(billingResponse.status || 500).json({
-                error: billing.error || 'AbacatePay Error',
-                details: billing
+        if (!response.ok) {
+            console.error('AbacatePay Error:', data);
+            return res.status(response.status).json({
+                error: data.error || data.message || 'Erro ao criar cobrança',
+                details: data
             });
         }
 
-        const paymentUrl = billing.data?.url;
-        const billId = billing.data?.id;
-
-        if (!paymentUrl) {
-            return res.status(500).json({ error: 'No payment URL', details: billing });
+        if (!data.data?.url) {
+            console.error('No URL in response:', data);
+            return res.status(500).json({ error: 'URL de pagamento não gerada' });
         }
 
-        return res.status(200).json({ url: paymentUrl, id: billId });
+        return res.status(200).json({
+            url: data.data.url,
+            id: data.data.id
+        });
 
     } catch (error: any) {
-        console.error('Error:', error);
-        return res.status(500).json({ error: error.message });
+        console.error('Server Error:', error);
+        return res.status(500).json({ error: error.message || 'Erro interno' });
     }
 }
