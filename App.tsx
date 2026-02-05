@@ -778,12 +778,7 @@ const App: React.FC = () => {
         onBuyCredits={() => { setAuthMode('register'); setShowAuth(true); }}
       />
 
-      <Pricing
-        plans={pricingPlans}
-        creditPackages={creditPackages}
-        onSelectPlan={handlePlanSelection}
-        onBuyCredits={() => { setAuthMode('register'); setShowAuth(true); }}
-      />
+
 
       <FAQ items={FAQS} />
 
