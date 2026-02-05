@@ -1,7 +1,7 @@
 
 import { VercelRequest, VercelResponse } from '@vercel/node';
 
-// AbacatePay API Base URL (from SDK source)
+// AbacatePay API Base URL (from official docs)
 const ABACATE_API_URL = 'https://api.abacatepay.com/v1';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -27,7 +27,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             return res.status(500).json({ error: 'Server Config Error: Missing Key' });
         }
 
-        const { amount, description, customerEmail, userId, credits, planName, frequency } = req.body;
+        const { amount, description, customerEmail, customerName, planName } = req.body;
 
         if (!amount) {
             return res.status(400).json({ error: 'Missing required parameter: amount' });
@@ -36,36 +36,49 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         // Determine base URL dynamically for redirects
         const protocol = req.headers['x-forwarded-proto'] || 'https';
         const host = req.headers['host'];
-        const returnUrl = `${protocol}://${host}/?payment=success`;
+        const baseUrl = `${protocol}://${host}`;
 
-        console.log('Creating AbacatePay billing via direct API:', { amount, planName, returnUrl });
+        console.log('Creating AbacatePay billing:', { amount, planName, baseUrl });
+
+        // Build payload according to official documentation
+        // https://docs.abacatepay.com/pages/payment/create
+        const payload: any = {
+            frequency: "ONE_TIME", // Exactly as documented
+            methods: ["PIX"], // PIX is the only fully supported method
+            products: [
+                {
+                    externalId: planName || 'product-1',
+                    name: description || 'Créditos RenderXYZ',
+                    description: description || 'Compra de créditos',
+                    quantity: 1,
+                    price: amount // Price in cents
+                }
+            ],
+            returnUrl: `${baseUrl}/?payment=success`,
+            completionUrl: `${baseUrl}/?payment=success`
+        };
+
+        // Only add customer if we have complete data (email at minimum)
+        // Customer is optional per docs
+        if (customerEmail) {
+            payload.customer = {
+                email: customerEmail,
+                name: customerName || 'Cliente',
+                cellphone: '11999999999', // Placeholder - could be collected in form
+                taxId: '00000000000' // Placeholder CPF
+            };
+        }
+
+        console.log('AbacatePay Request Payload:', JSON.stringify(payload, null, 2));
 
         // Direct API call to AbacatePay
         const response = await fetch(`${ABACATE_API_URL}/billing/create`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${apiKey}`,
-                'Content-Type': 'application/json',
-                'User-Agent': 'RenderXYZ/1.0'
+                'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
-                frequency: frequency || 'ONE_TIME',
-                methods: ['PIX'],
-                products: [
-                    {
-                        externalId: planName || 'default',
-                        name: description || 'Credits',
-                        quantity: 1,
-                        price: amount,
-                        description: description || 'Service',
-                    }
-                ],
-                returnUrl: returnUrl,
-                completionUrl: returnUrl,
-                customer: customerEmail ? {
-                    email: customerEmail
-                } : undefined
-            })
+            body: JSON.stringify(payload)
         });
 
         const billing = await response.json();
@@ -80,13 +93,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             });
         }
 
-        // The API returns data.url and data.id
+        // The API returns data.url and data.id per documentation
         const paymentUrl = billing.data?.url;
         const billId = billing.data?.id;
 
         if (!paymentUrl) {
             console.error('AbacatePay: No payment URL returned', billing);
-            return res.status(500).json({ error: 'Failed to generate payment URL' });
+            return res.status(500).json({ error: 'Failed to generate payment URL', details: billing });
         }
 
         return res.status(200).json({ url: paymentUrl, id: billId });
