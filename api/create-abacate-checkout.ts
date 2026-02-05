@@ -1,22 +1,44 @@
 
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import { AbacatePay } from 'abacatepay';
+import { createRequire } from 'module';
+
+const require = createRequire(import.meta.url);
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+    // Set CORS headers immediately
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+    res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
+
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+    }
+
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed' });
     }
 
     try {
-        // Production Logic: Strictly use environment variable
+        console.log("Starting AbacatePay Checkout...");
+
         const apiKey = process.env.ABACATE_PAY_API_KEY;
 
         if (!apiKey) {
-            console.error("CRITICAL: ABACATE_PAY_API_KEY is missing in Vercel Environment Variables.");
-            return res.status(500).json({ error: 'Server Configuration Error: Missing Payment Key' });
+            console.error("CRITICAL: Missing ABACATE_PAY_API_KEY");
+            return res.status(500).json({ error: 'Server Config Error: Missing Key' });
         }
 
-        // Initialize AbacatePay
+        // Robust Import Strategy
+        let AbacatePay;
+        try {
+            const pkg = require('abacatepay');
+            AbacatePay = pkg.AbacatePay || pkg.default?.AbacatePay || pkg;
+        } catch (importError: any) {
+            console.error("Import Error:", importError);
+            return res.status(500).json({ error: 'Failed to load Payment Module', details: importError.message });
+        }
+
         const abacatePay = new AbacatePay(apiKey);
 
         const { amount, description, customerEmail, userId, credits, planName, frequency } = req.body;
