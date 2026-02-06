@@ -141,6 +141,9 @@ const App: React.FC = () => {
   const [selectedPackage, setSelectedPackage] = useState<CreditPackage | null>(null);
   const [paymentLoading, setPaymentLoading] = useState(false);
 
+  // Initial loading state to prevent flash of content
+  const [appLoading, setAppLoading] = useState(true);
+
   // State for direct checkout flow (payment first, then register)
   const [pendingPaymentData, setPendingPaymentData] = useState<{
     email: string;
@@ -324,6 +327,7 @@ const App: React.FC = () => {
         setCurrentUser(null);
         setHistory([]);
       }
+      setAppLoading(false); // Authentication check complete
     });
 
     // 3. Global Settings (Landing, Pricing, Packages)
@@ -509,6 +513,14 @@ const App: React.FC = () => {
     link.click();
     document.body.removeChild(link);
   };
+
+  if (appLoading) {
+    return (
+      <div className="min-h-screen bg-[#F2F2F2] flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-[#B6B09F]/30 border-t-black rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   if (showAuth) return (
     <AuthView
