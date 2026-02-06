@@ -47,9 +47,7 @@ import { MOCK_MODE } from './services/geminiService';
 import { Toaster, toast } from 'react-hot-toast';
 import { useScrollReveal } from './services/scrollReveal';
 import { PricingPlan, RenderHistoryItem, RenderStyle, CreditPackage, AppUser, LandingSettings, AuthViewMode, UserPlan } from './types';
-import { abacatePayService } from './services/abacatePayService';
 import { stripeService } from './services/stripeService';
-import { PaymentMethodModal } from './components/PaymentMethodModal';
 
 const DEFAULT_PRICING_PLANS: PricingPlan[] = [
   {
@@ -152,106 +150,9 @@ const App: React.FC = () => {
 
   useScrollReveal([isLoggedIn, showAuth]);
 
-  // Process pending payment on page load (for returning users)
+  // Payment processing is now handled via Stripe webhook
   useEffect(() => {
-    const pendingBillId = sessionStorage.getItem('pendingBillId');
-    const pendingPlanName = sessionStorage.getItem('pendingPlanName');
-
-    console.log('[Payment Check] pendingBillId:', pendingBillId, 'pendingPlanName:', pendingPlanName);
-
-    if (pendingBillId) {
-      abacatePayService.checkPaymentStatus(pendingBillId)
-        .then(async (statusData: any) => {
-          console.log('[Payment Check] Status response:', statusData);
-
-          if (statusData.status === 'PAID') {
-            // Clear session storage first to prevent duplicate processing
-            sessionStorage.removeItem('pendingBillId');
-            sessionStorage.removeItem('pendingPlanName');
-
-            // Try to extract credits from plan name (e.g., "20 Créditos" -> 20)
-            let creditAmount = 0;
-
-            if (pendingPlanName) {
-              const creditMatch = pendingPlanName.match(/(\d+)/);
-              if (creditMatch) {
-                creditAmount = parseInt(creditMatch[1], 10);
-              }
-            }
-
-            // Fallback: calculate credits from billing amount (1490 centavos = 20 credits for 14.90)
-            if (!creditAmount && statusData.amount) {
-              // Credit packages: 20 credits = 1490 (R$14.90), 100 credits = 4990 (R$49.90), 300 credits = 9990 (R$99.90)
-              const amountInReais = statusData.amount / 100;
-              if (amountInReais <= 20) creditAmount = 20;
-              else if (amountInReais <= 60) creditAmount = 100;
-              else creditAmount = 300;
-              console.log('[Payment Check] Fallback: calculated', creditAmount, 'credits from amount', statusData.amount);
-            }
-
-            console.log('[Payment Check] Credit amount to add:', creditAmount);
-
-            if (creditAmount > 0) {
-              // If user is logged in, add credits directly
-              if (auth.currentUser) {
-                try {
-                  const userId = auth.currentUser.uid;
-                  console.log('[Payment Check] Adding credits to user:', userId);
-
-                  const userDoc = await getDoc(doc(db, "users", userId));
-                  const currentCredits = userDoc.exists() ? (userDoc.data().credits || 0) : 0;
-                  const newCredits = currentCredits + creditAmount;
-
-                  await updateDoc(doc(db, "users", userId), {
-                    credits: newCredits
-                  });
-
-                  // Update local state
-                  setCredits(newCredits);
-
-                  toast.success(`${creditAmount} créditos adicionados com sucesso!`, {
-                    duration: 5000,
-                    style: { borderRadius: '15px', background: '#000', color: '#fff', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase' }
-                  });
-                  console.log('[Payment Check] Credits updated:', currentCredits, '+', creditAmount, '=', newCredits);
-                } catch (error) {
-                  console.error('[Payment Check] Error adding credits:', error);
-                  toast.error('Erro ao adicionar créditos. Contacte o suporte.');
-                }
-              } else {
-                // Store for later processing after login
-                sessionStorage.setItem('pendingCredits', creditAmount.toString());
-                toast.success(`Pagamento confirmado! Faça login para receber ${creditAmount} créditos.`, {
-                  duration: 5000,
-                  style: { borderRadius: '15px', background: '#000', color: '#fff', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase' }
-                });
-                setAuthMode('register');
-                setShowAuth(true);
-              }
-            } else {
-              console.error('[Payment Check] Could not determine credit amount!');
-              // Clear session storage even on error
-              sessionStorage.removeItem('pendingBillId');
-              sessionStorage.removeItem('pendingPlanName');
-              toast.error('Erro ao processar créditos. Contacte o suporte.');
-            }
-          } else {
-            // Payment not complete yet or failed - clear to prevent loop
-            console.log('[Payment Check] Status not PAID:', statusData.status);
-            sessionStorage.removeItem('pendingBillId');
-            sessionStorage.removeItem('pendingPlanName');
-          }
-        })
-        .catch(err => {
-          console.error('[Payment Check] Error:', err);
-          // Clear on error to prevent infinite loading
-          sessionStorage.removeItem('pendingBillId');
-          sessionStorage.removeItem('pendingPlanName');
-        })
-        .finally(() => setProcessingPayment(false));
-    } else {
-      setProcessingPayment(false);
-    }
+    setProcessingPayment(false);
   }, []);
 
   useEffect(() => {
@@ -623,29 +524,7 @@ const App: React.FC = () => {
     }
   };
 
-  const handlePayWithPix = async () => {
-    if (!selectedPackage) return;
-
-    const priceString = selectedPackage.price.replace(',', '.');
-    const amountInCentavos = Math.round(parseFloat(priceString) * 100);
-
-    setPaymentLoading(true);
-    try {
-      // For now, use AbacatePay for PIX (will be replaced with Asaas)
-      await abacatePayService.createCheckoutSession({
-        amount: amountInCentavos,
-        planName: `${selectedPackage.amount} Créditos`,
-        description: `${selectedPackage.amount} Créditos RenderXYZ - ${selectedPackage.description}`,
-        customerEmail: currentUser?.email,
-        customerName: currentUser?.displayName,
-        userId: currentUser?.id
-      });
-    } catch (error: any) {
-      console.error('PIX payment error:', error);
-      toast.error(error.message || 'Erro ao iniciar pagamento PIX');
-      setPaymentLoading(false);
-    }
-  };
+  // handlePayWithPix removed - only Stripe is supported now
 
   const deleteFromHistory = async (id: string) => {
     try {
@@ -840,17 +719,7 @@ const App: React.FC = () => {
 
   return (
     <>
-      {/* Payment Method Selection Modal */}
-      {selectedPackage && (
-        <PaymentMethodModal
-          isOpen={showPaymentModal}
-          onClose={() => { setShowPaymentModal(false); setPaymentLoading(false); }}
-          package={selectedPackage}
-          onSelectCard={handlePayWithCard}
-          onSelectPix={handlePayWithPix}
-          isLoading={paymentLoading}
-        />
-      )}
+      {/* Payment is now handled via CreditModal with integrated Stripe checkout */}
 
       <div className="min-h-screen bg-[#F2F2F2] text-black overflow-x-hidden">
         <nav className="fixed top-0 w-full z-50 glass h-16 md:h-20 flex items-center justify-between px-4 md:px-8">

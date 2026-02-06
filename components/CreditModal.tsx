@@ -1,10 +1,8 @@
 
 import React, { useEffect, useState } from 'react';
-import { X, Loader2, Zap, Sparkles, TrendingUp } from 'lucide-react';
+import { X, Loader2, Zap, Sparkles, TrendingUp, CreditCard } from 'lucide-react';
 import { CreditPackage } from '../types';
-import { PaymentMethodModal } from './PaymentMethodModal';
 import { stripeService } from '../services/stripeService';
-import { abacatePayService } from '../services/abacatePayService';
 import { toast } from 'react-hot-toast';
 import { auth } from '../services/firebase';
 
@@ -14,10 +12,8 @@ interface CreditModalProps {
     onClose: () => void;
 }
 
-export const CreditModal: React.FC<CreditModalProps> = ({ creditPackages, onBuyCredits, onClose }) => {
-    const [selectedPackage, setSelectedPackage] = useState<CreditPackage | null>(null);
-    const [showPaymentModal, setShowPaymentModal] = useState(false);
-    const [paymentLoading, setPaymentLoading] = useState(false);
+export const CreditModal: React.FC<CreditModalProps> = ({ creditPackages, onClose }) => {
+    const [loadingId, setLoadingId] = useState<string | null>(null);
 
     // Lock body scroll when modal is open
     useEffect(() => {
@@ -27,52 +23,23 @@ export const CreditModal: React.FC<CreditModalProps> = ({ creditPackages, onBuyC
         };
     }, []);
 
-    const handleSelectPackage = (pkg: CreditPackage) => {
-        setSelectedPackage(pkg);
-        setShowPaymentModal(true);
-    };
+    const handleBuy = async (pkg: CreditPackage) => {
+        setLoadingId(pkg.id);
 
-    const handlePayWithCard = async () => {
-        if (!selectedPackage) return;
-
-        const priceString = selectedPackage.price.replace(',', '.');
+        const priceString = pkg.price.replace(',', '.');
         const amountInCentavos = Math.round(parseFloat(priceString) * 100);
 
-        setPaymentLoading(true);
         try {
             await stripeService.createCheckoutSession({
                 amount: amountInCentavos,
-                credits: selectedPackage.amount,
+                credits: pkg.amount,
                 customerEmail: auth.currentUser?.email || undefined,
                 userId: auth.currentUser?.uid
             });
         } catch (error: any) {
-            console.error('Stripe payment error:', error);
-            toast.error(error.message || 'Erro ao iniciar pagamento com cartão');
-            setPaymentLoading(false);
-        }
-    };
-
-    const handlePayWithPix = async () => {
-        if (!selectedPackage) return;
-
-        const priceString = selectedPackage.price.replace(',', '.');
-        const amountInCentavos = Math.round(parseFloat(priceString) * 100);
-
-        setPaymentLoading(true);
-        try {
-            await abacatePayService.createCheckoutSession({
-                amount: amountInCentavos,
-                planName: `${selectedPackage.amount} Créditos`,
-                description: `${selectedPackage.amount} Créditos RenderXYZ - ${selectedPackage.description}`,
-                customerEmail: auth.currentUser?.email || undefined,
-                customerName: auth.currentUser?.displayName || undefined,
-                userId: auth.currentUser?.uid
-            });
-        } catch (error: any) {
-            console.error('PIX payment error:', error);
-            toast.error(error.message || 'Erro ao iniciar pagamento PIX');
-            setPaymentLoading(false);
+            console.error('Payment error:', error);
+            toast.error(error.message || 'Erro ao iniciar pagamento');
+            setLoadingId(null);
         }
     };
 
@@ -82,24 +49,9 @@ export const CreditModal: React.FC<CreditModalProps> = ({ creditPackages, onBuyC
         return { badge: null, icon: Zap, gradient: '', highlight: false };
     };
 
-    // If payment modal is open, only show that
-    if (showPaymentModal && selectedPackage) {
-        return (
-            <PaymentMethodModal
-                isOpen={true}
-                onClose={() => { setShowPaymentModal(false); setPaymentLoading(false); }}
-                package={selectedPackage}
-                onSelectCard={handlePayWithCard}
-                onSelectPix={handlePayWithPix}
-                isLoading={paymentLoading}
-            />
-        );
-    }
-
-    // Otherwise show credit modal
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/70 backdrop-blur-md" onClick={onClose} />
+            <div className="absolute inset-0 bg-black/70 backdrop-blur-md" />
             <div className="relative bg-white w-full max-w-4xl rounded-[35px] max-h-[90vh] overflow-y-auto shadow-2xl animate-in zoom-in-95 fade-in duration-200">
                 {/* Header */}
                 <div className="bg-gradient-to-r from-black to-zinc-800 p-6 md:p-8 rounded-t-[35px]">
@@ -128,10 +80,10 @@ export const CreditModal: React.FC<CreditModalProps> = ({ creditPackages, onBuyC
                                 <div
                                     key={pkg.id}
                                     className={`relative bg-gradient-to-br from-[#F8F6F1] to-[#EAE4D5] border-2 ${style.highlight
-                                        ? 'border-emerald-500 shadow-xl shadow-emerald-500/20 scale-105'
-                                        : index === 1
-                                            ? 'border-black'
-                                            : 'border-[#B6B09F]/30'
+                                            ? 'border-emerald-500 shadow-xl shadow-emerald-500/20 scale-105'
+                                            : index === 1
+                                                ? 'border-black'
+                                                : 'border-[#B6B09F]/30'
                                         } p-6 rounded-[25px] flex flex-col items-center text-center transition-all hover:shadow-lg`}
                                 >
                                     {/* Badge */}
@@ -144,10 +96,10 @@ export const CreditModal: React.FC<CreditModalProps> = ({ creditPackages, onBuyC
 
                                     {/* Credits Circle */}
                                     <div className={`w-20 h-20 rounded-full flex items-center justify-center mb-4 mt-2 ${style.highlight
-                                        ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white'
-                                        : index === 1
-                                            ? 'bg-black text-white'
-                                            : 'bg-[#B6B09F]/30 text-black'
+                                            ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white'
+                                            : index === 1
+                                                ? 'bg-black text-white'
+                                                : 'bg-[#B6B09F]/30 text-black'
                                         }`}>
                                         <div className="text-center leading-tight">
                                             <span className="text-2xl font-black block">{pkg.amount}</span>
@@ -166,13 +118,21 @@ export const CreditModal: React.FC<CreditModalProps> = ({ creditPackages, onBuyC
 
                                     {/* Button */}
                                     <button
-                                        onClick={() => handleSelectPackage(pkg)}
-                                        className={`w-full py-3.5 rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center transition-all ${style.highlight
-                                            ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:shadow-lg hover:shadow-emerald-500/30'
-                                            : 'bg-black text-white hover:bg-zinc-800'
+                                        onClick={() => handleBuy(pkg)}
+                                        disabled={!!loadingId}
+                                        className={`w-full py-3.5 rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 transition-all disabled:opacity-70 ${style.highlight
+                                                ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:shadow-lg hover:shadow-emerald-500/30'
+                                                : 'bg-black text-white hover:bg-zinc-800'
                                             }`}
                                     >
-                                        Comprar Agora
+                                        {loadingId === pkg.id ? (
+                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                        ) : (
+                                            <>
+                                                <CreditCard className="w-4 h-4" />
+                                                Comprar Agora
+                                            </>
+                                        )}
                                     </button>
                                 </div>
                             );
@@ -181,7 +141,7 @@ export const CreditModal: React.FC<CreditModalProps> = ({ creditPackages, onBuyC
 
                     {/* Trust Badge */}
                     <p className="text-center text-[9px] font-bold uppercase tracking-widest text-[#7A756A] mt-6">
-                        🔒 Pagamento 100% seguro • Créditos nunca expiram
+                        🔒 Pagamento 100% seguro via cartão • Créditos nunca expiram
                     </p>
                 </div>
             </div>
