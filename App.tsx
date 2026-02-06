@@ -202,6 +202,26 @@ const App: React.FC = () => {
         if (!isNaN(amount) && amount > 0) {
           sessionStorage.setItem('pendingCredits', amount.toString());
           console.log(`Stored ${amount} pending credits from AbacatePay return`);
+
+          // If user is NOT logged in, show registration screen
+          if (!auth.currentUser) {
+            // We'll set this after a tiny delay to let React render
+            setTimeout(() => {
+              setAuthMode('register');
+              setShowAuth(true);
+              toast.success(`Pagamento confirmado! Crie sua conta para receber ${amount} créditos.`, {
+                duration: 5000,
+                style: {
+                  borderRadius: '15px',
+                  background: '#000',
+                  color: '#fff',
+                  fontSize: '10px',
+                  fontWeight: '900',
+                  textTransform: 'uppercase'
+                }
+              });
+            }, 100);
+          }
         }
       }
     }
