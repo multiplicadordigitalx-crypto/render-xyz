@@ -504,6 +504,16 @@ const App: React.FC = () => {
   };
 
   const handlePayWithPix = () => {
+    if (!currentUser) {
+      setShowPaymentModal(false);
+      toast('Crie uma conta gratis para pagar com PIX', {
+        icon: '🔒',
+        style: { borderRadius: '15px', background: '#000', color: '#fff' }
+      });
+      setAuthMode('register');
+      setShowAuth(true);
+      return;
+    }
     setShowPaymentModal(false);
     setShowPixModal(true);
   };
