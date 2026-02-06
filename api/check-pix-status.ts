@@ -23,30 +23,51 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             return res.status(400).json({ error: 'ID do pagamento não fornecido' });
         }
 
-        const response = await fetch(`${ABACATE_API}/pixQrCode/check?id=${id}`, {
+        const headers = {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json'
+        };
+
+        // First try to get billing status using the list endpoint
+        // AbacatePay doesn't have a direct /billing/:id endpoint, so we check the list
+        const response = await fetch(`${ABACATE_API}/billing/list`, {
             method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${apiKey}`,
-                'Content-Type': 'application/json'
-            }
+            headers
         });
 
         const data = await response.json();
+        console.log('Billing list response for ID check:', id);
 
-        if (!response.ok || data.error) {
+        if (!response.ok) {
+            console.error('Error from AbacatePay:', data);
             return res.status(response.status || 500).json({
                 error: data.error || 'Erro ao verificar pagamento'
             });
         }
 
+        // Find the billing with matching ID
+        const billings = data.data || [];
+        const billing = billings.find((b: any) => b.id === id);
+
+        if (!billing) {
+            // Billing not found - might still be processing
+            return res.status(200).json({
+                status: 'PENDING',
+                message: 'Pagamento em processamento'
+            });
+        }
+
+        console.log('Found billing:', billing.id, 'Status:', billing.status);
+
         return res.status(200).json({
-            status: data.data?.status || 'PENDING',
-            paidAt: data.data?.paidAt,
-            amount: data.data?.amount
+            status: billing.status || 'PENDING',
+            paidAt: billing.paidAt,
+            amount: billing.amount,
+            billingId: billing.id
         });
 
     } catch (error: any) {
-        console.error('Error checking PIX status:', error);
+        console.error('Error checking payment status:', error);
         return res.status(500).json({ error: error.message || 'Erro interno' });
     }
 }
