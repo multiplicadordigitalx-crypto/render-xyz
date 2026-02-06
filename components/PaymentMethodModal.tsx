@@ -1,5 +1,5 @@
-import React from 'react';
-import { X, CreditCard, Smartphone, Zap, Shield, Loader2 } from 'lucide-react';
+import React, { useEffect } from 'react';
+import { X, CreditCard, Smartphone, Zap, Shield, Loader2, ChevronRight } from 'lucide-react';
 import { CreditPackage } from '../types';
 
 interface PaymentMethodModalProps {
@@ -19,6 +19,16 @@ export const PaymentMethodModal: React.FC<PaymentMethodModalProps> = ({
     onSelectPix,
     isLoading = false
 }) => {
+    // Lock body scroll when modal is open
+    useEffect(() => {
+        if (isOpen) {
+            document.body.style.overflow = 'hidden';
+        }
+        return () => {
+            document.body.style.overflow = '';
+        };
+    }, [isOpen]);
+
     if (!isOpen) return null;
 
     return (
@@ -80,9 +90,7 @@ export const PaymentMethodModal: React.FC<PaymentMethodModalProps> = ({
                         {isLoading ? (
                             <Loader2 className="w-5 h-5 animate-spin" />
                         ) : (
-                            <div className="text-[10px] font-bold uppercase bg-white/20 px-3 py-1 rounded-full">
-                                Stripe
-                            </div>
+                            <ChevronRight className="w-5 h-5" />
                         )}
                     </button>
 
@@ -104,9 +112,7 @@ export const PaymentMethodModal: React.FC<PaymentMethodModalProps> = ({
                         {isLoading ? (
                             <Loader2 className="w-5 h-5 animate-spin" />
                         ) : (
-                            <div className="text-[10px] font-bold uppercase bg-white/20 px-3 py-1 rounded-full">
-                                Asaas
-                            </div>
+                            <ChevronRight className="w-5 h-5" />
                         )}
                     </button>
                 </div>
