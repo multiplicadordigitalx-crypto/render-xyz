@@ -144,30 +144,49 @@ const App: React.FC = () => {
 
   useScrollReveal([isLoggedIn, showAuth]);
 
-  // Process pending PIX payment on page load (for returning users)
+  // Process pending payment on page load (for returning users)
   useEffect(() => {
-    const pendingPixId = sessionStorage.getItem('pendingPixPaymentId');
+    const pendingBillId = sessionStorage.getItem('pendingBillId');
     const pendingPlanName = sessionStorage.getItem('pendingPlanName');
 
-    if (pendingPixId) {
-      abacatePayService.checkPaymentStatus(pendingPixId)
-        .then((status) => {
-          if (status.status === 'PAID') {
-            sessionStorage.removeItem('pendingPixPaymentId');
-            sessionStorage.removeItem('pendingPlanName');
-            toast.success('Pagamento confirmado!', {
-              style: { borderRadius: '15px', background: '#000', color: '#fff' }
-            });
+    if (pendingBillId) {
+      console.log('Checking pending payment:', pendingBillId, pendingPlanName);
 
-            // If not logged in, redirect to register
-            if (!auth.currentUser) {
-              setPendingPaymentData({
-                email: '',
-                planName: pendingPlanName || '',
-                sessionId: pendingPixId
-              });
-              setAuthMode('register');
-              setShowAuth(true);
+      abacatePayService.checkPaymentStatus(pendingBillId)
+        .then((statusData) => {
+          console.log('Payment status:', statusData);
+
+          if (statusData.status === 'PAID') {
+            // Clear session storage first to prevent duplicate processing
+            sessionStorage.removeItem('pendingBillId');
+            sessionStorage.removeItem('pendingPlanName');
+
+            // Extract credits from plan name (e.g., "20 Créditos" -> 20)
+            if (pendingPlanName) {
+              const creditMatch = pendingPlanName.match(/(\d+)/);
+              if (creditMatch) {
+                const amount = parseInt(creditMatch[1], 10);
+                if (!isNaN(amount) && amount > 0) {
+                  // Store credits for processing
+                  sessionStorage.setItem('pendingCredits', amount.toString());
+                  console.log(`Stored ${amount} pending credits from paid bill`);
+
+                  toast.success(`Pagamento confirmado! ${amount} créditos serão adicionados.`, {
+                    style: { borderRadius: '15px', background: '#000', color: '#fff', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase' }
+                  });
+
+                  // If not logged in, redirect to register
+                  if (!auth.currentUser) {
+                    setPendingPaymentData({
+                      email: '',
+                      planName: pendingPlanName,
+                      sessionId: pendingBillId
+                    });
+                    setAuthMode('register');
+                    setShowAuth(true);
+                  }
+                }
+              }
             }
           }
         })
