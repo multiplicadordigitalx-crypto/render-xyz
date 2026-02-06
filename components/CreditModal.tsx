@@ -96,7 +96,8 @@ export const CreditModal: React.FC<CreditModalProps> = ({ creditPackages, onBuyC
                 />
             )}
 
-            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            {/* Credit Modal - hide when payment modal is open */}
+            <div className={`fixed inset-0 z-[100] flex items-center justify-center p-4 transition-all duration-300 ${showPaymentModal ? 'opacity-0 pointer-events-none scale-95' : 'opacity-100 scale-100'}`}>
                 <div className="absolute inset-0 bg-black/70 backdrop-blur-md" onClick={onClose} />
                 <div className="relative bg-white w-full max-w-4xl rounded-[35px] max-h-[90vh] overflow-y-auto shadow-2xl animate-in zoom-in-95 fade-in duration-200">
                     {/* Header */}
@@ -126,10 +127,10 @@ export const CreditModal: React.FC<CreditModalProps> = ({ creditPackages, onBuyC
                                     <div
                                         key={pkg.id}
                                         className={`relative bg-gradient-to-br from-[#F8F6F1] to-[#EAE4D5] border-2 ${style.highlight
-                                                ? 'border-emerald-500 shadow-xl shadow-emerald-500/20 scale-105'
-                                                : index === 1
-                                                    ? 'border-black'
-                                                    : 'border-[#B6B09F]/30'
+                                            ? 'border-emerald-500 shadow-xl shadow-emerald-500/20 scale-105'
+                                            : index === 1
+                                                ? 'border-black'
+                                                : 'border-[#B6B09F]/30'
                                             } p-6 rounded-[25px] flex flex-col items-center text-center transition-all hover:shadow-lg`}
                                     >
                                         {/* Badge */}
@@ -142,10 +143,10 @@ export const CreditModal: React.FC<CreditModalProps> = ({ creditPackages, onBuyC
 
                                         {/* Credits Circle */}
                                         <div className={`w-20 h-20 rounded-full flex items-center justify-center mb-4 mt-2 ${style.highlight
-                                                ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white'
-                                                : index === 1
-                                                    ? 'bg-black text-white'
-                                                    : 'bg-[#B6B09F]/30 text-black'
+                                            ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white'
+                                            : index === 1
+                                                ? 'bg-black text-white'
+                                                : 'bg-[#B6B09F]/30 text-black'
                                             }`}>
                                             <div className="text-center leading-tight">
                                                 <span className="text-2xl font-black block">{pkg.amount}</span>
@@ -166,8 +167,8 @@ export const CreditModal: React.FC<CreditModalProps> = ({ creditPackages, onBuyC
                                         <button
                                             onClick={() => handleSelectPackage(pkg)}
                                             className={`w-full py-3.5 rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center transition-all ${style.highlight
-                                                    ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:shadow-lg hover:shadow-emerald-500/30'
-                                                    : 'bg-black text-white hover:bg-zinc-800'
+                                                ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:shadow-lg hover:shadow-emerald-500/30'
+                                                : 'bg-black text-white hover:bg-zinc-800'
                                                 }`}
                                         >
                                             Comprar Agora
