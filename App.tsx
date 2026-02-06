@@ -182,7 +182,8 @@ const App: React.FC = () => {
     const creditsPurchased = params.get('credits');
     const subscriptionSuccess = params.get('success');
     const canceled = params.get('canceled');
-    const paymentCanceled = params.get('payment');
+    const paymentStatus = params.get('payment');
+    const planName = params.get('plan'); // AbacatePay returns plan name like "20 Créditos"
 
     // Store pending credits in sessionStorage BEFORE cleaning URL
     if (legacyPaymentSuccess === 'true' && creditsPurchased) {
@@ -192,18 +193,31 @@ const App: React.FC = () => {
       }
     }
 
+    // NEW: Handle AbacatePay return with ?payment=success&plan=X Créditos
+    if (paymentStatus === 'success' && planName) {
+      // Extract credit amount from plan name (e.g., "20 Créditos" -> 20)
+      const creditMatch = planName.match(/(\d+)/);
+      if (creditMatch) {
+        const amount = parseInt(creditMatch[1], 10);
+        if (!isNaN(amount) && amount > 0) {
+          sessionStorage.setItem('pendingCredits', amount.toString());
+          console.log(`Stored ${amount} pending credits from AbacatePay return`);
+        }
+      }
+    }
+
     // Store subscription success flag
     if (subscriptionSuccess === 'true') {
       sessionStorage.setItem('subscriptionSuccess', 'true');
     }
 
     // Clean URL immediately to prevent duplicate processing
-    if (legacyPaymentSuccess || subscriptionSuccess || canceled || paymentCanceled === 'canceled') {
+    if (legacyPaymentSuccess || subscriptionSuccess || canceled || paymentStatus) {
       window.history.replaceState({}, '', window.location.pathname);
     }
 
     // Process canceled payment
-    if (canceled === 'true' || paymentCanceled === 'canceled') {
+    if (canceled === 'true' || paymentStatus === 'canceled') {
       toast.error('Pagamento cancelado', {
         style: {
           borderRadius: '15px',
