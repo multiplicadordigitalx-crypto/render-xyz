@@ -101,8 +101,6 @@ const FAQS = [
   { q: "Como funciona a garantia de satisfação?", a: "Se você não estiver satisfeito com o serviço, entre em contato em até 7 dias após a compra e devolvemos seu dinheiro integralmente." },
   { q: "Quanto tempo leva para gerar um render?", a: "Na maioria dos casos, seus renders ficam prontos em segundos. Em horários de pico, pode levar até alguns minutos." },
 ];
-{ q: "Existe um limite real no plano Elite?", a: "O plano Elite oferece um limite de Uso Justo de 250 renders por mês para garantir processamento em velocidade máxima para todos." }
-];
 
 // Declare aistudio globally
 declare global {
