@@ -205,3 +205,4 @@ export const Pricing: React.FC<PricingProps> = ({ creditPackages, onBuyCredits }
         </section>
     );
 };
+// Updated
