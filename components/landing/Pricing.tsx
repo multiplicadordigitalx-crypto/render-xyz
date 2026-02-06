@@ -118,31 +118,48 @@ export const Pricing: React.FC<PricingProps> = ({ creditPackages, onBuyCredits }
                                         {pkg.description}
                                     </p>
 
-                                    {/* Features */}
+                                    {/* Features based on package tier */}
                                     <div className="space-y-3">
+                                        {/* All packages */}
                                         <div className="flex items-center text-[11px] font-bold">
                                             <CheckCircle className="w-4 h-4 mr-3 text-emerald-500 shrink-0" />
-                                            <span>Qualidade até 4K Ultra</span>
-                                        </div>
-                                        <div className="flex items-center text-[11px] font-bold">
-                                            <CheckCircle className="w-4 h-4 mr-3 text-emerald-500 shrink-0" />
-                                            <span>Sem marca d'água</span>
+                                            <span>Resolução até 4K Ultra HD</span>
                                         </div>
                                         <div className="flex items-center text-[11px] font-bold">
                                             <CheckCircle className="w-4 h-4 mr-3 text-emerald-500 shrink-0" />
                                             <span>Créditos nunca expiram</span>
                                         </div>
+                                        <div className="flex items-center text-[11px] font-bold">
+                                            <CheckCircle className="w-4 h-4 mr-3 text-emerald-500 shrink-0" />
+                                            <span>4 estilos de iluminação</span>
+                                        </div>
+
+                                        {/* Professional and Office */}
                                         {i >= 1 && (
-                                            <div className="flex items-center text-[11px] font-bold">
-                                                <CheckCircle className="w-4 h-4 mr-3 text-emerald-500 shrink-0" />
-                                                <span>Suporte prioritário</span>
-                                            </div>
+                                            <>
+                                                <div className="flex items-center text-[11px] font-bold">
+                                                    <CheckCircle className="w-4 h-4 mr-3 text-emerald-500 shrink-0" />
+                                                    <span>Modo em lote (múltiplas imagens)</span>
+                                                </div>
+                                                <div className="flex items-center text-[11px] font-bold">
+                                                    <CheckCircle className="w-4 h-4 mr-3 text-emerald-500 shrink-0" />
+                                                    <span>Suporte prioritário via chat</span>
+                                                </div>
+                                            </>
                                         )}
+
+                                        {/* Office only */}
                                         {i >= 2 && (
-                                            <div className="flex items-center text-[11px] font-bold text-emerald-600">
-                                                <Gift className="w-4 h-4 mr-3 shrink-0" />
-                                                <span>+30 créditos bônus!</span>
-                                            </div>
+                                            <>
+                                                <div className="flex items-center text-[11px] font-bold">
+                                                    <CheckCircle className="w-4 h-4 mr-3 text-emerald-500 shrink-0" />
+                                                    <span>Galeria ilimitada de projetos</span>
+                                                </div>
+                                                <div className="flex items-center text-[11px] font-bold text-emerald-600">
+                                                    <Gift className="w-4 h-4 mr-3 shrink-0" />
+                                                    <span>+50 créditos bônus grátis!</span>
+                                                </div>
+                                            </>
                                         )}
                                     </div>
                                 </div>
