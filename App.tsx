@@ -124,6 +124,7 @@ const App: React.FC = () => {
   const [credits, setCredits] = useState(3);
   const [showCreditModal, setShowCreditModal] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [processingPayment, setProcessingPayment] = useState(!!sessionStorage.getItem('pendingBillId'));
   const [selectedPlan, setSelectedPlan] = useState<PricingPlan | null>(null);
   const [history, setHistory] = useState<RenderHistoryItem[]>([]);
   const [landingSettings, setLandingSettings] = useState<LandingSettings>(DEFAULT_LANDING);
@@ -226,7 +227,10 @@ const App: React.FC = () => {
             }
           }
         })
-        .catch(err => console.error('[Payment Check] Error:', err));
+        .catch(err => console.error('[Payment Check] Error:', err))
+        .finally(() => setProcessingPayment(false));
+    } else {
+      setProcessingPayment(false);
     }
   }, []);
 
@@ -791,6 +795,19 @@ const App: React.FC = () => {
           </section>
         </main>
       </div >
+    );
+  }
+
+  // Show loading while processing payment
+  if (processingPayment) {
+    return (
+      <div className="min-h-screen bg-[#F2F2F2] flex items-center justify-center">
+        <div className="text-center">
+          <img src="/assets/logo-icon.png" alt="Loading" className="w-20 h-20 mx-auto mb-6 animate-bounce" />
+          <h2 className="text-lg font-black uppercase tracking-widest">Processando pagamento...</h2>
+          <p className="text-[#7A756A] text-xs font-bold mt-2">Aguarde um momento</p>
+        </div>
+      </div>
     );
   }
 
