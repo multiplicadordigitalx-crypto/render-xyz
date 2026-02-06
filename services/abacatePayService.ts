@@ -3,6 +3,9 @@ interface CreateCheckoutParams {
     amount: number;
     planName: string;
     description?: string;
+    customerEmail?: string;
+    customerName?: string;
+    userId?: string;
 }
 
 export const abacatePayService = {
@@ -13,7 +16,10 @@ export const abacatePayService = {
             body: JSON.stringify({
                 amount: params.amount,
                 planName: params.planName,
-                description: params.description || `Assinatura ${params.planName}`
+                description: params.description || `${params.planName}`,
+                customerEmail: params.customerEmail,
+                customerName: params.customerName,
+                userId: params.userId
             })
         });
 

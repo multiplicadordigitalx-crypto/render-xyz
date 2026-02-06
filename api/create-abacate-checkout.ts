@@ -41,7 +41,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     };
 
     try {
-        const { amount, planName, description, customerEmail } = req.body;
+        const { amount, planName, description, customerEmail, customerName, userId } = req.body;
 
         if (!amount || typeof amount !== 'number' || amount <= 0) {
             return res.status(400).json({ error: 'Valor inválido' });
@@ -52,18 +52,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const host = req.headers['host'] || 'render-xyz.vercel.app';
         const baseUrl = `${protocol}://${host}`;
 
-        console.log('Step 1: Creating customer...');
+        console.log('Step 1: Creating customer...', { customerEmail, customerName, userId });
 
         // Step 1: Create a customer first
-        // Using a generic customer for anonymous purchases
+        // Use real user data if logged in, otherwise generate placeholder
         const email = customerEmail || `cliente_${Date.now()}@renderxyz.com`;
+        const name = customerName || 'Cliente RenderXYZ';
         const cpf = generateValidCPF();
 
         const customerResponse = await fetch(`${ABACATE_API}/customer/create`, {
             method: 'POST',
             headers,
             body: JSON.stringify({
-                name: 'Cliente RenderXYZ',
+                name: name,
                 email: email,
                 cellphone: '11999999999',
                 taxId: cpf

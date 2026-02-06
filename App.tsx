@@ -503,10 +503,14 @@ const App: React.FC = () => {
 
     try {
       // Redirect to AbacatePay payment page (supports PIX + Card)
+      // Pass user email if logged in so we can pre-fill customer data
       await abacatePayService.createCheckoutSession({
         amount: amountInCentavos,
         planName: `${pkg.amount} Créditos`,
-        description: `${pkg.amount} Créditos RenderXYZ - ${pkg.description}`
+        description: `${pkg.amount} Créditos RenderXYZ - ${pkg.description}`,
+        customerEmail: currentUser?.email,
+        customerName: currentUser?.displayName,
+        userId: currentUser?.id
       });
     } catch (error: any) {
       console.error('Payment error:', error);
