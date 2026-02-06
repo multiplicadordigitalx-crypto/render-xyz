@@ -18,11 +18,12 @@ const fileToBase64 = (file: File): Promise<string> => {
 
 const STYLES: RenderStyle[] = ['Dia', 'Noite', 'Fim de Tarde', 'Nublado'];
 
-// Resolution config with plan requirements
-const RESOLUTIONS: { label: RenderResolution; cost: number; minPlan: UserPlan | null }[] = [
-  { label: '1K', cost: 1, minPlan: null }, // Available to all
-  { label: '2K', cost: 2, minPlan: null }, // Available to all (credits or studio+)
-  { label: '4K', cost: 4, minPlan: 'elite' }, // Elite only
+// Resolution config with credit costs (no plan restrictions)
+// All resolutions available to everyone - just costs more credits
+const RESOLUTIONS: { label: RenderResolution; cost: number }[] = [
+  { label: '1K', cost: 1 },   // Standard quality
+  { label: '2K', cost: 2 },   // HD quality
+  { label: '4K', cost: 3 },   // Ultra quality
 ];
 
 interface RenderToolProps {
@@ -32,14 +33,6 @@ interface RenderToolProps {
   onKeyReset: () => void;
   onUpgrade?: () => void;
 }
-
-// Helper to check if user can use a resolution
-const canUseResolution = (resolution: RenderResolution, userPlan: UserPlan): boolean => {
-  if (resolution === '4K') {
-    return userPlan === 'elite';
-  }
-  return true; // 1K and 2K available to everyone
-};
 
 // Check if user is on free plan (for watermark)
 const shouldShowWatermark = (userPlan: UserPlan): boolean => {
@@ -104,21 +97,7 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
   const handleGenerate = async () => {
     if (!image) return;
 
-    // Check resolution access
-    if (!canUseResolution(resolution, userPlan)) {
-      toast.error('Resolução 4K disponível apenas no plano Elite', {
-        style: {
-          borderRadius: '15px',
-          background: '#000',
-          color: '#fff',
-          fontSize: '10px',
-          fontWeight: '900',
-          textTransform: 'uppercase'
-        }
-      });
-      return;
-    }
-
+    // Check credits
     if (credits < selectedRes.cost) {
       toast.error(`Créditos insuficientes (${selectedRes.cost} necessários)`, {
         style: {
@@ -200,7 +179,7 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
               onClick={() => setMode('batch')}
               className={`flex-1 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${mode === 'batch' ? 'bg-black text-white shadow-md' : 'text-[#7A756A] hover:bg-black/5'}`}
             >
-              Lote {userPlan === 'elite' && '(Elite)'}
+              Lote (+1 crédito cada)
             </button>
           </div>
 
@@ -225,28 +204,21 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
           <div className="bg-[#EAE4D5] border border-[#B6B09F]/20 p-5 md:p-8 rounded-2xl md:rounded-3xl shadow-sm">
             <label className="block text-[9px] md:text-[10px] font-black text-[#000000] mb-4 md:mb-5 uppercase tracking-widest">Qualidade {mode === 'batch' && '(Global)'}</label>
             <div className="grid grid-cols-3 gap-2 md:gap-3">
-              {RESOLUTIONS.map((r) => {
-                const isLocked = !canUseResolution(r.label, userPlan);
-                return (
-                  <button
-                    key={r.label}
-                    onClick={() => !isLocked && setResolution(r.label)}
-                    disabled={isLocked}
-                    className={`px-2 py-2.5 md:py-3 rounded-lg md:rounded-xl text-[8px] md:text-[9px] font-black transition-all uppercase tracking-widest border flex flex-col items-center justify-center relative ${isLocked
-                      ? 'bg-zinc-100 text-zinc-400 border-zinc-200 cursor-not-allowed'
-                      : resolution === r.label
-                        ? 'bg-[#000000] text-white border-[#000000] shadow-lg'
-                        : 'bg-[#F2F2F2] text-[#000000] border-[#B6B09F]/20 hover:border-[#B6B09F]/50'
-                      }`}
-                  >
-                    {isLocked && <Lock className="absolute top-1 right-1 w-2.5 h-2.5 text-zinc-400" />}
-                    <span>{r.label}</span>
-                    <span className={`text-[6px] md:text-[7px] mt-1 ${isLocked ? 'text-zinc-400' : resolution === r.label ? 'opacity-70' : 'text-[#7A756A]'}`}>
-                      {isLocked ? 'Elite' : `${r.cost} ${r.cost === 1 ? 'crédito' : 'créditos'}`}
-                    </span>
-                  </button>
-                );
-              })}
+              {RESOLUTIONS.map((r) => (
+                <button
+                  key={r.label}
+                  onClick={() => setResolution(r.label)}
+                  className={`px-2 py-2.5 md:py-3 rounded-lg md:rounded-xl text-[8px] md:text-[9px] font-black transition-all uppercase tracking-widest border flex flex-col items-center justify-center relative ${resolution === r.label
+                    ? 'bg-[#000000] text-white border-[#000000] shadow-lg'
+                    : 'bg-[#F2F2F2] text-[#000000] border-[#B6B09F]/20 hover:border-[#B6B09F]/50'
+                    }`}
+                >
+                  <span>{r.label}</span>
+                  <span className={`text-[6px] md:text-[7px] mt-1 ${resolution === r.label ? 'opacity-70' : 'text-[#7A756A]'}`}>
+                    {r.cost} {r.cost === 1 ? 'crédito' : 'créditos'}
+                  </span>
+                </button>
+              ))}
             </div>
           </div>
 
@@ -318,8 +290,8 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
                 onRender={processBatchImage}
                 isProcessing={isRendering}
                 style={style}
-                userPlan={userPlan}
-                onUpgrade={() => onUpgrade?.()}
+                credits={credits}
+                costPerRender={selectedRes.cost}
               />
             </div>
           ) : (

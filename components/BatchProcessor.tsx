@@ -1,13 +1,13 @@
 import React, { useState, useRef } from 'react';
-import { Upload, X, Loader2, CheckCircle2, Image as ImageIcon, AlertCircle } from 'lucide-react';
+import { Upload, X, Loader2, CheckCircle2, Image as ImageIcon, AlertCircle, Coins } from 'lucide-react';
 import { RenderStyle } from '../types';
 
 interface BatchProcessorProps {
     onRender: (file: File) => Promise<void>;
     isProcessing: boolean;
     style: RenderStyle;
-    userPlan: string;
-    onUpgrade: () => void;
+    credits: number;
+    costPerRender: number;
 }
 
 interface BatchItem {
@@ -17,20 +17,27 @@ interface BatchItem {
     previewUrl: string;
 }
 
-export const BatchProcessor: React.FC<BatchProcessorProps> = ({ onRender, isProcessing: globalProcessing, style, userPlan, onUpgrade }) => {
+// Batch mode costs +1 credit per render
+const BATCH_SURCHARGE = 1;
+
+export const BatchProcessor: React.FC<BatchProcessorProps> = ({
+    onRender,
+    isProcessing: globalProcessing,
+    style,
+    credits,
+    costPerRender
+}) => {
     const [queue, setQueue] = useState<BatchItem[]>([]);
     const [processingId, setProcessingId] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const isElite = userPlan === 'elite';
+    const totalCostPerItem = costPerRender + BATCH_SURCHARGE;
+    const pendingCount = queue.filter(i => i.status === 'pending').length;
+    const totalCostNeeded = pendingCount * totalCostPerItem;
+    const hasEnoughCredits = credits >= totalCostNeeded;
 
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
-            if (!isElite) {
-                onUpgrade();
-                return;
-            }
-
             const newFiles = Array.from(e.target.files).map((file: File) => ({
                 id: Math.random().toString(36).substr(2, 9),
                 file,
@@ -90,25 +97,24 @@ export const BatchProcessor: React.FC<BatchProcessorProps> = ({ onRender, isProc
                 )}
             </div>
 
+            {/* Cost indicator */}
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-4 flex items-center justify-between">
+                <div className="flex items-center space-x-2 text-[10px] font-bold uppercase text-amber-700">
+                    <Coins className="w-4 h-4" />
+                    <span>Lote: {costPerRender} + {BATCH_SURCHARGE} = {totalCostPerItem} créditos por imagem</span>
+                </div>
+                {pendingCount > 0 && (
+                    <span className="text-[10px] font-black uppercase text-amber-800">
+                        Total: {totalCostNeeded} créditos
+                    </span>
+                )}
+            </div>
+
             <div
                 className={`relative border-2 border-dashed rounded-3xl p-8 transition-all duration-300 text-center
-                    ${!isElite ? 'border-[#B6B09F]/30 bg-[#EAE4D5]/20' :
-                        queue.length > 0 ? 'border-black bg-white' : 'border-[#B6B09F] hover:border-black hover:bg-white'}
+                    ${queue.length > 0 ? 'border-black bg-white' : 'border-[#B6B09F] hover:border-black hover:bg-white'}
                 `}
             >
-                {!isElite && (
-                    <div className="absolute inset-0 z-10 bg-white/60 backdrop-blur-[2px] flex flex-col items-center justify-center rounded-3xl">
-                        <div className="bg-black text-white p-6 rounded-2xl shadow-2xl max-w-xs text-center transform hover:scale-105 transition-transform">
-                            <span className="block text-2xl mb-2">💎</span>
-                            <h4 className="text-lg font-black uppercase mb-2">Exclusivo Elite</h4>
-                            <p className="text-[10px] font-bold text-white/70 mb-4 uppercase">Renderize dezenas de imagens automaticamente enquanto você descansa.</p>
-                            <button onClick={onUpgrade} className="w-full bg-white text-black py-3 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-[#F2F2F2]">
-                                Fazer Upgrade
-                            </button>
-                        </div>
-                    </div>
-                )}
-
                 <input
                     type="file"
                     multiple
@@ -165,7 +171,7 @@ export const BatchProcessor: React.FC<BatchProcessorProps> = ({ onRender, isProc
                         <div className="flex gap-3 pt-4 border-t border-[#B6B09F]/20">
                             <button
                                 onClick={processQueue}
-                                disabled={!!processingId || queue.filter(i => i.status === 'pending').length === 0}
+                                disabled={!!processingId || pendingCount === 0 || !hasEnoughCredits}
                                 className="flex-1 bg-black text-white py-4 rounded-xl font-black text-xs uppercase tracking-widest flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed hover:bg-zinc-800 transition-colors"
                             >
                                 {processingId ? (
@@ -173,8 +179,10 @@ export const BatchProcessor: React.FC<BatchProcessorProps> = ({ onRender, isProc
                                         <Loader2 className="w-4 h-4 animate-spin mr-2" />
                                         Processando...
                                     </>
+                                ) : !hasEnoughCredits ? (
+                                    `Créditos insuficientes (${totalCostNeeded} necessários)`
                                 ) : (
-                                    "Iniciar Renderização em Lote"
+                                    `Iniciar Lote (${totalCostNeeded} créditos)`
                                 )}
                             </button>
                             <button

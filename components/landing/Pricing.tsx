@@ -32,8 +32,18 @@ export const Pricing: React.FC<PricingProps> = ({ creditPackages, onBuyCredits }
                     </h2>
                     <p className="text-[#7A756A] text-sm md:text-base max-w-2xl mx-auto leading-relaxed">
                         Sem assinatura, sem compromisso. Compre créditos quando precisar e use no seu ritmo.
-                        <span className="block mt-2 font-bold">1 crédito = 1 render em alta qualidade.</span>
                     </p>
+                    <div className="flex flex-wrap justify-center gap-4 mt-6">
+                        <div className="bg-white px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest border border-[#B6B09F]/30">
+                            1K = 1 crédito
+                        </div>
+                        <div className="bg-white px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest border border-[#B6B09F]/30">
+                            2K = 2 créditos
+                        </div>
+                        <div className="bg-white px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest border border-[#B6B09F]/30">
+                            4K = 3 créditos
+                        </div>
+                    </div>
                 </div>
 
                 {/* Free Credits Banner */}
@@ -61,17 +71,17 @@ export const Pricing: React.FC<PricingProps> = ({ creditPackages, onBuyCredits }
                             <div
                                 key={pkg.id}
                                 className={`relative bg-white border-2 ${isBestValue
-                                        ? 'border-emerald-500 shadow-2xl shadow-emerald-500/20 scale-100 md:scale-105 z-10'
-                                        : isPopular
-                                            ? 'border-black shadow-xl'
-                                            : 'border-[#B6B09F]/30'
+                                    ? 'border-emerald-500 shadow-2xl shadow-emerald-500/20 scale-100 md:scale-105 z-10'
+                                    : isPopular
+                                        ? 'border-black shadow-xl'
+                                        : 'border-[#B6B09F]/30'
                                     } rounded-[35px] p-8 md:p-10 flex flex-col reveal reveal-fade stagger-${i + 1} transition-all hover:shadow-xl`}
                             >
                                 {/* Badge */}
                                 {isBestValue && (
                                     <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-6 py-2 rounded-full text-[9px] font-black tracking-widest flex items-center gap-2 shadow-lg">
                                         <TrendingUp className="w-3 h-3" />
-                                        MELHOR CUSTO-BENEFÍCIO
+                                        CUSTO-BENEFÍCIO
                                     </div>
                                 )}
                                 {isPopular && !isBestValue && (
@@ -141,10 +151,10 @@ export const Pricing: React.FC<PricingProps> = ({ creditPackages, onBuyCredits }
                                 <button
                                     onClick={() => onBuyCredits(pkg)}
                                     className={`w-full py-5 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all ${isBestValue
-                                            ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:shadow-lg hover:shadow-emerald-500/30 hover:scale-[1.02]'
-                                            : isPopular
-                                                ? 'bg-black text-white hover:bg-zinc-800'
-                                                : 'bg-[#EAE4D5] text-black border border-[#B6B09F]/30 hover:border-black hover:bg-black hover:text-white'
+                                        ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:shadow-lg hover:shadow-emerald-500/30 hover:scale-[1.02]'
+                                        : isPopular
+                                            ? 'bg-black text-white hover:bg-zinc-800'
+                                            : 'bg-[#EAE4D5] text-black border border-[#B6B09F]/30 hover:border-black hover:bg-black hover:text-white'
                                         }`}
                                 >
                                     Comprar Agora
