@@ -594,20 +594,7 @@ const App: React.FC = () => {
     }
   };
 
-  const buyCredits = async (amount: number) => {
-    if (!currentUser) return;
-    const newCredits = credits + amount;
-
-    try {
-      await updateDoc(doc(db, "users", currentUser.id), {
-        credits: newCredits
-      });
-      setCredits(newCredits);
-    } catch (error) {
-      console.error("Error updating credits:", error);
-    }
-    setShowCreditModal(false);
-  };
+  // buyCredits function removed - credits are now only added via webhook after payment confirmation
 
   const handleBuyCreditsFromLanding = (pkg: CreditPackage) => {
     // Show payment method selection modal
@@ -790,17 +777,7 @@ const App: React.FC = () => {
           showCreditModal && (
             <CreditModal
               creditPackages={creditPackages}
-              onBuyCredits={buyCredits}
-              onClose={() => setShowCreditModal(false)}
-            />
-          )
-        }
-
-        {
-          showCreditModal && (
-            <CreditModal
-              creditPackages={creditPackages}
-              onBuyCredits={buyCredits}
+              onBuyCredits={() => { }} // Not used anymore - payment is handled internally
               onClose={() => setShowCreditModal(false)}
             />
           )

@@ -32,8 +32,8 @@ export const PaymentMethodModal: React.FC<PaymentMethodModalProps> = ({
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4" onClick={onClose}>
-            <div className="bg-white rounded-[30px] w-full max-w-md overflow-hidden animate-in zoom-in-95 fade-in duration-200" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
+            <div className="bg-white rounded-[30px] w-full max-w-md overflow-hidden animate-in zoom-in-95 fade-in duration-200">
                 {/* Header */}
                 <div className="bg-gradient-to-r from-black to-zinc-800 p-6 text-white">
                     <div className="flex items-center justify-between mb-4">
