@@ -588,6 +588,29 @@ const App: React.FC = () => {
           />
         )}
 
+        {/* Payment Modals for Logged In User */}
+        {selectedPackage && (
+          <>
+            <PaymentMethodModal
+              isOpen={showPaymentModal}
+              onClose={() => { setShowPaymentModal(false); setPaymentLoading(false); }}
+              package={selectedPackage}
+              onSelectCard={handlePayWithCard}
+              onSelectPix={handlePayWithPix}
+              isLoading={paymentLoading}
+            />
+
+            {currentUser && (
+              <PixCheckoutModal
+                isOpen={showPixModal}
+                onClose={() => setShowPixModal(false)}
+                selectedPackage={selectedPackage}
+                user={currentUser}
+              />
+            )}
+          </>
+        )}
+
         <div className="sticky top-0 z-50">
           {currentUser?.cpf === "" && (
             <div
