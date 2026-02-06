@@ -149,66 +149,84 @@ const App: React.FC = () => {
     const pendingBillId = sessionStorage.getItem('pendingBillId');
     const pendingPlanName = sessionStorage.getItem('pendingPlanName');
 
-    if (pendingBillId) {
-      console.log('Checking pending payment:', pendingBillId, pendingPlanName);
+    console.log('[Payment Check] pendingBillId:', pendingBillId, 'pendingPlanName:', pendingPlanName);
 
+    if (pendingBillId) {
       abacatePayService.checkPaymentStatus(pendingBillId)
-        .then(async (statusData) => {
-          console.log('Payment status:', statusData);
+        .then(async (statusData: any) => {
+          console.log('[Payment Check] Status response:', statusData);
 
           if (statusData.status === 'PAID') {
             // Clear session storage first to prevent duplicate processing
             sessionStorage.removeItem('pendingBillId');
             sessionStorage.removeItem('pendingPlanName');
 
-            // Extract credits from plan name (e.g., "20 Créditos" -> 20)
+            // Try to extract credits from plan name (e.g., "20 Créditos" -> 20)
+            let creditAmount = 0;
+
             if (pendingPlanName) {
               const creditMatch = pendingPlanName.match(/(\d+)/);
               if (creditMatch) {
-                const amount = parseInt(creditMatch[1], 10);
-                if (!isNaN(amount) && amount > 0) {
-                  console.log(`Processing ${amount} credits from paid bill`);
-
-                  // If user is logged in, add credits directly
-                  if (auth.currentUser) {
-                    try {
-                      const userId = auth.currentUser.uid;
-                      const userDoc = await getDoc(doc(db, "users", userId));
-                      const currentCredits = userDoc.exists() ? (userDoc.data().credits || 0) : 0;
-                      const newCredits = currentCredits + amount;
-
-                      await updateDoc(doc(db, "users", userId), {
-                        credits: newCredits
-                      });
-
-                      // Update local state
-                      setCredits(newCredits);
-
-                      toast.success(`${amount} créditos adicionados com sucesso!`, {
-                        duration: 5000,
-                        style: { borderRadius: '15px', background: '#000', color: '#fff', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase' }
-                      });
-                      console.log(`Credits updated: ${currentCredits} + ${amount} = ${newCredits}`);
-                    } catch (error) {
-                      console.error('Error adding credits:', error);
-                      toast.error('Erro ao adicionar créditos. Contacte o suporte.');
-                    }
-                  } else {
-                    // Store for later processing after login
-                    sessionStorage.setItem('pendingCredits', amount.toString());
-                    toast.success(`Pagamento confirmado! Faça login para receber ${amount} créditos.`, {
-                      duration: 5000,
-                      style: { borderRadius: '15px', background: '#000', color: '#fff', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase' }
-                    });
-                    setAuthMode('register');
-                    setShowAuth(true);
-                  }
-                }
+                creditAmount = parseInt(creditMatch[1], 10);
               }
+            }
+
+            // Fallback: calculate credits from billing amount (1490 centavos = 20 credits for 14.90)
+            if (!creditAmount && statusData.amount) {
+              // Credit packages: 20 credits = 1490 (R$14.90), 100 credits = 4990 (R$49.90), 300 credits = 9990 (R$99.90)
+              const amountInReais = statusData.amount / 100;
+              if (amountInReais <= 20) creditAmount = 20;
+              else if (amountInReais <= 60) creditAmount = 100;
+              else creditAmount = 300;
+              console.log('[Payment Check] Fallback: calculated', creditAmount, 'credits from amount', statusData.amount);
+            }
+
+            console.log('[Payment Check] Credit amount to add:', creditAmount);
+
+            if (creditAmount > 0) {
+              // If user is logged in, add credits directly
+              if (auth.currentUser) {
+                try {
+                  const userId = auth.currentUser.uid;
+                  console.log('[Payment Check] Adding credits to user:', userId);
+
+                  const userDoc = await getDoc(doc(db, "users", userId));
+                  const currentCredits = userDoc.exists() ? (userDoc.data().credits || 0) : 0;
+                  const newCredits = currentCredits + creditAmount;
+
+                  await updateDoc(doc(db, "users", userId), {
+                    credits: newCredits
+                  });
+
+                  // Update local state
+                  setCredits(newCredits);
+
+                  toast.success(`${creditAmount} créditos adicionados com sucesso!`, {
+                    duration: 5000,
+                    style: { borderRadius: '15px', background: '#000', color: '#fff', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase' }
+                  });
+                  console.log('[Payment Check] Credits updated:', currentCredits, '+', creditAmount, '=', newCredits);
+                } catch (error) {
+                  console.error('[Payment Check] Error adding credits:', error);
+                  toast.error('Erro ao adicionar créditos. Contacte o suporte.');
+                }
+              } else {
+                // Store for later processing after login
+                sessionStorage.setItem('pendingCredits', creditAmount.toString());
+                toast.success(`Pagamento confirmado! Faça login para receber ${creditAmount} créditos.`, {
+                  duration: 5000,
+                  style: { borderRadius: '15px', background: '#000', color: '#fff', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase' }
+                });
+                setAuthMode('register');
+                setShowAuth(true);
+              }
+            } else {
+              console.error('[Payment Check] Could not determine credit amount!');
+              toast.error('Erro ao processar créditos. Contacte o suporte.');
             }
           }
         })
-        .catch(err => console.error('Error checking payment:', err));
+        .catch(err => console.error('[Payment Check] Error:', err));
     }
   }, []);
 
