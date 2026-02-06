@@ -27,7 +27,6 @@ export const stripeService = {
         // Store pending info before redirect
         if (data.sessionId) {
             sessionStorage.setItem('pendingStripeSession', data.sessionId);
-            sessionStorage.setItem('pendingCredits', params.credits.toString());
         }
 
         // Redirect to Stripe Checkout

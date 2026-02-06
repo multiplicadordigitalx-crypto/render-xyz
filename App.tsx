@@ -243,41 +243,8 @@ const App: React.FC = () => {
     const subscriptionSuccess = sessionStorage.getItem('subscriptionSuccess');
 
     // Process pending credit purchase
-    if (pendingCredits) {
-      const amount = parseInt(pendingCredits, 10);
-      sessionStorage.removeItem('pendingCredits'); // Remove immediately to prevent duplicate processing
-
-      if (!isNaN(amount) && amount > 0) {
-        const addPurchasedCredits = async () => {
-          try {
-            // Get fresh user data from Firestore to get accurate current credits
-            const userDoc = await getDoc(doc(db, "users", currentUser.id));
-            const currentCredits = userDoc.exists() ? (userDoc.data().credits || 0) : 0;
-            const newCredits = currentCredits + amount;
-
-            await updateDoc(doc(db, "users", currentUser.id), {
-              credits: newCredits
-            });
-
-            toast.success(`${amount} créditos adicionados com sucesso!`, {
-              style: {
-                borderRadius: '15px',
-                background: '#000',
-                color: '#fff',
-                fontSize: '10px',
-                fontWeight: '900',
-                textTransform: 'uppercase',
-                letterSpacing: '0.1em'
-              }
-            });
-          } catch (error) {
-            console.error("Error updating credits:", error);
-            toast.error("Erro ao adicionar créditos. Contacte o suporte.");
-          }
-        };
-        addPurchasedCredits();
-      }
-    }
+    // pendingCredits logic removed to prevent free credits vulnerability
+    // Credits are now securely added via Stripe Webhook only
 
     // Process subscription success
     if (subscriptionSuccess) {
