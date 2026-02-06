@@ -104,7 +104,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                         price: amount
                     }
                 ],
-                returnUrl: baseUrl,
+                returnUrl: `${baseUrl}/?payment=success&plan=${encodeURIComponent(planName || '')}`,
                 completionUrl: `${baseUrl}/?payment=success&plan=${encodeURIComponent(planName || '')}`,
                 customerId: customerId // Use the customer ID we just created
             })
