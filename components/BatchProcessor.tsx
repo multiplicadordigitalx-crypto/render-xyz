@@ -98,15 +98,29 @@ export const BatchProcessor: React.FC<BatchProcessorProps> = ({
             </div>
 
             {/* Cost indicator */}
-            <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-4 flex items-center justify-between">
-                <div className="flex items-center space-x-2 text-[10px] font-bold uppercase text-amber-700">
-                    <Coins className="w-4 h-4" />
-                    <span>Lote: {costPerRender} + {BATCH_SURCHARGE} = {totalCostPerItem} créditos por imagem</span>
+            <div className={`rounded-xl p-3 mb-4 ${!hasEnoughCredits && pendingCount > 0 ? 'bg-red-50 border border-red-200' : 'bg-amber-50 border border-amber-200'}`}>
+                <div className="flex items-center justify-between">
+                    <div className={`flex items-center space-x-2 text-[10px] font-bold uppercase ${!hasEnoughCredits && pendingCount > 0 ? 'text-red-700' : 'text-amber-700'}`}>
+                        <Coins className="w-4 h-4" />
+                        <span>Lote: {costPerRender} + {BATCH_SURCHARGE} = {totalCostPerItem} créditos por imagem</span>
+                    </div>
+                    {pendingCount > 0 && (
+                        <span className={`text-[10px] font-black uppercase ${!hasEnoughCredits ? 'text-red-800' : 'text-amber-800'}`}>
+                            Total: {totalCostNeeded} créditos
+                        </span>
+                    )}
                 </div>
-                {pendingCount > 0 && (
-                    <span className="text-[10px] font-black uppercase text-amber-800">
-                        Total: {totalCostNeeded} créditos
-                    </span>
+
+                {/* Insufficient credits warning */}
+                {!hasEnoughCredits && pendingCount > 0 && (
+                    <div className="mt-3 pt-3 border-t border-red-200 text-center">
+                        <p className="text-red-700 text-[11px] font-black uppercase">
+                            ⚠️ Você tem {credits} créditos, precisa de {totalCostNeeded}
+                        </p>
+                        <p className="text-red-600 text-[10px] font-bold mt-1">
+                            Faltam {totalCostNeeded - credits} créditos para processar {pendingCount} {pendingCount === 1 ? 'imagem' : 'imagens'}
+                        </p>
+                    </div>
                 )}
             </div>
 
