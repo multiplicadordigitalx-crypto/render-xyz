@@ -145,7 +145,7 @@ const App: React.FC = () => {
   const [paymentLoading, setPaymentLoading] = useState(false);
 
   // Initial loading state to prevent flash of content
-  const [appLoading, setAppLoading] = useState(true);
+  const [appLoading, setAppLoading] = useState(false);
 
   // State for direct checkout flow (payment first, then register)
   const [pendingPaymentData, setPendingPaymentData] = useState<{
