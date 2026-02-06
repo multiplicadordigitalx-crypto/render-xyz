@@ -744,6 +744,7 @@ const App: React.FC = () => {
               <div className="flex items-center bg-black text-white px-3 md:px-5 py-1.5 md:py-2 rounded-xl shadow-lg">
                 <Coins className="w-3 h-3 md:w-4 md:h-4 mr-2 text-[#7A756A]" />
                 <span className="text-xs md:text-sm font-black">{credits}</span>
+                <span className="text-[8px] md:text-[9px] font-bold text-[#7A756A] ml-1 uppercase">créditos</span>
                 <button onClick={() => setShowCreditModal(true)} className="ml-3 md:ml-6 bg-[#B6B09F] text-black p-1 rounded transition-all"><Plus className="w-3 h-3" /></button>
               </div>
               <button onClick={handleLogout} className="p-2 bg-black/5 rounded-full"><LogOut className="w-3 h-3" /></button>
