@@ -55,7 +55,7 @@ export const Pricing: React.FC<PricingProps> = ({ creditPackages, onBuyCredits }
                                 Comece Grátis com 3 Créditos!
                             </h3>
                             <p className="text-white/80 text-[10px] md:text-xs font-bold uppercase tracking-widest">
-                                Crie sua conta e teste o poder do Render XYZ sem pagar nada
+                                Crie sua conta e teste o poder do Render XYZ
                             </p>
                         </div>
                     </div>
