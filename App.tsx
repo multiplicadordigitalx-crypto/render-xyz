@@ -281,6 +281,11 @@ const App: React.FC = () => {
     };
     checkKey();
 
+    // Safety timeout to prevent infinite loading
+    const safetyTimeout = setTimeout(() => {
+      setAppLoading(false);
+    }, 3000);
+
     // 2. Firebase Auth Listener & Profile Sync
     const unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
       if (firebaseUser) {
