@@ -153,7 +153,7 @@ const App: React.FC = () => {
       console.log('Checking pending payment:', pendingBillId, pendingPlanName);
 
       abacatePayService.checkPaymentStatus(pendingBillId)
-        .then((statusData) => {
+        .then(async (statusData) => {
           console.log('Payment status:', statusData);
 
           if (statusData.status === 'PAID') {
@@ -167,20 +167,38 @@ const App: React.FC = () => {
               if (creditMatch) {
                 const amount = parseInt(creditMatch[1], 10);
                 if (!isNaN(amount) && amount > 0) {
-                  // Store credits for processing
-                  sessionStorage.setItem('pendingCredits', amount.toString());
-                  console.log(`Stored ${amount} pending credits from paid bill`);
+                  console.log(`Processing ${amount} credits from paid bill`);
 
-                  toast.success(`Pagamento confirmado! ${amount} créditos serão adicionados.`, {
-                    style: { borderRadius: '15px', background: '#000', color: '#fff', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase' }
-                  });
+                  // If user is logged in, add credits directly
+                  if (auth.currentUser) {
+                    try {
+                      const userId = auth.currentUser.uid;
+                      const userDoc = await getDoc(doc(db, "users", userId));
+                      const currentCredits = userDoc.exists() ? (userDoc.data().credits || 0) : 0;
+                      const newCredits = currentCredits + amount;
 
-                  // If not logged in, redirect to register
-                  if (!auth.currentUser) {
-                    setPendingPaymentData({
-                      email: '',
-                      planName: pendingPlanName,
-                      sessionId: pendingBillId
+                      await updateDoc(doc(db, "users", userId), {
+                        credits: newCredits
+                      });
+
+                      // Update local state
+                      setCredits(newCredits);
+
+                      toast.success(`${amount} créditos adicionados com sucesso!`, {
+                        duration: 5000,
+                        style: { borderRadius: '15px', background: '#000', color: '#fff', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase' }
+                      });
+                      console.log(`Credits updated: ${currentCredits} + ${amount} = ${newCredits}`);
+                    } catch (error) {
+                      console.error('Error adding credits:', error);
+                      toast.error('Erro ao adicionar créditos. Contacte o suporte.');
+                    }
+                  } else {
+                    // Store for later processing after login
+                    sessionStorage.setItem('pendingCredits', amount.toString());
+                    toast.success(`Pagamento confirmado! Faça login para receber ${amount} créditos.`, {
+                      duration: 5000,
+                      style: { borderRadius: '15px', background: '#000', color: '#fff', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase' }
                     });
                     setAuthMode('register');
                     setShowAuth(true);
