@@ -230,11 +230,24 @@ const App: React.FC = () => {
               }
             } else {
               console.error('[Payment Check] Could not determine credit amount!');
+              // Clear session storage even on error
+              sessionStorage.removeItem('pendingBillId');
+              sessionStorage.removeItem('pendingPlanName');
               toast.error('Erro ao processar créditos. Contacte o suporte.');
             }
+          } else {
+            // Payment not complete yet or failed - clear to prevent loop
+            console.log('[Payment Check] Status not PAID:', statusData.status);
+            sessionStorage.removeItem('pendingBillId');
+            sessionStorage.removeItem('pendingPlanName');
           }
         })
-        .catch(err => console.error('[Payment Check] Error:', err))
+        .catch(err => {
+          console.error('[Payment Check] Error:', err);
+          // Clear on error to prevent infinite loading
+          sessionStorage.removeItem('pendingBillId');
+          sessionStorage.removeItem('pendingPlanName');
+        })
         .finally(() => setProcessingPayment(false));
     } else {
       setProcessingPayment(false);
