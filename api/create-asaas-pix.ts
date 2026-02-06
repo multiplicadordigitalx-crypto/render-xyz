@@ -15,23 +15,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(405).json({ error: 'Method not allowed' });
     }
 
+    const apiKey = process.env.ASAAS_API_KEY;
+    const apiUrl = process.env.ASAAS_API_URL || 'https://www.asaas.com/api/v3';
+
+    if (!apiKey) {
+        console.error('ASAAS_API_KEY not configured');
+        return res.status(500).json({
+            error: 'Server configuration error',
+            message: 'Erro de configuração do servidor (API KEY ausente)'
+        });
+    }
+
     const { amount, description, customer, userId, credits } = req.body;
 
     if (!amount || !customer || !userId || !credits) {
         return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    const apiKey = process.env.ASAAS_API_KEY;
-    const apiUrl = process.env.ASAAS_API_URL || 'https://www.asaas.com/api/v3';
-
-    if (!apiKey) {
-        console.error('ASAAS_API_KEY not configured');
-        return res.status(500).json({ error: 'Server configuration error' });
-    }
-
     try {
         // Sanitize CPF (remove non-digits)
-        const sanitizedCpf = customer.cpfCnpj.replace(/\D/g, '');
+        const sanitizedCpf = (customer.cpfCnpj || '').replace(/\D/g, '');
 
         // 1. Criar ou buscar o cliente no Asaas
         let customerId = '';
@@ -128,6 +131,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     } catch (error: any) {
         console.error('Asaas API Logic Error:', error);
-        return res.status(500).json({ error: error.message, stack: error.stack });
+        return res.status(500).json({
+            error: error.message || 'Erro interno no servidor',
+            message: error.message || 'Erro interno no servidor',
+            stack: error.stack
+        });
     }
 }

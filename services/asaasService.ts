@@ -29,8 +29,14 @@ export const asaasService = {
         });
 
         if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.message || 'Erro ao criar cobrança PIX');
+            let errorMessage = 'Erro ao criar cobrança PIX';
+            try {
+                const errorData = await response.json();
+                errorMessage = errorData.message || errorData.error || errorMessage;
+            } catch (e) {
+                console.error('Error parsing error response:', e);
+            }
+            throw new Error(errorMessage);
         }
 
         return response.json();
