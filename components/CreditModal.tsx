@@ -8,11 +8,11 @@ import { auth } from '../services/firebase';
 
 interface CreditModalProps {
     creditPackages: CreditPackage[];
-    onBuyCredits: (amount: number) => void;
+    onBuyCredits: (pkg: CreditPackage) => void;
     onClose: () => void;
 }
 
-export const CreditModal: React.FC<CreditModalProps> = ({ creditPackages, onClose }) => {
+export const CreditModal: React.FC<CreditModalProps> = ({ creditPackages, onClose, onBuyCredits }) => {
     const [loadingId, setLoadingId] = useState<string | null>(null);
 
     // Lock body scroll when modal is open
@@ -24,23 +24,7 @@ export const CreditModal: React.FC<CreditModalProps> = ({ creditPackages, onClos
     }, []);
 
     const handleBuy = async (pkg: CreditPackage) => {
-        setLoadingId(pkg.id);
-
-        const priceString = pkg.price.replace(',', '.');
-        const amountInCentavos = Math.round(parseFloat(priceString) * 100);
-
-        try {
-            await stripeService.createCheckoutSession({
-                amount: amountInCentavos,
-                credits: pkg.amount,
-                customerEmail: auth.currentUser?.email || undefined,
-                userId: auth.currentUser?.uid
-            });
-        } catch (error: any) {
-            console.error('Payment error:', error);
-            toast.error(error.message || 'Erro ao iniciar pagamento');
-            setLoadingId(null);
-        }
+        onBuyCredits(pkg);
     };
 
     const getPackageStyle = (index: number) => {
@@ -80,10 +64,10 @@ export const CreditModal: React.FC<CreditModalProps> = ({ creditPackages, onClos
                                 <div
                                     key={pkg.id}
                                     className={`relative bg-gradient-to-br from-[#F8F6F1] to-[#EAE4D5] border-2 ${style.highlight
-                                            ? 'border-emerald-500 shadow-xl shadow-emerald-500/20 scale-105'
-                                            : index === 1
-                                                ? 'border-black'
-                                                : 'border-[#B6B09F]/30'
+                                        ? 'border-emerald-500 shadow-xl shadow-emerald-500/20 scale-105'
+                                        : index === 1
+                                            ? 'border-black'
+                                            : 'border-[#B6B09F]/30'
                                         } p-6 rounded-[25px] flex flex-col items-center text-center transition-all hover:shadow-lg`}
                                 >
                                     {/* Badge */}
@@ -96,10 +80,10 @@ export const CreditModal: React.FC<CreditModalProps> = ({ creditPackages, onClos
 
                                     {/* Credits Circle */}
                                     <div className={`w-20 h-20 rounded-full flex items-center justify-center mb-4 mt-2 ${style.highlight
-                                            ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white'
-                                            : index === 1
-                                                ? 'bg-black text-white'
-                                                : 'bg-[#B6B09F]/30 text-black'
+                                        ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white'
+                                        : index === 1
+                                            ? 'bg-black text-white'
+                                            : 'bg-[#B6B09F]/30 text-black'
                                         }`}>
                                         <div className="text-center leading-tight">
                                             <span className="text-2xl font-black block">{pkg.amount}</span>
@@ -121,8 +105,8 @@ export const CreditModal: React.FC<CreditModalProps> = ({ creditPackages, onClos
                                         onClick={() => handleBuy(pkg)}
                                         disabled={!!loadingId}
                                         className={`w-full py-3.5 rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 transition-all disabled:opacity-70 ${style.highlight
-                                                ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:shadow-lg hover:shadow-emerald-500/30'
-                                                : 'bg-black text-white hover:bg-zinc-800'
+                                            ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:shadow-lg hover:shadow-emerald-500/30'
+                                            : 'bg-black text-white hover:bg-zinc-800'
                                             }`}
                                     >
                                         {loadingId === pkg.id ? (

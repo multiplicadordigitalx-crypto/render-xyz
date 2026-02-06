@@ -48,6 +48,8 @@ import { Toaster, toast } from 'react-hot-toast';
 import { useScrollReveal } from './services/scrollReveal';
 import { PricingPlan, RenderHistoryItem, RenderStyle, CreditPackage, AppUser, LandingSettings, AuthViewMode, UserPlan } from './types';
 import { stripeService } from './services/stripeService';
+import { PaymentMethodModal } from './components/PaymentMethodModal';
+import { PixCheckoutModal } from './components/PixCheckoutModal';
 
 const DEFAULT_PRICING_PLANS: PricingPlan[] = [
   {
@@ -138,6 +140,7 @@ const App: React.FC = () => {
 
   // Payment method selection modal
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showPixModal, setShowPixModal] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState<CreditPackage | null>(null);
   const [paymentLoading, setPaymentLoading] = useState(false);
 
@@ -500,7 +503,10 @@ const App: React.FC = () => {
     }
   };
 
-  // handlePayWithPix removed - only Stripe is supported now
+  const handlePayWithPix = () => {
+    setShowPaymentModal(false);
+    setShowPixModal(true);
+  };
 
   const deleteFromHistory = async (id: string) => {
     try {
@@ -640,7 +646,7 @@ const App: React.FC = () => {
           showCreditModal && (
             <CreditModal
               creditPackages={creditPackages}
-              onBuyCredits={() => { }} // Not used anymore - payment is handled internally
+              onBuyCredits={handleBuyCreditsFromLanding}
               onClose={() => setShowCreditModal(false)}
             />
           )
@@ -703,7 +709,28 @@ const App: React.FC = () => {
 
   return (
     <>
-      {/* Payment is now handled via CreditModal with integrated Stripe checkout */}
+      {/* Payment Modals */}
+      {selectedPackage && (
+        <>
+          <PaymentMethodModal
+            isOpen={showPaymentModal}
+            onClose={() => { setShowPaymentModal(false); setPaymentLoading(false); }}
+            package={selectedPackage}
+            onSelectCard={handlePayWithCard}
+            onSelectPix={handlePayWithPix}
+            isLoading={paymentLoading}
+          />
+
+          {currentUser && (
+            <PixCheckoutModal
+              isOpen={showPixModal}
+              onClose={() => setShowPixModal(false)}
+              selectedPackage={selectedPackage}
+              user={currentUser}
+            />
+          )}
+        </>
+      )}
 
       <div className="min-h-screen bg-[#F2F2F2] text-black overflow-x-hidden">
         <nav className="fixed top-0 w-full z-50 glass h-16 md:h-20 flex items-center justify-between px-4 md:px-8">
