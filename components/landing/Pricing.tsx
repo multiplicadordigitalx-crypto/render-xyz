@@ -94,9 +94,9 @@ export const Pricing: React.FC<PricingProps> = ({ creditPackages, onBuyCredits }
                                 {/* Credits Amount */}
                                 <div className="text-center mb-6">
                                     <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-[#EAE4D5] to-[#F2F2F2] rounded-full mb-4">
-                                        <div className="text-center">
+                                        <div className="text-center leading-none">
                                             <span className="text-3xl font-black block">{pkg.amount}</span>
-                                            <span className="text-[9px] font-black uppercase tracking-widest text-[#7A756A]">créditos</span>
+                                            <span className="text-[9px] font-black uppercase tracking-widest text-[#7A756A] block -mt-0.5">créditos</span>
                                         </div>
                                     </div>
                                 </div>
