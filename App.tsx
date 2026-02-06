@@ -83,9 +83,9 @@ const DEFAULT_PRICING_PLANS: PricingPlan[] = [
 ];
 
 const DEFAULT_CREDIT_PACKAGES: CreditPackage[] = [
-  { id: 'p1', amount: 20, price: '29,90', description: 'Pack Iniciante', externalId: 'price_1Sv1PwEQ6obY8Ge9m6L0F5V1' },
-  { id: 'p2', amount: 100, price: '119,90', description: 'Pack Profissional', externalId: 'price_1Sv1QKEQ6obY8Ge9YxUdxd0A' },
-  { id: 'p3', amount: 300, price: '299,90', description: 'Pack Office', externalId: 'price_1Sv1QiEQ6obY8Ge9gtui9ODr' },
+  { id: 'p1', amount: 20, price: '24,90', description: 'Pack Iniciante', externalId: 'price_1Sv1PwEQ6obY8Ge9m6L0F5V1' },
+  { id: 'p2', amount: 100, price: '99,90', description: 'Pack Profissional', externalId: 'price_1Sv1QKEQ6obY8Ge9YxUdxd0A' },
+  { id: 'p3', amount: 300, price: '279,90', description: 'Pack Office', externalId: 'price_1Sv1QiEQ6obY8Ge9gtui9ODr' },
 ];
 
 const DEFAULT_LANDING: LandingSettings = {
