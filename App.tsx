@@ -48,6 +48,8 @@ import { Toaster, toast } from 'react-hot-toast';
 import { useScrollReveal } from './services/scrollReveal';
 import { PricingPlan, RenderHistoryItem, RenderStyle, CreditPackage, AppUser, LandingSettings, AuthViewMode, UserPlan } from './types';
 import { abacatePayService } from './services/abacatePayService';
+import { stripeService } from './services/stripeService';
+import { PaymentMethodModal } from './components/PaymentMethodModal';
 
 const DEFAULT_PRICING_PLANS: PricingPlan[] = [
   {
@@ -135,6 +137,11 @@ const App: React.FC = () => {
   const [creditPackages, setCreditPackages] = useState<CreditPackage[]>(DEFAULT_CREDIT_PACKAGES);
   const [showCpfModal, setShowCpfModal] = useState(false);
   const [cpfBlocking, setCpfBlocking] = useState(false);
+
+  // Payment method selection modal
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [selectedPackage, setSelectedPackage] = useState<CreditPackage | null>(null);
+  const [paymentLoading, setPaymentLoading] = useState(false);
 
   // State for direct checkout flow (payment first, then register)
   const [pendingPaymentData, setPendingPaymentData] = useState<{
@@ -589,25 +596,54 @@ const App: React.FC = () => {
     setShowCreditModal(false);
   };
 
-  const handleBuyCreditsFromLanding = async (pkg: CreditPackage) => {
-    // Parse price to centavos (price is like "14,90")
-    const priceString = pkg.price.replace(',', '.');
+  const handleBuyCreditsFromLanding = (pkg: CreditPackage) => {
+    // Show payment method selection modal
+    setSelectedPackage(pkg);
+    setShowPaymentModal(true);
+  };
+
+  const handlePayWithCard = async () => {
+    if (!selectedPackage) return;
+
+    const priceString = selectedPackage.price.replace(',', '.');
     const amountInCentavos = Math.round(parseFloat(priceString) * 100);
 
+    setPaymentLoading(true);
     try {
-      // Redirect to AbacatePay payment page (supports PIX + Card)
-      // Pass user email if logged in so we can pre-fill customer data
+      await stripeService.createCheckoutSession({
+        amount: amountInCentavos,
+        credits: selectedPackage.amount,
+        customerEmail: currentUser?.email,
+        userId: currentUser?.id
+      });
+    } catch (error: any) {
+      console.error('Stripe payment error:', error);
+      toast.error(error.message || 'Erro ao iniciar pagamento com cartão');
+      setPaymentLoading(false);
+    }
+  };
+
+  const handlePayWithPix = async () => {
+    if (!selectedPackage) return;
+
+    const priceString = selectedPackage.price.replace(',', '.');
+    const amountInCentavos = Math.round(parseFloat(priceString) * 100);
+
+    setPaymentLoading(true);
+    try {
+      // For now, use AbacatePay for PIX (will be replaced with Asaas)
       await abacatePayService.createCheckoutSession({
         amount: amountInCentavos,
-        planName: `${pkg.amount} Créditos`,
-        description: `${pkg.amount} Créditos RenderXYZ - ${pkg.description}`,
+        planName: `${selectedPackage.amount} Créditos`,
+        description: `${selectedPackage.amount} Créditos RenderXYZ - ${selectedPackage.description}`,
         customerEmail: currentUser?.email,
         customerName: currentUser?.displayName,
         userId: currentUser?.id
       });
     } catch (error: any) {
-      console.error('Payment error:', error);
-      toast.error(error.message || 'Erro ao iniciar pagamento');
+      console.error('PIX payment error:', error);
+      toast.error(error.message || 'Erro ao iniciar pagamento PIX');
+      setPaymentLoading(false);
     }
   };
 
@@ -812,66 +848,80 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#F2F2F2] text-black overflow-x-hidden">
-      <nav className="fixed top-0 w-full z-50 glass h-16 md:h-20 flex items-center justify-between px-4 md:px-8">
-        <a href="/" className="flex items-center hover:opacity-80 transition-opacity">
-          <img src="/assets/logo.png" alt="Render XYZ" className="h-8 md:h-10" />
-        </a>
-
-        <div className="md:hidden flex items-center space-x-4">
-          <button onClick={() => { setAuthMode('login'); setShowAuth(true); }} className="bg-black text-white px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest">Acessar</button>
-          <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="p-2"><Menu /></button>
-        </div>
-
-        <div className="hidden md:flex items-center space-x-12 text-[10px] font-black uppercase tracking-widest">
-          <a href="#demo" className="hover:text-[#7A756A]">Portfólio</a>
-          <a href="#how-it-works" className="hover:text-[#7A756A]">Processo</a>
-          <a href="#pricing" className="hover:text-[#7A756A]">Preços</a>
-          <button onClick={() => { setAuthMode('login'); setShowAuth(true); }} className="bg-black text-white px-10 py-3.5 rounded-full hover:bg-zinc-800 transition-all shadow-xl">Acessar App</button>
-        </div>
-      </nav>
-
-      {mobileMenuOpen && (
-        <div className="fixed inset-0 z-[45] bg-[#EAE4D5] pt-24 px-8 md:hidden">
-          <div className="flex flex-col space-y-8 text-xl font-black uppercase tracking-tighter">
-            <a href="#demo" onClick={() => setMobileMenuOpen(false)}>Portfólio</a>
-            <a href="#how-it-works" onClick={() => setMobileMenuOpen(false)}>Processo</a>
-            <a href="#pricing" onClick={() => setMobileMenuOpen(false)}>Preços</a>
-            <button onClick={() => { setAuthMode('login'); setShowAuth(true); setMobileMenuOpen(false); }} className="w-full bg-black text-white py-6 rounded-2xl">Acessar App</button>
-          </div>
-        </div>
+    <>
+      {/* Payment Method Selection Modal */}
+      {selectedPackage && (
+        <PaymentMethodModal
+          isOpen={showPaymentModal}
+          onClose={() => { setShowPaymentModal(false); setPaymentLoading(false); }}
+          package={selectedPackage}
+          onSelectCard={handlePayWithCard}
+          onSelectPix={handlePayWithPix}
+          isLoading={paymentLoading}
+        />
       )}
 
-      <Hero
-        onStartNow={() => { setAuthMode('register'); setShowAuth(true); }}
-        onSeeInAction={() => { }}
-      />
+      <div className="min-h-screen bg-[#F2F2F2] text-black overflow-x-hidden">
+        <nav className="fixed top-0 w-full z-50 glass h-16 md:h-20 flex items-center justify-between px-4 md:px-8">
+          <a href="/" className="flex items-center hover:opacity-80 transition-opacity">
+            <img src="/assets/logo.png" alt="Render XYZ" className="h-8 md:h-10" />
+          </a>
 
-      <DemoSlider
-        showcaseBefore={landingSettings.showcaseBefore}
-        showcaseAfter={landingSettings.showcaseAfter}
-      />
+          <div className="md:hidden flex items-center space-x-4">
+            <button onClick={() => { setAuthMode('login'); setShowAuth(true); }} className="bg-black text-white px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest">Acessar</button>
+            <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="p-2"><Menu /></button>
+          </div>
 
-      <HowItWorks
-        heroVideoUrl={landingSettings.heroVideoUrl}
-        heroVideoPoster={landingSettings.heroVideoPoster}
-      />
+          <div className="hidden md:flex items-center space-x-12 text-[10px] font-black uppercase tracking-widest">
+            <a href="#demo" className="hover:text-[#7A756A]">Portfólio</a>
+            <a href="#how-it-works" className="hover:text-[#7A756A]">Processo</a>
+            <a href="#pricing" className="hover:text-[#7A756A]">Preços</a>
+            <button onClick={() => { setAuthMode('login'); setShowAuth(true); }} className="bg-black text-white px-10 py-3.5 rounded-full hover:bg-zinc-800 transition-all shadow-xl">Acessar App</button>
+          </div>
+        </nav>
 
-      <Testimonials />
+        {mobileMenuOpen && (
+          <div className="fixed inset-0 z-[45] bg-[#EAE4D5] pt-24 px-8 md:hidden">
+            <div className="flex flex-col space-y-8 text-xl font-black uppercase tracking-tighter">
+              <a href="#demo" onClick={() => setMobileMenuOpen(false)}>Portfólio</a>
+              <a href="#how-it-works" onClick={() => setMobileMenuOpen(false)}>Processo</a>
+              <a href="#pricing" onClick={() => setMobileMenuOpen(false)}>Preços</a>
+              <button onClick={() => { setAuthMode('login'); setShowAuth(true); setMobileMenuOpen(false); }} className="w-full bg-black text-white py-6 rounded-2xl">Acessar App</button>
+            </div>
+          </div>
+        )}
 
-      <Pricing
-        creditPackages={creditPackages}
-        onBuyCredits={handleBuyCreditsFromLanding}
-      />
+        <Hero
+          onStartNow={() => { setAuthMode('register'); setShowAuth(true); }}
+          onSeeInAction={() => { }}
+        />
+
+        <DemoSlider
+          showcaseBefore={landingSettings.showcaseBefore}
+          showcaseAfter={landingSettings.showcaseAfter}
+        />
+
+        <HowItWorks
+          heroVideoUrl={landingSettings.heroVideoUrl}
+          heroVideoPoster={landingSettings.heroVideoPoster}
+        />
+
+        <Testimonials />
+
+        <Pricing
+          creditPackages={creditPackages}
+          onBuyCredits={handleBuyCreditsFromLanding}
+        />
 
 
 
-      <FAQ items={FAQS} />
+        <FAQ items={FAQS} />
 
-      <CTA onStartNow={() => { setAuthMode('register'); setShowAuth(true); }} />
+        <CTA onStartNow={() => { setAuthMode('register'); setShowAuth(true); }} />
 
-      <Footer />
-    </div>
+        <Footer />
+      </div>
+    </>
   );
 };
 
