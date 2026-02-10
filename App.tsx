@@ -270,6 +270,7 @@ const App: React.FC = () => {
               onAuth={(mode) => navigate(mode === 'login' ? '/login' : '/cadastro')}
               creditPackages={creditPackages}
               onBuyCredits={(pkg) => navigate(`/checkout?pkg=${pkg.id}`)}
+              landingSettings={landingSettings}
             />
           } />
           <Route path="/login" element={
