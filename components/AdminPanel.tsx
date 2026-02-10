@@ -44,7 +44,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 }) => {
     const [activeTab, setActiveTab] = useState<'stats' | 'users' | 'content' | 'pricing'>('content');
     const [tempLanding, setTempLanding] = useState<LandingSettings>(landingSettings);
-    const [tempPricingPlans, setTempPricingPlans] = useState<PricingPlan[]>(pricingPlans);
     const [tempCreditPackages, setTempCreditPackages] = useState<CreditPackage[]>(creditPackages);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedUserForCredits, setSelectedUserForCredits] = useState<AppUser | null>(null);
@@ -84,12 +83,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         }
     };
 
-    const handlePlanPriceChange = (index: number, price: string) => {
-        const newPlans = [...tempPricingPlans];
-        newPlans[index].price = price;
-        setTempPricingPlans(newPlans);
-    };
-
     const handleCreditPriceChange = (index: number, price: string) => {
         const newPacks = [...tempCreditPackages];
         newPacks[index].price = price;
@@ -100,12 +93,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         try {
             await setDoc(doc(db, "settings", "global"), {
                 landing: tempLanding,
-                pricing: tempPricingPlans,
                 credits: tempCreditPackages
             }, { merge: true });
 
             setLandingSettings(tempLanding);
-            setPricingPlans(tempPricingPlans);
             setCreditPackages(tempCreditPackages);
             onClose();
         } catch (error) {
@@ -162,20 +153,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     <div className="flex-1 overflow-y-auto p-4 md:p-8 bg-white/30">
                         {activeTab === 'pricing' && (
                             <div className="space-y-10 pb-10">
-                                <div className="space-y-6">
-                                    <h3 className="text-xl font-black uppercase tracking-tight flex items-center"><Tag className="w-5 h-5 mr-3" /> Planos Landing</h3>
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                        {tempPricingPlans.map((plan, idx) => (
-                                            <div key={idx} className="bg-white p-6 rounded-3xl border border-[#B6B09F]/20">
-                                                <label className="text-[9px] font-black uppercase tracking-widest text-[#7A756A] block mb-2">{plan.name}</label>
-                                                <div className="flex items-center bg-[#F2F2F2] px-4 py-3 rounded-xl">
-                                                    <span className="font-bold text-xs mr-2">R$</span>
-                                                    <input type="text" value={plan.price} onChange={(e) => handlePlanPriceChange(idx, e.target.value)} className="bg-transparent w-full text-xs font-black focus:outline-none" />
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
+
                                 <div className="space-y-6">
                                     <h3 className="text-xl font-black uppercase tracking-tight flex items-center"><Coins className="w-5 h-5 mr-3" /> Pacotes de Créditos</h3>
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
