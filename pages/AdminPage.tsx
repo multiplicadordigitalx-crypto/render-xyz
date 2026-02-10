@@ -42,6 +42,24 @@ export const AdminPage: React.FC<AdminPageProps> = ({
     const [tempLanding, setTempLanding] = useState<LandingSettings>(landingSettings);
     const [tempCreditPackages, setTempCreditPackages] = useState<CreditPackage[]>(creditPackages);
     const [searchTerm, setSearchTerm] = useState('');
+    const [selectedUserForCredits, setSelectedUserForCredits] = useState<AppUser | null>(null);
+    const [creditAmount, setCreditAmount] = useState('');
+
+    const handleCreditOperation = async (type: 'add' | 'remove') => {
+        if (!selectedUserForCredits || !creditAmount) return;
+
+        const amount = parseInt(creditAmount);
+        if (isNaN(amount) || amount <= 0) return;
+
+        const currentCredits = selectedUserForCredits.credits || 0;
+        const newCredits = type === 'add' ? currentCredits + amount : Math.max(0, currentCredits - amount);
+
+        await handleUserUpdate(selectedUserForCredits.id, { credits: newCredits });
+
+        alert(`Créditos ${type === 'add' ? 'adicionados' : 'removidos'} com sucesso!`);
+        setSelectedUserForCredits(null);
+        setCreditAmount('');
+    };
 
     const fileInputBeforeRef = useRef<HTMLInputElement>(null);
     const fileInputAfterRef = useRef<HTMLInputElement>(null);
@@ -177,14 +195,14 @@ export const AdminPage: React.FC<AdminPageProps> = ({
                         )}
                         {activeTab === 'stats' && <div className="text-center p-20 opacity-20"><BarChart3 className="w-20 h-20 mx-auto mb-4" /><p className="font-black uppercase tracking-widest text-xs">Aguardando dados de tráfego</p></div>}
                         {activeTab === 'users' && (
-                            <div className="bg-white rounded-[30px] border border-[#B6B09F]/20 overflow-hidden shadow-sm">
+                            <div className="bg-white rounded-[30px] border border-[#B6B09F]/20 overflow-hidden shadow-sm relative">
                                 <div className="p-4"><input type="text" placeholder="Buscar usuário..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full p-2 bg-[#F2F2F2] rounded-lg text-xs" /></div>
                                 <table className="w-full text-left">
                                     <thead className="bg-[#F2F2F2] border-b border-[#B6B09F]/10">
                                         <tr>
                                             <th className="px-8 py-5 text-[9px] font-black uppercase tracking-[0.3em] text-[#7A756A]">Usuário</th>
                                             <th className="px-8 py-5 text-[9px] font-black uppercase tracking-[0.3em] text-[#7A756A]">Créditos</th>
-                                            <th className="px-8 py-5 text-[9px] font-black uppercase tracking-[0.3em] text-[#7A756A] text-right">Ações</th>
+                                            <th className="px-8 py-5 text-[9px] font-black uppercase tracking-[0.3em] text-[#7A756A] text-right">Gerenciar Saldo</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-[#B6B09F]/10">
@@ -192,11 +210,73 @@ export const AdminPage: React.FC<AdminPageProps> = ({
                                             <tr key={u.id}>
                                                 <td className="px-8 py-6"><p className="text-xs font-black uppercase">{u.name}</p><p className="text-[9px] text-[#7A756A]">{u.email}</p></td>
                                                 <td className="px-8 py-6 font-black">{u.credits}</td>
-                                                <td className="px-8 py-6 text-right"><button onClick={() => handleUserUpdate(u.id, { credits: u.credits + 10 })} className="p-2 bg-[#EAE4D5] rounded-lg"><Plus className="w-4 h-4" /></button></td>
+                                                <td className="px-8 py-6 text-right">
+                                                    <button
+                                                        onClick={() => { setSelectedUserForCredits(u); setCreditAmount(''); }}
+                                                        className="px-4 py-2 bg-black text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-zinc-800 transition-all shadow-sm"
+                                                    >
+                                                        Ajustar
+                                                    </button>
+                                                </td>
                                             </tr>
                                         ))}
                                     </tbody>
                                 </table>
+
+                                {/* Credit Management Modal Overlay */}
+                                {selectedUserForCredits && (
+                                    <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-20 animate-in fade-in">
+                                        <div className="bg-white border border-[#B6B09F]/20 shadow-2xl rounded-3xl p-8 max-w-md w-full mx-4">
+                                            <div className="text-center mb-6">
+                                                <div className="w-12 h-12 bg-[#F2F2F2] rounded-full flex items-center justify-center mx-auto mb-3">
+                                                    <Coins className="w-6 h-6 text-[#7A756A]" />
+                                                </div>
+                                                <h3 className="text-lg font-black uppercase tracking-tight">Gerenciar Créditos</h3>
+                                                <p className="text-xs text-[#7A756A] font-bold mt-1">{selectedUserForCredits.name}</p>
+                                                <p className="text-[10px] text-[#7A756A] uppercase tracking-widest mt-2 bg-[#F2F2F2] py-1 px-3 rounded-full inline-block">
+                                                    Saldo Atual: <span className="text-black font-black">{selectedUserForCredits.credits}</span>
+                                                </p>
+                                            </div>
+
+                                            <div className="space-y-4">
+                                                <div>
+                                                    <label className="text-[9px] font-black uppercase tracking-widest text-[#7A756A] block mb-2">Quantidade para Ajustar</label>
+                                                    <input
+                                                        type="number"
+                                                        value={creditAmount}
+                                                        onChange={(e) => setCreditAmount(e.target.value)}
+                                                        placeholder="0"
+                                                        className="w-full bg-[#F2F2F2] rounded-xl px-4 py-3 text-center font-black text-lg focus:outline-none focus:ring-2 focus:ring-black/5"
+                                                    />
+                                                </div>
+
+                                                <div className="grid grid-cols-2 gap-3 pt-2">
+                                                    <button
+                                                        onClick={() => handleCreditOperation('remove')}
+                                                        disabled={!creditAmount || parseInt(creditAmount) <= 0}
+                                                        className="py-3 bg-red-100 text-red-700 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-red-200 transition-colors disabled:opacity-50 flex items-center justify-center"
+                                                    >
+                                                        <span className="mr-2">-</span> Remover
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleCreditOperation('add')}
+                                                        disabled={!creditAmount || parseInt(creditAmount) <= 0}
+                                                        className="py-3 bg-green-100 text-green-700 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-green-200 transition-colors disabled:opacity-50 flex items-center justify-center"
+                                                    >
+                                                        <span className="mr-2">+</span> Adicionar
+                                                    </button>
+                                                </div>
+
+                                                <button
+                                                    onClick={() => setSelectedUserForCredits(null)}
+                                                    className="w-full py-3 text-[#7A756A] font-black text-[10px] uppercase tracking-widest hover:bg-[#F2F2F2] rounded-xl transition-colors mt-2"
+                                                >
+                                                    Cancelar
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>
