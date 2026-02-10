@@ -17,8 +17,8 @@ import {
     Grid,
     Trash2
 } from 'lucide-react';
-import { db } from '../services/firebase';
-import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { db, storage } from '../services/firebase';
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { collection, addDoc, getDocs, deleteDoc, query, orderBy, onSnapshot, doc, updateDoc, setDoc } from 'firebase/firestore';
 import { PricingPlan, CreditPackage, AppUser, LandingSettings, PortfolioItem } from '../types';
 import { useNavigate } from 'react-router-dom';
@@ -52,7 +52,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({
 
     // Fetch portfolio items
     React.useEffect(() => {
-        if (activeTab === 'content') {
+        if (activeTab === 'portfolio') { // Changed to fetch only when tab is active
             const q = query(collection(db, 'portfolio'), orderBy('createdAt', 'desc'));
             const unsubscribe = onSnapshot(q, (snapshot) => {
                 const items = snapshot.docs.map(doc => ({
@@ -71,7 +71,6 @@ export const AdminPage: React.FC<AdminPageProps> = ({
 
         setUploadingPortfolio(true);
         try {
-            const storage = getStorage();
             const storageRef = ref(storage, `portfolio/${Date.now()}_${file.name}`);
             await uploadBytes(storageRef, file);
             const url = await getDownloadURL(storageRef);
@@ -81,11 +80,13 @@ export const AdminPage: React.FC<AdminPageProps> = ({
                 title: file.name.split('.')[0],
                 createdAt: Date.now()
             });
-        } catch (error) {
+            alert("Imagem enviada com sucesso!");
+        } catch (error: any) {
             console.error("Error uploading portfolio item:", error);
-            alert("Erro ao fazer upload da imagem.");
+            alert(`Erro ao fazer upload: ${error.message || 'Erro desconhecido'}`);
         } finally {
             setUploadingPortfolio(false);
+            e.target.value = ''; // Reset input
         }
     };
 
