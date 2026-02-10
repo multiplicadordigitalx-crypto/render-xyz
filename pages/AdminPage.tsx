@@ -195,7 +195,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({
                         )}
                         {activeTab === 'stats' && <div className="text-center p-20 opacity-20"><BarChart3 className="w-20 h-20 mx-auto mb-4" /><p className="font-black uppercase tracking-widest text-xs">Aguardando dados de tráfego</p></div>}
                         {activeTab === 'users' && (
-                            <div className="bg-white rounded-[30px] border border-[#B6B09F]/20 overflow-hidden shadow-sm relative">
+                            <div className="bg-white rounded-[30px] border border-[#B6B09F]/20 overflow-hidden shadow-sm">
                                 <div className="p-4"><input type="text" placeholder="Buscar usuário..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full p-2 bg-[#F2F2F2] rounded-lg text-xs" /></div>
                                 <table className="w-full text-left">
                                     <thead className="bg-[#F2F2F2] border-b border-[#B6B09F]/10">
@@ -222,66 +222,70 @@ export const AdminPage: React.FC<AdminPageProps> = ({
                                         ))}
                                     </tbody>
                                 </table>
-
-                                {/* Credit Management Modal Overlay */}
-                                {selectedUserForCredits && (
-                                    <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-20 animate-in fade-in">
-                                        <div className="bg-white border border-[#B6B09F]/20 shadow-2xl rounded-3xl p-8 max-w-md w-full mx-4">
-                                            <div className="text-center mb-6">
-                                                <div className="w-12 h-12 bg-[#F2F2F2] rounded-full flex items-center justify-center mx-auto mb-3">
-                                                    <Coins className="w-6 h-6 text-[#7A756A]" />
-                                                </div>
-                                                <h3 className="text-lg font-black uppercase tracking-tight">Gerenciar Créditos</h3>
-                                                <p className="text-xs text-[#7A756A] font-bold mt-1">{selectedUserForCredits.name}</p>
-                                                <p className="text-[10px] text-[#7A756A] uppercase tracking-widest mt-2 bg-[#F2F2F2] py-1 px-3 rounded-full inline-block">
-                                                    Saldo Atual: <span className="text-black font-black">{selectedUserForCredits.credits}</span>
-                                                </p>
-                                            </div>
-
-                                            <div className="space-y-4">
-                                                <div>
-                                                    <label className="text-[9px] font-black uppercase tracking-widest text-[#7A756A] block mb-2">Quantidade para Ajustar</label>
-                                                    <input
-                                                        type="number"
-                                                        value={creditAmount}
-                                                        onChange={(e) => setCreditAmount(e.target.value)}
-                                                        placeholder="0"
-                                                        className="w-full bg-[#F2F2F2] rounded-xl px-4 py-3 text-center font-black text-lg focus:outline-none focus:ring-2 focus:ring-black/5"
-                                                    />
-                                                </div>
-
-                                                <div className="grid grid-cols-2 gap-3 pt-2">
-                                                    <button
-                                                        onClick={() => handleCreditOperation('remove')}
-                                                        disabled={!creditAmount || parseInt(creditAmount) <= 0}
-                                                        className="py-3 bg-red-100 text-red-700 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-red-200 transition-colors disabled:opacity-50 flex items-center justify-center"
-                                                    >
-                                                        <span className="mr-2">-</span> Remover
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleCreditOperation('add')}
-                                                        disabled={!creditAmount || parseInt(creditAmount) <= 0}
-                                                        className="py-3 bg-green-100 text-green-700 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-green-200 transition-colors disabled:opacity-50 flex items-center justify-center"
-                                                    >
-                                                        <span className="mr-2">+</span> Adicionar
-                                                    </button>
-                                                </div>
-
-                                                <button
-                                                    onClick={() => setSelectedUserForCredits(null)}
-                                                    className="w-full py-3 text-[#7A756A] font-black text-[10px] uppercase tracking-widest hover:bg-[#F2F2F2] rounded-xl transition-colors mt-2"
-                                                >
-                                                    Cancelar
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
                             </div>
                         )}
                     </div>
                 </div>
             </div>
+
+            {/* Credit Management Modal Overlay - Global Position */}
+            {selectedUserForCredits && (
+                <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center animate-in fade-in p-4">
+                    <div className="bg-white border border-[#B6B09F]/20 shadow-2xl rounded-[30px] p-8 max-w-sm w-full relative overflow-hidden">
+                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-black to-transparent opacity-20" />
+
+                        <div className="text-center mb-8">
+                            <div className="w-14 h-14 bg-[#F2F2F2] rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-inner">
+                                <Coins className="w-7 h-7 text-[#7A756A]" />
+                            </div>
+                            <h3 className="text-xl font-black uppercase tracking-tight mb-1">Gerenciar Créditos</h3>
+                            <p className="text-xs text-[#7A756A] font-bold">{selectedUserForCredits.name}</p>
+                            <div className="mt-4 inline-flex items-center bg-[#F2F2F2] rounded-xl px-4 py-2 border border-[#B6B09F]/10">
+                                <span className="text-[9px] font-black uppercase tracking-widest text-[#7A756A] mr-2">Saldo Atual</span>
+                                <span className="text-sm font-black text-black">{selectedUserForCredits.credits}</span>
+                            </div>
+                        </div>
+
+                        <div className="space-y-6">
+                            <div>
+                                <label className="text-[9px] font-black uppercase tracking-widest text-[#7A756A] block mb-2 pl-2">Quantidade</label>
+                                <input
+                                    type="number"
+                                    value={creditAmount}
+                                    onChange={(e) => setCreditAmount(e.target.value)}
+                                    placeholder="0"
+                                    className="w-full bg-[#F2F2F2] rounded-xl px-6 py-4 text-center font-black text-2xl focus:outline-none focus:ring-2 focus:ring-black placeholder:text-[#B6B09F]/50 transition-all"
+                                    autoFocus
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3">
+                                <button
+                                    onClick={() => handleCreditOperation('remove')}
+                                    disabled={!creditAmount || parseInt(creditAmount) <= 0}
+                                    className="py-4 bg-red-50 text-red-600 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-red-100 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:hover:scale-100 flex items-center justify-center"
+                                >
+                                    <span className="mr-2 text-lg">-</span> Remover
+                                </button>
+                                <button
+                                    onClick={() => handleCreditOperation('add')}
+                                    disabled={!creditAmount || parseInt(creditAmount) <= 0}
+                                    className="py-4 bg-black text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-zinc-800 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:hover:scale-100 flex items-center justify-center shadow-lg"
+                                >
+                                    <span className="mr-2 text-lg">+</span> Adicionar
+                                </button>
+                            </div>
+
+                            <button
+                                onClick={() => setSelectedUserForCredits(null)}
+                                className="w-full py-3 text-[#7A756A] font-black text-[10px] uppercase tracking-widest hover:text-black hover:bg-[#F2F2F2] rounded-xl transition-all"
+                            >
+                                Cancelar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
