@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Upload, Wand2, Download, RotateCcw, AlertCircle, CheckCircle2, Coins, ShieldCheck, Lock } from 'lucide-react';
+import { Upload, Wand2, Download, RotateCcw, AlertCircle, CheckCircle2, Coins, ShieldCheck, Lock, Maximize2, Image as ImageIcon, Zap, Layers } from 'lucide-react';
 import { RenderStyle, RenderResolution, UserPlan } from '../types';
 import { renderImage } from '../services/geminiService';
 import { storageService } from '../services/storageService';
@@ -18,12 +18,10 @@ const fileToBase64 = (file: File): Promise<string> => {
 
 const STYLES: RenderStyle[] = ['Dia', 'Noite', 'Fim de Tarde', 'Nublado'];
 
-// Resolution config with credit costs (no plan restrictions)
-// All resolutions available to everyone - just costs more credits
 const RESOLUTIONS: { label: RenderResolution; cost: number }[] = [
-  { label: '1K', cost: 1 },   // Standard quality
-  { label: '2K', cost: 2 },   // HD quality
-  { label: '4K', cost: 3 },   // Ultra quality
+  { label: '1K', cost: 1 },
+  { label: '2K', cost: 2 },
+  { label: '4K', cost: 3 },
 ];
 
 interface RenderToolProps {
@@ -34,7 +32,6 @@ interface RenderToolProps {
   onUpgrade?: () => void;
 }
 
-// Check if user is on free plan (for watermark)
 const shouldShowWatermark = (userPlan: UserPlan): boolean => {
   return userPlan === 'free';
 };
@@ -52,27 +49,17 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
   const selectedRes = RESOLUTIONS.find(r => r.label === resolution) || RESOLUTIONS[0];
 
   const processBatchImage = async (file: File) => {
-    // Check credits
     if (credits < selectedRes.cost) {
       throw new Error(`Créditos insuficientes (${selectedRes.cost} necessários)`);
     }
-
-    // Convert file
     const base64 = await fileToBase64(file);
     const type = file.type;
-
-    // Render (No toast here, BatchProcessor handles status)
     const rendered = await renderImage(base64, type, style, resolution);
-
-    // Upload
     const response = await fetch(rendered);
     const blob = await response.blob();
     const filename = `render-${Date.now()}-${Math.random().toString(36).substr(2, 5)}.png`;
     const uploadFile = new File([blob], filename, { type: "image/png" });
-
     const publicUrl = await storageService.uploadImage(uploadFile, "renders");
-
-    // Callback (updates credits and history)
     onRenderComplete(publicUrl, style, selectedRes.cost);
   };
 
@@ -96,51 +83,30 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
 
   const handleGenerate = async () => {
     if (!image) return;
-
-    // Check credits
     if (credits < selectedRes.cost) {
-      toast.error(`Créditos insuficientes (${selectedRes.cost} necessários)`, {
-        style: {
-          borderRadius: '15px',
-          background: '#000',
-          color: '#fff',
-          fontSize: '10px',
-          fontWeight: '900',
-          textTransform: 'uppercase'
-        }
-      });
+      toast.error(`Créditos insuficientes (${selectedRes.cost} necessários)`);
       return;
     }
 
     setIsRendering(true);
     setError(null);
-    const loadingToast = toast.loading('Processando render com IA...', {
-      style: {
-        borderRadius: '15px',
-        background: '#000',
-        color: '#fff',
-        fontSize: '10px',
-        fontWeight: '900',
-        textTransform: 'uppercase'
-      }
+    const loadingToast = toast.loading('IA Trabalhando...', {
+      style: { background: '#000', color: '#fff' }
     });
 
     try {
       const rendered = await renderImage(image, mimeType, style, resolution);
-
-      // Upload para R2
       const response = await fetch(rendered);
       const blob = await response.blob();
       const filename = `render-${Date.now()}.png`;
       const file = new File([blob], filename, { type: "image/png" });
-
       const publicUrl = await storageService.uploadImage(file, "renders");
 
       setResult(publicUrl);
       onRenderComplete(publicUrl, style, selectedRes.cost);
-      toast.success('Renderizado e salvo com sucesso!', { id: loadingToast });
+      toast.success('Pronto!', { id: loadingToast });
     } catch (err: any) {
-      toast.error('Erro ao processar imagem.', { id: loadingToast });
+      toast.error('Erro na renderização', { id: loadingToast });
       const errorMsg = err.message || "";
       if (errorMsg.includes("Requested entity was not found")) {
         setError("Chave inválida. Selecione novamente.");
@@ -163,12 +129,15 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
   };
 
   return (
-    <div className="w-full">
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8 items-start relative">
-        {/* Controls */}
-        <div className="lg:col-span-4 space-y-4 md:space-y-6">
-          {/* Mode Toggle */}
-          <div className="flex bg-[#EAE4D5] rounded-xl p-1 border border-[#B6B09F]/20">
+    <div className="flex h-full w-full bg-[#EAE4D5] rounded-[30px] overflow-hidden border border-[#B6B09F]/30 shadow-2xl relative">
+      {/* Sidebar Controls */}
+      <div className="w-80 bg-white/50 backdrop-blur-sm border-r border-[#B6B09F]/20 flex flex-col p-6 overflow-y-auto custom-scrollbar z-10">
+        <div className="mb-8">
+          <h3 className="text-xs font-black uppercase tracking-widest text-[#7A756A] mb-4 flex items-center">
+            <Layers className="w-4 h-4 mr-2" />
+            Modo de Trabalho
+          </h3>
+          <div className="flex bg-[#F2F2F2] rounded-xl p-1">
             <button
               onClick={() => setMode('single')}
               className={`flex-1 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${mode === 'single' ? 'bg-black text-white shadow-md' : 'text-[#7A756A] hover:bg-black/5'}`}
@@ -179,20 +148,25 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
               onClick={() => setMode('batch')}
               className={`flex-1 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${mode === 'batch' ? 'bg-black text-white shadow-md' : 'text-[#7A756A] hover:bg-black/5'}`}
             >
-              Lote (+1 crédito cada)
+              Lote
             </button>
           </div>
+        </div>
 
-          <div className="bg-[#EAE4D5] border border-[#B6B09F]/20 p-5 md:p-8 rounded-2xl md:rounded-3xl shadow-sm">
-            <label className="block text-[9px] md:text-[10px] font-black text-[#000000] mb-4 md:mb-5 uppercase tracking-widest">Atmosfera {mode === 'batch' && '(Global)'}</label>
-            <div className="grid grid-cols-2 gap-2 md:gap-3">
+        <div className="mb-8 space-y-6">
+          <div>
+            <label className="text-[10px] font-black uppercase tracking-widest text-[#000] mb-3 flex items-center">
+              <Zap className="w-3 h-3 mr-2" />
+              Estilo Atmosférico
+            </label>
+            <div className="grid grid-cols-2 gap-2">
               {STYLES.map((s) => (
                 <button
                   key={s}
                   onClick={() => setStyle(s)}
-                  className={`px-3 py-2.5 md:py-3 rounded-lg md:rounded-xl text-[8px] md:text-[9px] font-black transition-all uppercase tracking-widest border ${style === s
-                    ? 'bg-[#000000] text-white border-[#000000] shadow-lg'
-                    : 'bg-[#F2F2F2] text-[#000000] border-[#B6B09F]/20 hover:border-[#B6B09F]/50'
+                  className={`px-3 py-3 rounded-xl text-[9px] font-black transition-all uppercase tracking-widest border text-left ${style === s
+                    ? 'bg-black text-white border-black shadow-lg scale-105'
+                    : 'bg-white text-[#7A756A] border-transparent hover:border-[#B6B09F]/30 hover:bg-white/80'
                     }`}
                 >
                   {s}
@@ -201,155 +175,126 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
             </div>
           </div>
 
-          <div className="bg-[#EAE4D5] border border-[#B6B09F]/20 p-5 md:p-8 rounded-2xl md:rounded-3xl shadow-sm">
-            <label className="block text-[9px] md:text-[10px] font-black text-[#000000] mb-4 md:mb-5 uppercase tracking-widest">Qualidade {mode === 'batch' && '(Global)'}</label>
-            <div className="grid grid-cols-3 gap-2 md:gap-3">
+          <div>
+            <label className="text-[10px] font-black uppercase tracking-widest text-[#000] mb-3 flex items-center">
+              <Maximize2 className="w-3 h-3 mr-2" />
+              Resolução de Saída
+            </label>
+            <div className="space-y-2">
               {RESOLUTIONS.map((r) => (
                 <button
                   key={r.label}
                   onClick={() => setResolution(r.label)}
-                  className={`px-2 py-2.5 md:py-3 rounded-lg md:rounded-xl text-[8px] md:text-[9px] font-black transition-all uppercase tracking-widest border flex flex-col items-center justify-center relative ${resolution === r.label
-                    ? 'bg-[#000000] text-white border-[#000000] shadow-lg'
-                    : 'bg-[#F2F2F2] text-[#000000] border-[#B6B09F]/20 hover:border-[#B6B09F]/50'
+                  className={`w-full px-4 py-3 rounded-xl text-[9px] font-black transition-all uppercase tracking-widest border flex justify-between items-center ${resolution === r.label
+                    ? 'bg-black text-white border-black shadow-lg scale-105'
+                    : 'bg-white text-[#7A756A] border-transparent hover:border-[#B6B09F]/30 hover:bg-white/80'
                     }`}
                 >
                   <span>{r.label}</span>
-                  <span className={`text-[6px] md:text-[7px] mt-1 ${resolution === r.label ? 'opacity-70' : 'text-[#7A756A]'}`}>
-                    {r.cost} {r.cost === 1 ? 'crédito' : 'créditos'}
-                  </span>
+                  <span className="opacity-60">{r.cost} {r.cost === 1 ? 'crédito' : 'créditos'}</span>
                 </button>
               ))}
             </div>
           </div>
+        </div>
 
+        <div className="mt-auto">
           {mode === 'single' && (
-            <div className="bg-[#EAE4D5] border border-[#B6B09F]/20 p-5 md:p-8 rounded-2xl md:rounded-3xl shadow-sm">
-              <label className="block text-[9px] md:text-[10px] font-black text-[#000000] mb-4 md:mb-5 uppercase tracking-widest">Projeto</label>
-              <div className="relative">
-                <input
-                  type="file"
-                  onChange={handleFileUpload}
-                  className="hidden"
-                  id="image-upload"
-                  accept="image/*"
-                />
+            <>
+              <input
+                type="file"
+                onChange={handleFileUpload}
+                className="hidden"
+                id="image-upload"
+                accept="image/*"
+              />
+              {!image ? (
                 <label
                   htmlFor="image-upload"
-                  className="flex flex-col items-center justify-center border-2 border-dashed border-[#B6B09F]/40 rounded-xl md:rounded-2xl p-6 md:p-10 cursor-pointer hover:border-[#000000] transition-all"
+                  className="w-full py-4 rounded-2xl border-2 border-dashed border-[#B6B09F]/40 flex flex-col items-center justify-center cursor-pointer hover:border-black hover:bg-white/60 transition-all group mb-4"
                 >
-                  <Upload className="w-6 h-6 md:w-8 md:h-8 text-[#7A756A] mb-2 md:mb-3" />
-                  <span className="text-[8px] md:text-[9px] font-black uppercase text-[#7A756A] tracking-widest text-center">Selecionar Arquivo</span>
+                  <Upload className="w-5 h-5 text-[#7A756A] group-hover:text-black mb-2" />
+                  <span className="text-[9px] font-black uppercase text-[#7A756A] tracking-widest">Carregar Projeto</span>
                 </label>
-              </div>
-            </div>
-          )}
-
-          {mode === 'single' && (
-            <button
-              onClick={handleGenerate}
-              disabled={!image || isRendering || credits <= 0}
-              className={`w-full py-4 md:py-6 rounded-xl md:rounded-2xl flex items-center justify-center font-black text-xs md:text-sm uppercase tracking-widest transition-all ${!image || isRendering || credits <= 0
-                ? 'bg-zinc-200 text-zinc-400 cursor-not-allowed opacity-50'
-                : 'bg-[#000000] hover:bg-zinc-800 text-white shadow-xl'
-                }`}
-            >
-              {isRendering ? (
-                <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 md:w-4 md:h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  <span>Processando</span>
-                </div>
               ) : (
-                <>
-                  <img src="/assets/logo-icon.png" alt="" className="w-5 h-5 mr-3 invert" />
-                  Gerar Render
-                </>
+                <button
+                  onClick={handleGenerate}
+                  disabled={isRendering || credits <= 0}
+                  className={`w-full py-5 rounded-2xl flex items-center justify-center font-black text-xs uppercase tracking-widest shadow-xl hover:scale-[1.02] active:scale-95 transition-all ${isRendering || credits <= 0 ? 'bg-zinc-300 text-zinc-500 cursor-not-allowed' : 'bg-black text-white'
+                    }`}
+                >
+                  {isRendering ? (
+                    <span className="animate-pulse">Renderizando...</span>
+                  ) : (
+                    <>
+                      <Wand2 className="w-4 h-4 mr-2" />
+                      Renderizar Agora
+                    </>
+                  )}
+                </button>
               )}
-            </button>
+            </>
           )}
 
-          {/* Watermark notice for free users */}
           {shouldShowWatermark(userPlan) && (
-            <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-[8px] font-bold uppercase tracking-widest text-amber-700 text-center">
-              Plano Grátis • Marca d'água será aplicada
-            </div>
-          )}
-
-          {error && (
-            <div className="p-3 md:p-4 bg-red-50 border border-red-100 rounded-xl flex items-center space-x-2 text-red-700 text-[8px] md:text-[9px] font-black uppercase tracking-widest">
-              <AlertCircle className="w-3 h-3 md:w-4 md:h-4 shrink-0" />
-              <span>{error}</span>
+            <div className="mt-4 text-center">
+              <p className="text-[8px] font-bold uppercase tracking-widest text-[#7A756A] opacity-60">Plano Grátis • Com marca d'água</p>
             </div>
           )}
         </div>
+      </div>
 
-        {/* Canvas Area */}
-        <div className="lg:col-span-8 bg-[#EAE4D5] border border-[#B6B09F]/20 rounded-[30px] md:rounded-3xl p-4 md:p-6 min-h-[400px] md:min-h-[550px] flex flex-col relative overflow-hidden shadow-sm">
-          {mode === 'batch' ? (
-            <div className="flex-1 overflow-y-auto">
-              <BatchProcessor
-                onRender={processBatchImage}
-                isProcessing={isRendering}
-                style={style}
-                credits={credits}
-                costPerRender={selectedRes.cost}
-              />
-            </div>
-          ) : (
-            <div className="flex-1 relative flex items-center justify-center overflow-hidden rounded-2xl md:rounded-3xl bg-[#F2F2F2] border border-[#B6B09F]/10">
-              {result ? (
-                <img src={result} alt="Render Result" className="max-w-full max-h-full object-contain" />
-              ) : image ? (
-                <img src={image} alt="Original" className="max-w-full max-h-full object-contain opacity-30 blur-[1px]" />
-              ) : (
-                <div className="text-[#7A756A] flex flex-col items-center text-center px-6">
-                  <Upload className="w-8 h-8 md:w-10 md:h-10 opacity-20 mb-4 md:mb-6" />
-                  <p className="font-black uppercase text-[9px] md:text-[11px] tracking-widest text-[#000000]">Mesa de Trabalho</p>
-                  <p className="text-[7px] md:text-[8px] text-[#7A756A] mt-2 font-bold uppercase tracking-widest italic">Aguardando seu projeto</p>
+      {/* Main Canvas */}
+      <div className="flex-1 bg-[#dcd7c9] relative flex flex-col">
+        {mode === 'batch' ? (
+          <div className="absolute inset-0 p-8 overflow-y-auto">
+            <BatchProcessor
+              onRender={processBatchImage}
+              isProcessing={isRendering}
+              style={style}
+              credits={credits}
+              costPerRender={selectedRes.cost}
+            />
+          </div>
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center p-8">
+            {result ? (
+              <div className="relative w-full h-full flex flex-col">
+                <div className="flex-1 flex items-center justify-center overflow-hidden">
+                  <img src={result} alt="Resultado" className="max-w-full max-h-full object-contain shadow-2xl rounded-lg" />
                 </div>
-              )}
-
-              {isRendering && (
-                <div className="absolute inset-0 bg-[#F2F2F2]/90 backdrop-blur-md flex flex-col items-center justify-center space-y-8 z-20">
-                  <div className="relative">
-                    <img src="/assets/logo-icon.png" alt="Processando" className="w-16 h-16 md:w-20 md:h-20 object-contain animate-bounce" />
-                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-[#B6B09F] rounded-full animate-ping" />
-                  </div>
-                  <div className="text-center space-y-2">
-                    <p className="text-[#000000] font-black text-2xl md:text-3xl tracking-tighter uppercase animate-pulse">Processando</p>
-                    <p className="text-[#7A756A] font-black text-[9px] uppercase tracking-[0.3em]">IA em alta velocidade</p>
-                  </div>
-                  <div className="w-48 h-1 bg-black/10 rounded-full overflow-hidden">
-                    <div className="h-full bg-black animate-progress" />
-                  </div>
+                <div className="mt-6 flex justify-center gap-4">
+                  <button onClick={() => { setResult(null); setImage(null) }} className="px-6 py-3 bg-white text-black rounded-xl font-black text-xs uppercase tracking-widest shadow-lg hover:bg-gray-50 transition-all">Novo Render</button>
+                  <button onClick={downloadResult} className="px-8 py-3 bg-black text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-lg flex items-center hover:bg-neutral-800 transition-all">
+                    <Download className="w-4 h-4 mr-2" /> Download
+                  </button>
                 </div>
-              )}
-            </div>
-          )}
+              </div>
+            ) : image ? (
+              <div className="relative w-full h-full flex flex-col items-center justify-center">
+                <img src={image} alt="Preview" className="max-w-full max-h-full object-contain opacity-50 blur-sm rounded-lg" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <label htmlFor="image-upload" className="bg-black/80 text-white px-6 py-3 rounded-full font-bold text-xs uppercase tracking-widest cursor-pointer hover:bg-black transition-all backdrop-blur-md flex items-center">
+                    <RotateCcw className="w-3 h-3 mr-2" /> Trocar Imagem
+                  </label>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center text-[#7A756A] opacity-40">
+                <ImageIcon className="w-24 h-24 mx-auto mb-4" />
+                <p className="text-sm font-black uppercase tracking-[0.2em]">Área de Trabalho Vazia</p>
+              </div>
+            )}
 
-          {result && !isRendering && mode === 'single' && (
-            <div className="mt-4 md:mt-6 flex flex-col sm:flex-row gap-3 md:gap-4 justify-between items-center bg-white/40 p-4 rounded-xl md:rounded-2xl">
-              <div className="text-[8px] md:text-[10px] font-black text-[#000000] uppercase tracking-widest flex items-center space-x-4">
-                <span>ESTILO: {style}</span>
-                <span className="opacity-30">|</span>
-                <span>QUALIDADE: {resolution}</span>
+            {isRendering && (
+              <div className="absolute inset-0 bg-black/60 backdrop-blur-md flex flex-col items-center justify-center z-50 text-white">
+                <div className="w-20 h-20 border-4 border-white/20 border-t-white rounded-full animate-spin mb-6" />
+                <p className="font-black text-2xl uppercase tracking-widest animate-pulse">Renderizando</p>
+                <p className="text-xs uppercase tracking-widest mt-2 opacity-70">A mágica está acontecendo...</p>
               </div>
-              <div className="flex w-full sm:w-auto gap-2 md:gap-4">
-                <button
-                  onClick={() => { setResult(null); setImage(null); }}
-                  className="flex-1 sm:flex-none px-4 py-2.5 rounded-lg bg-[#F2F2F2] border border-[#B6B09F]/20 text-[8px] md:text-[9px] font-black uppercase tracking-widest"
-                >
-                  LIMPAR
-                </button>
-                <button
-                  onClick={downloadResult}
-                  className="flex-1 sm:flex-none px-6 py-2.5 rounded-lg bg-black text-white text-[8px] md:text-[9px] font-black uppercase tracking-widest shadow-lg"
-                >
-                  EXPORTAR
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
