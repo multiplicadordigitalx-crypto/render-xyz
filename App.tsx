@@ -37,37 +37,8 @@ import { CheckoutPage } from './pages/CheckoutPage';
 // Types & Services
 import { MOCK_MODE } from './services/geminiService';
 import { Toaster, toast } from 'react-hot-toast';
-import { AppUser, CreditPackage, LandingSettings, PricingPlan, RenderHistoryItem, RenderStyle } from './types';
+import { AppUser, CreditPackage, LandingSettings, RenderHistoryItem, RenderStyle } from './types';
 import { stripeService } from './services/stripeService';
-
-const DEFAULT_PRICING_PLANS: PricingPlan[] = [
-  {
-    name: "Essencial",
-    price: "0",
-    period: "/mês",
-    features: ["3 renders por mês", "Qualidade 1K Standard", "Marca d'água Render XYZ", "Uso pessoal e testes"],
-    buttonText: "Começar Grátis",
-    resolutionLabel: "1K"
-  },
-  {
-    name: "Estúdio",
-    price: "79",
-    period: "/mês",
-    features: ["60 renders/mês", "Qualidade 2K HD Pro", "Sem marca d'água", "Créditos acumulativos"],
-    buttonText: "Assinar Agora",
-    isPopular: true,
-    resolutionLabel: "2K",
-    externalId: "price_1Sv1OpEQ6obY8Ge944QhB3SZ"
-  },
-  {
-    name: "Elite",
-    price: "149",
-    period: "/mês",
-    features: ["250 renders/mês (Fair Use)", "Qualidade 4K Ultra Pro", "Créditos acumulativos", "Suporte VIP via WhatsApp", "Acesso Antecipado"],
-    buttonText: "Acessar Elite",
-    externalId: "price_1Sv1PHEQ6obY8Ge93N3Sxiit"
-  }
-];
 
 const DEFAULT_CREDIT_PACKAGES: CreditPackage[] = [
   { id: 'p1', amount: 20, price: '24,90', description: 'Pack Iniciante', externalId: 'price_1Sv1PwEQ6obY8Ge9m6L0F5V1' },
@@ -104,7 +75,6 @@ const App: React.FC = () => {
 
   // Settings
   const [landingSettings, setLandingSettings] = useState<LandingSettings>(DEFAULT_LANDING);
-  const [pricingPlans, setPricingPlans] = useState<PricingPlan[]>(DEFAULT_PRICING_PLANS);
   const [creditPackages, setCreditPackages] = useState<CreditPackage[]>(DEFAULT_CREDIT_PACKAGES);
   const [appUsers, setAppUsers] = useState<AppUser[]>([]);
 
@@ -167,7 +137,6 @@ const App: React.FC = () => {
             if (settingsDoc.exists()) {
               const data = settingsDoc.data();
               if (data.landing) setLandingSettings({ ...DEFAULT_LANDING, ...data.landing });
-              if (data.pricing) setPricingPlans(data.pricing);
               if (data.credits) setCreditPackages(data.credits);
             }
           } catch (error) {
@@ -322,8 +291,6 @@ const App: React.FC = () => {
               <AdminPage
                 landingSettings={landingSettings}
                 setLandingSettings={setLandingSettings}
-                pricingPlans={pricingPlans}
-                setPricingPlans={setPricingPlans}
                 creditPackages={creditPackages}
                 setCreditPackages={setCreditPackages}
                 appUsers={appUsers}

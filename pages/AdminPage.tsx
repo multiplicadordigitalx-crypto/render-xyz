@@ -23,8 +23,6 @@ import { useNavigate } from 'react-router-dom';
 interface AdminPageProps {
     landingSettings: LandingSettings;
     setLandingSettings: (settings: LandingSettings) => void;
-    pricingPlans: PricingPlan[];
-    setPricingPlans: (plans: PricingPlan[]) => void;
     creditPackages: CreditPackage[];
     setCreditPackages: (packs: CreditPackage[]) => void;
     appUsers: AppUser[];
@@ -34,17 +32,14 @@ interface AdminPageProps {
 export const AdminPage: React.FC<AdminPageProps> = ({
     landingSettings,
     setLandingSettings,
-    pricingPlans,
-    setPricingPlans,
     creditPackages,
     setCreditPackages,
     appUsers,
     setAppUsers
 }) => {
     const navigate = useNavigate();
-    const [activeTab, setActiveTab] = useState<'stats' | 'users' | 'content' | 'pricing'>('content');
+    const [activeTab, setActiveTab] = useState<'stats' | 'users' | 'content'>('content');
     const [tempLanding, setTempLanding] = useState<LandingSettings>(landingSettings);
-    const [tempPricingPlans, setTempPricingPlans] = useState<PricingPlan[]>(pricingPlans);
     const [tempCreditPackages, setTempCreditPackages] = useState<CreditPackage[]>(creditPackages);
     const [searchTerm, setSearchTerm] = useState('');
 
@@ -64,12 +59,6 @@ export const AdminPage: React.FC<AdminPageProps> = ({
         }
     };
 
-    const handlePlanPriceChange = (index: number, price: string) => {
-        const newPlans = [...tempPricingPlans];
-        newPlans[index].price = price;
-        setTempPricingPlans(newPlans);
-    };
-
     const handleCreditPriceChange = (index: number, price: string) => {
         const newPacks = [...tempCreditPackages];
         newPacks[index].price = price;
@@ -80,12 +69,10 @@ export const AdminPage: React.FC<AdminPageProps> = ({
         try {
             await setDoc(doc(db, "settings", "global"), {
                 landing: tempLanding,
-                pricing: tempPricingPlans,
                 credits: tempCreditPackages
             }, { merge: true });
 
             setLandingSettings(tempLanding);
-            setPricingPlans(tempPricingPlans);
             setCreditPackages(tempCreditPackages);
             alert("Configurações salvas com sucesso!");
         } catch (error) {
@@ -133,47 +120,13 @@ export const AdminPage: React.FC<AdminPageProps> = ({
                         <button onClick={() => setActiveTab('users')} className={`flex items-center space-x-3 p-3 md:p-4 rounded-xl font-black text-[9px] md:text-[10px] uppercase tracking-widest ${activeTab === 'users' ? 'bg-black text-white' : 'text-[#7A756A] hover:bg-black/5'}`}>
                             <Users className="w-4 h-4" /><span>Usuários</span>
                         </button>
-                        <button onClick={() => setActiveTab('pricing')} className={`flex items-center space-x-3 p-3 md:p-4 rounded-xl font-black text-[9px] md:text-[10px] uppercase tracking-widest ${activeTab === 'pricing' ? 'bg-black text-white' : 'text-[#7A756A] hover:bg-black/5'}`}>
-                            <DollarSign className="w-4 h-4" /><span>Preços</span>
-                        </button>
+                        {/* Removed Pricing Tab Button */}
                         <button onClick={() => setActiveTab('content')} className={`flex items-center space-x-3 p-3 md:p-4 rounded-xl font-black text-[9px] md:text-[10px] uppercase tracking-widest ${activeTab === 'content' ? 'bg-black text-white' : 'text-[#7A756A] hover:bg-black/5'}`}>
                             <Layers className="w-4 h-4" /><span>Landing</span>
                         </button>
                     </div>
                     <div className="flex-1 p-4 md:p-8 bg-white/30">
-                        {activeTab === 'pricing' && (
-                            <div className="space-y-10 pb-10">
-                                <div className="space-y-6">
-                                    <h3 className="text-xl font-black uppercase tracking-tight flex items-center"><Tag className="w-5 h-5 mr-3" /> Planos Landing</h3>
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                        {tempPricingPlans.map((plan, idx) => (
-                                            <div key={idx} className="bg-white p-6 rounded-3xl border border-[#B6B09F]/20">
-                                                <label className="text-[9px] font-black uppercase tracking-widest text-[#7A756A] block mb-2">{plan.name}</label>
-                                                <div className="flex items-center bg-[#F2F2F2] px-4 py-3 rounded-xl">
-                                                    <span className="font-bold text-xs mr-2">R$</span>
-                                                    <input type="text" value={plan.price} onChange={(e) => handlePlanPriceChange(idx, e.target.value)} className="bg-transparent w-full text-xs font-black focus:outline-none" />
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                                <div className="space-y-6">
-                                    <h3 className="text-xl font-black uppercase tracking-tight flex items-center"><Coins className="w-5 h-5 mr-3" /> Pacotes de Créditos</h3>
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                        {tempCreditPackages.map((pkg, idx) => (
-                                            <div key={idx} className="bg-white p-6 rounded-3xl border border-[#B6B09F]/20">
-                                                <label className="text-[9px] font-black uppercase tracking-widest text-[#7A756A] block mb-2">{pkg.amount} Créditos</label>
-                                                <div className="flex items-center bg-[#F2F2F2] px-4 py-3 rounded-xl">
-                                                    <span className="font-bold text-xs mr-2">R$</span>
-                                                    <input type="text" value={pkg.price} onChange={(e) => handleCreditPriceChange(idx, e.target.value)} className="bg-transparent w-full text-xs font-black focus:outline-none" />
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                                <button onClick={handleSaveAdmin} className="w-full py-6 bg-black text-white rounded-[30px] font-black text-xs uppercase tracking-[0.3em] flex items-center justify-center shadow-xl hover:bg-zinc-800 transition-all"><Save className="w-5 h-5 mr-3" /> Salvar Configurações</button>
-                            </div>
-                        )}
+                        {/* Pricing Tab content removed */}
                         {activeTab === 'content' && (
                             <div className="space-y-10 pb-10">
                                 <div className="space-y-8">

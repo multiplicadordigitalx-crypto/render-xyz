@@ -22,8 +22,6 @@ import { PricingPlan, CreditPackage, AppUser, LandingSettings } from '../types';
 interface AdminPanelProps {
     landingSettings: LandingSettings;
     setLandingSettings: (settings: LandingSettings) => void;
-    pricingPlans: PricingPlan[];
-    setPricingPlans: (plans: PricingPlan[]) => void;
     creditPackages: CreditPackage[];
     setCreditPackages: (packs: CreditPackage[]) => void;
     appUsers: AppUser[];
@@ -34,8 +32,6 @@ interface AdminPanelProps {
 export const AdminPanel: React.FC<AdminPanelProps> = ({
     landingSettings,
     setLandingSettings,
-    pricingPlans,
-    setPricingPlans,
     creditPackages,
     setCreditPackages,
     appUsers,
