@@ -57,3 +57,11 @@ export interface LandingSettings {
 }
 
 export type AuthViewMode = 'login' | 'register' | 'forgot-password' | 'verify-email';
+
+export interface PortfolioItem {
+  id: string;
+  imageUrl: string;
+  title: string;
+  category?: string;
+  createdAt: number;
+}

@@ -13,11 +13,14 @@ import {
     FileVideo,
     Save,
     Plus,
-    ArrowLeft
+    ArrowLeft,
+    Grid,
+    Trash2
 } from 'lucide-react';
-import { doc, updateDoc, setDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
-import { PricingPlan, CreditPackage, AppUser, LandingSettings } from '../types';
+import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { collection, addDoc, getDocs, deleteDoc, query, orderBy, onSnapshot, doc, updateDoc, setDoc } from 'firebase/firestore';
+import { PricingPlan, CreditPackage, AppUser, LandingSettings, PortfolioItem } from '../types';
 import { useNavigate } from 'react-router-dom';
 
 interface AdminPageProps {
@@ -38,12 +41,64 @@ export const AdminPage: React.FC<AdminPageProps> = ({
     setAppUsers
 }) => {
     const navigate = useNavigate();
-    const [activeTab, setActiveTab] = useState<'stats' | 'users' | 'content'>('content');
+    const [activeTab, setActiveTab] = useState<'stats' | 'users' | 'content' | 'portfolio'>('content');
     const [tempLanding, setTempLanding] = useState<LandingSettings>(landingSettings);
     const [tempCreditPackages, setTempCreditPackages] = useState<CreditPackage[]>(creditPackages);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedUserForCredits, setSelectedUserForCredits] = useState<AppUser | null>(null);
     const [creditAmount, setCreditAmount] = useState('');
+    const [portfolioItems, setPortfolioItems] = useState<PortfolioItem[]>([]);
+    const [uploadingPortfolio, setUploadingPortfolio] = useState(false);
+
+    // Fetch portfolio items
+    React.useEffect(() => {
+        if (activeTab === 'content') {
+            const q = query(collection(db, 'portfolio'), orderBy('createdAt', 'desc'));
+            const unsubscribe = onSnapshot(q, (snapshot) => {
+                const items = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                })) as PortfolioItem[];
+                setPortfolioItems(items);
+            });
+            return () => unsubscribe();
+        }
+    }, [activeTab]);
+
+    const handlePortfolioUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setUploadingPortfolio(true);
+        try {
+            const storage = getStorage();
+            const storageRef = ref(storage, `portfolio/${Date.now()}_${file.name}`);
+            await uploadBytes(storageRef, file);
+            const url = await getDownloadURL(storageRef);
+
+            await addDoc(collection(db, 'portfolio'), {
+                imageUrl: url,
+                title: file.name.split('.')[0],
+                createdAt: Date.now()
+            });
+        } catch (error) {
+            console.error("Error uploading portfolio item:", error);
+            alert("Erro ao fazer upload da imagem.");
+        } finally {
+            setUploadingPortfolio(false);
+        }
+    };
+
+    const handleDeletePortfolioItem = async (item: PortfolioItem) => {
+        if (!confirm('Tem certeza que deseja excluir esta imagem?')) return;
+        try {
+            await deleteDoc(doc(db, 'portfolio', item.id));
+            // Optional: delete from storage if you want to be clean, 
+            // but strictly not necessary for the UI to update.
+        } catch (error) {
+            console.error("Error deleting portfolio item:", error);
+        }
+    };
 
     const handleCreditOperation = async (type: 'add' | 'remove') => {
         if (!selectedUserForCredits || !creditAmount) return;
@@ -142,8 +197,11 @@ export const AdminPage: React.FC<AdminPageProps> = ({
                         <button onClick={() => setActiveTab('content')} className={`flex items-center space-x-3 p-3 md:p-4 rounded-xl font-black text-[9px] md:text-[10px] uppercase tracking-widest ${activeTab === 'content' ? 'bg-black text-white' : 'text-[#7A756A] hover:bg-black/5'}`}>
                             <Layers className="w-4 h-4" /><span>Landing</span>
                         </button>
+                        <button onClick={() => setActiveTab('portfolio' as any)} className={`flex items-center space-x-3 p-3 md:p-4 rounded-xl font-black text-[9px] md:text-[10px] uppercase tracking-widest ${activeTab === 'portfolio' ? 'bg-black text-white' : 'text-[#7A756A] hover:bg-black/5'}`}>
+                            <Grid className="w-4 h-4" /><span>Portfólio</span>
+                        </button>
                     </div>
-                    <div className="flex-1 p-4 md:p-8 bg-white/30">
+                    <div className="flex-1 p-4 md:p-8 bg-white/30 overflow-y-auto">
                         {/* Pricing Tab content removed */}
                         {activeTab === 'content' && (
                             <div className="space-y-10 pb-10">
@@ -191,6 +249,56 @@ export const AdminPage: React.FC<AdminPageProps> = ({
                                     </div>
                                 </div>
                                 <button onClick={handleSaveAdmin} className="w-full py-6 bg-black text-white rounded-[30px] font-black text-xs uppercase tracking-[0.3em] flex items-center justify-center shadow-xl"><Save className="w-5 h-5 mr-3" /> Salvar Conteúdo da Landing</button>
+                            </div>
+                        )}
+                        {activeTab === 'portfolio' && (
+                            <div className="space-y-8">
+                                <div className="flex items-center justify-between">
+                                    <h3 className="text-xl font-black uppercase tracking-tight flex items-center"><Grid className="w-5 h-5 mr-3" /> Gerenciar Portfólio</h3>
+                                    <div className="relative">
+                                        <input
+                                            type="file"
+                                            id="portfolio-upload"
+                                            className="hidden"
+                                            accept="image/*"
+                                            onChange={handlePortfolioUpload}
+                                            disabled={uploadingPortfolio}
+                                        />
+                                        <label
+                                            htmlFor="portfolio-upload"
+                                            className={`cursor-pointer px-6 py-3 bg-black text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-zinc-800 transition-all flex items-center ${uploadingPortfolio ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        >
+                                            {uploadingPortfolio ? 'Enviando...' : (
+                                                <>
+                                                    <Plus className="w-4 h-4 mr-2" /> Adicionar Imagem
+                                                </>
+                                            )}
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                    {portfolioItems.map((item) => (
+                                        <div key={item.id} className="relative group rounded-2xl overflow-hidden aspect-square border border-[#B6B09F]/20 bg-white shadow-sm">
+                                            <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" />
+                                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-4">
+                                                <button
+                                                    onClick={() => handleDeletePortfolioItem(item)}
+                                                    className="p-3 bg-white text-red-600 rounded-full hover:bg-red-50 transition-colors mb-2"
+                                                >
+                                                    <Trash2 className="w-5 h-5" />
+                                                </button>
+                                                <span className="text-white text-[10px] uppercase font-bold text-center truncate w-full">{item.title}</span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {portfolioItems.length === 0 && (
+                                        <div className="col-span-full py-20 text-center text-[#7A756A] opacity-50 border-2 border-dashed border-[#B6B09F]/20 rounded-[30px]">
+                                            <Grid className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                                            <p className="font-black uppercase tracking-widest text-xs">Nenhuma imagem no portfólio</p>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         )}
                         {activeTab === 'stats' && <div className="text-center p-20 opacity-20"><BarChart3 className="w-20 h-20 mx-auto mb-4" /><p className="font-black uppercase tracking-widest text-xs">Aguardando dados de tráfego</p></div>}

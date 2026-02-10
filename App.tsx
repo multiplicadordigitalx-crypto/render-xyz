@@ -31,7 +31,12 @@ import { DashboardPage } from './pages/DashboardPage';
 import { PricingPage } from './pages/PricingPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { AdminPage } from './pages/AdminPage';
+import { ProfilePage } from './pages/ProfilePage';
+import { AdminPage } from './pages/AdminPage';
 import { CheckoutPage } from './pages/CheckoutPage';
+import { TermsPage } from './pages/TermsPage';
+import { PrivacyPage } from './pages/PrivacyPage';
+import { PortfolioPage } from './pages/PortfolioPage';
 
 
 // Types & Services
@@ -308,6 +313,10 @@ const App: React.FC = () => {
               <Navigate to="/login" />
             )
           } />
+
+          <Route path="/portfolio" element={<PortfolioPage />} />
+          <Route path="/termos" element={<TermsPage />} />
+          <Route path="/privacidade" element={<PrivacyPage />} />
 
           {/* Catch all redirect */}
           <Route path="*" element={<Navigate to="/" />} />
