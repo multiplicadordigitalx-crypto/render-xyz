@@ -138,8 +138,11 @@ const App: React.FC = () => {
             setCurrentUser(userData);
             setCredits(userData.credits);
           }
+          // Only stop loading once we have the user profile
+          setAppLoading(false);
         }, (error) => {
           console.error("Error in Profile Snapshot:", error);
+          setAppLoading(false); // Ensure we don't hang on error
         });
 
         // Sub 2: History real-time
@@ -181,8 +184,8 @@ const App: React.FC = () => {
         setIsLoggedIn(false);
         setCurrentUser(null);
         setHistory([]);
+        setAppLoading(false);
       }
-      setAppLoading(false);
     });
 
     return () => {
