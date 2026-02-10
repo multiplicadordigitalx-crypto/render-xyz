@@ -102,7 +102,7 @@ export const BatchProcessor: React.FC<BatchProcessorProps> = ({
                 <div className="flex items-center justify-between">
                     <div className={`flex items-center space-x-2 text-[10px] font-bold uppercase ${!hasEnoughCredits && pendingCount > 0 ? 'text-red-700' : 'text-amber-700'}`}>
                         <Coins className="w-4 h-4" />
-                        <span>Custo Batch: {totalCostPerItem} créditos por imagem (Incluso taxa de lote)</span>
+                        <span>Custo Lote: {totalCostPerItem} créditos por imagem (Incluso taxa de lote de 1 crédito)</span>
                     </div>
                     {pendingCount > 0 && (
                         <span className={`text-[10px] font-black uppercase ${!hasEnoughCredits ? 'text-red-800' : 'text-amber-800'}`}>

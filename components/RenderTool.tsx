@@ -201,6 +201,21 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
         <div className="mt-auto">
           {mode === 'single' && (
             <>
+              {/* Cost indicator */}
+              <div className={`rounded-xl p-3 mb-4 ${credits < selectedRes.cost ? 'bg-red-50 border border-red-200' : 'bg-amber-50 border border-amber-200'}`}>
+                <div className="flex items-center justify-between">
+                  <div className={`flex items-center space-x-2 text-[10px] font-bold uppercase ${credits < selectedRes.cost ? 'text-red-700' : 'text-amber-700'}`}>
+                    <Coins className="w-4 h-4" />
+                    <span>Custo: {selectedRes.cost} {selectedRes.cost === 1 ? 'crédito' : 'créditos'}</span>
+                  </div>
+                </div>
+                {credits < selectedRes.cost && (
+                  <p className="text-red-600 text-[10px] font-bold mt-1 text-center">
+                    Faltam {selectedRes.cost - credits} créditos
+                  </p>
+                )}
+              </div>
+
               <input
                 type="file"
                 onChange={handleFileUpload}
@@ -211,10 +226,15 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
               {!image ? (
                 <label
                   htmlFor="image-upload"
-                  className="w-full py-4 rounded-2xl border-2 border-dashed border-[#B6B09F]/40 flex flex-col items-center justify-center cursor-pointer hover:border-black hover:bg-white/60 transition-all group mb-4"
+                  className="w-full relative border-2 border-dashed border-[#B6B09F] hover:border-black bg-white/50 hover:bg-white rounded-3xl p-8 transition-all duration-300 text-center cursor-pointer flex flex-col items-center justify-center group mb-4"
                 >
-                  <Upload className="w-5 h-5 text-[#7A756A] group-hover:text-black mb-2" />
-                  <span className="text-[9px] font-black uppercase text-[#7A756A] tracking-widest">Carregar Projeto</span>
+                  <div className="w-16 h-16 bg-[#F2F2F2] rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <Upload className="w-8 h-8 text-[#7A756A]" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-black uppercase tracking-widest">Arraste uma imagem</p>
+                    <p className="text-[10px] font-bold uppercase text-[#7A756A] mt-2">ou clique para selecionar (JPG, PNG)</p>
+                  </div>
                 </label>
               ) : (
                 <button
