@@ -43,7 +43,7 @@ export const Header: React.FC<HeaderProps> = ({ onAuth }) => {
 
                 {/* Desktop Menu */}
                 <nav className="hidden md:flex items-center space-x-8">
-                    <button onClick={() => scrollToSection('features')} className="text-sm font-bold uppercase tracking-widest hover:text-black/70 transition-colors">Funcionalidades</button>
+                    <button onClick={() => scrollToSection('demo')} className="text-sm font-bold uppercase tracking-widest hover:text-black/70 transition-colors">Galeria</button>
                     <button onClick={() => scrollToSection('how-it-works')} className="text-sm font-bold uppercase tracking-widest hover:text-black/70 transition-colors">Como Funciona</button>
                     <button onClick={() => scrollToSection('pricing')} className="text-sm font-bold uppercase tracking-widest hover:text-black/70 transition-colors">Preços</button>
                     <button onClick={() => scrollToSection('faq')} className="text-sm font-bold uppercase tracking-widest hover:text-black/70 transition-colors">FAQ</button>
