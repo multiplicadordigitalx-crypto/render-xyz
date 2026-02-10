@@ -236,11 +236,7 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
             </>
           )}
 
-          {shouldShowWatermark(userPlan) && (
-            <div className="mt-4 text-center">
-              <p className="text-[8px] font-bold uppercase tracking-widest text-[#7A756A] opacity-60">Plano Grátis • Com marca d'água</p>
-            </div>
-          )}
+
         </div>
       </div>
 
