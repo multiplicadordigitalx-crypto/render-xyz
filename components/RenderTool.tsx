@@ -245,7 +245,7 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
       </div>
 
       {/* Main Canvas */}
-      <div className="flex-1 bg-[#dcd7c9] relative flex flex-col">
+      <div className="w-full md:flex-1 bg-[#dcd7c9] relative flex flex-col h-[50%] md:h-full order-1 md:order-2">
         {mode === 'batch' ? (
           <div className="absolute inset-0 p-8 overflow-y-auto">
             <BatchProcessor
