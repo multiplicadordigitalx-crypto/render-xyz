@@ -119,21 +119,17 @@ export const DashboardPage: React.FC<DashboardProps> = ({
                     />
                 </div>
 
-                {/* History Sidebar (Right) */}
-                <HistorySidebar
-                    history={history}
-                    onSelect={(item) => {
-                        // Ideally RenderTool should have a way to set image from URL, but currently it expects File or base64.
-                        // For now, we can just download view.
-                        // Or we can invoke download immediately.
-                        // Implements selection if we want to "reload" settings, but RenderTool state is internal.
-                        // Let's just trigger download/view logic or maybe we add a 'preview' modal?
-                        // For the MVP of this refactor, let's just use it as a gallery viewer.
-                        downloadHistoryImage(item.url, item.style);
-                    }}
-                    onDownload={downloadHistoryImage}
-                    onDelete={onDeleteHistory}
-                />
+                {/* History Sidebar (Right) - Hidden on mobile */}
+                <div className="hidden md:flex">
+                    <HistorySidebar
+                        history={history}
+                        onSelect={(item) => {
+                            downloadHistoryImage(item.url, item.style);
+                        }}
+                        onDownload={downloadHistoryImage}
+                        onDelete={onDeleteHistory}
+                    />
+                </div>
             </main>
 
             {showCpfModal && user && (

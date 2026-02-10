@@ -129,9 +129,9 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
   };
 
   return (
-    <div className="flex h-full w-full bg-[#EAE4D5] rounded-[30px] overflow-hidden border border-[#B6B09F]/30 shadow-2xl relative">
+    <div className="flex flex-col md:flex-row h-full w-full bg-[#EAE4D5] rounded-[20px] md:rounded-[30px] overflow-hidden border border-[#B6B09F]/30 shadow-2xl relative">
       {/* Sidebar Controls */}
-      <div className="w-80 bg-white/50 backdrop-blur-sm border-r border-[#B6B09F]/20 flex flex-col p-6 overflow-y-auto custom-scrollbar z-10">
+      <div className="w-full md:w-80 h-[50%] md:h-full bg-white/50 backdrop-blur-sm border-t md:border-t-0 md:border-r border-[#B6B09F]/20 flex flex-col p-4 md:p-6 overflow-y-auto custom-scrollbar z-10 order-2 md:order-1">
         <div className="mb-8">
           <h3 className="text-xs font-black uppercase tracking-widest text-[#7A756A] mb-4 flex items-center">
             <Layers className="w-4 h-4 mr-2" />
