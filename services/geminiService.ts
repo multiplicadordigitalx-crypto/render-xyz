@@ -3,7 +3,8 @@ import { GoogleGenAI } from "@google/genai";
 import { RenderStyle, RenderResolution } from "../types";
 
 // MODO DE TESTE: Altere para 'false' para ativar a IA real
-export const MOCK_MODE = true;
+// MODO DE TESTE: Altere para 'false' para ativar a IA real
+export const MOCK_MODE = false;
 
 export const renderImage = async (
   base64Image: string,
@@ -46,7 +47,7 @@ export const renderImage = async (
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-3-pro-image-preview',
+      model: 'gemini-2.0-flash-exp', // Using the latest available Flash model ("Nano Banana" equivalent)
       contents: {
         parts: [
           {
