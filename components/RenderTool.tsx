@@ -215,7 +215,7 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
             />
           </div>
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center p-8">
+          <div className={`absolute inset-0 p-8 ${result ? 'flex items-center justify-center' : 'overflow-y-auto'}`}>
             {result ? (
               <div className="relative w-full h-full flex flex-col">
                 <div className="flex-1 flex items-center justify-center overflow-hidden">
