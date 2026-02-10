@@ -49,7 +49,7 @@ export const PaymentMethodModal: React.FC<PaymentMethodModalProps> = ({
                             </div>
                             <div className="text-left">
                                 <p className="font-black uppercase text-xs tracking-wide">Cartão de Crédito</p>
-                                <p className="text-[10px] text-gray-500">Aprovação imediata via Stripe</p>
+                                <p className="text-[10px] text-gray-500">Aprovação imediata via Cartão</p>
                             </div>
                         </div>
                         <div className="w-4 h-4 rounded-full border-2 border-gray-300 group-hover:border-black" />
