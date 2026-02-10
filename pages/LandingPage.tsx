@@ -38,7 +38,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onAuth, creditPackages
             <FAQ items={[
                 { q: "Quanto tempo leva para gerar um render?", a: "A maioria dos renders é gerada em menos de 60 segundos, permitindo que você itere rapidamente sobre seus designs." },
                 { q: "Quais formatos de arquivo são suportados?", a: "Você pode fazer upload de arquivos .SKP, .OBJ, .FBX e imagens de referência. Entregamos os resultados em alta resolução JPG ou PNG." },
-                { q: "Posso usar as imagens comercialmente?", a: "Sim! Todos os renders gerados no plano Pago (Estúdio ou Elite) pertencem 100% a você para uso comercial irrestrito." },
+                { q: "Posso usar as imagens comercialmente?", a: "Sim! Todos os renders gerados com seus créditos pertencem 100% a você para uso comercial irrestrito." },
                 { q: "Preciso de um computador potente?", a: "Não. Todo o processamento é feito em nossa nuvem. Você pode renderizar projetos complexos até mesmo do seu celular ou tablet." },
                 { q: "Os créditos expiram?", a: "Não! Seus créditos são vitalícios e você pode usar quando quiser." },
                 { q: "Posso cancelar a compra?", a: "Sim, oferecemos reembolso total em até 7 dias caso não utilize os créditos." },
