@@ -53,7 +53,7 @@ export const DashboardPage: React.FC<DashboardProps> = ({
     }
 
     return (
-        <div className="h-screen bg-[#dcd7c9] text-black flex flex-col overflow-hidden">
+        <div className="min-h-screen bg-[#dcd7c9] text-black flex flex-col overflow-y-auto md:overflow-hidden">
             {/* CPF Warning Bar */}
             {user.cpf === "" && (
                 <div
@@ -107,9 +107,9 @@ export const DashboardPage: React.FC<DashboardProps> = ({
             </header>
 
             {/* Main Studio Area */}
-            <main className="flex-1 flex overflow-hidden">
+            <main className="flex-1 flex flex-col md:flex-row overflow-visible md:overflow-hidden">
                 {/* Render Tool (Sidebar + Canvas) */}
-                <div className="flex-1 p-4 overflow-hidden flex flex-col">
+                <div className="flex-1 p-4 overflow-visible md:overflow-hidden flex flex-col">
                     <RenderTool
                         onRenderComplete={onRenderComplete}
                         credits={credits}

@@ -129,9 +129,9 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
   };
 
   return (
-    <div className="flex flex-col md:flex-row h-full w-full bg-[#EAE4D5] rounded-[20px] md:rounded-[30px] overflow-hidden border border-[#B6B09F]/30 shadow-2xl relative">
+    <div className="flex flex-col md:flex-row h-auto md:h-full w-full bg-[#EAE4D5] rounded-[20px] md:rounded-[30px] overflow-hidden border border-[#B6B09F]/30 shadow-2xl relative">
       {/* Sidebar Controls */}
-      <div className="w-full md:w-80 h-[50%] md:h-full bg-white/50 backdrop-blur-sm border-t md:border-t-0 md:border-r border-[#B6B09F]/20 flex flex-col p-4 md:p-6 overflow-y-auto custom-scrollbar z-10">
+      <div className="w-full md:w-80 h-auto md:h-full bg-white/50 backdrop-blur-sm border-t md:border-t-0 md:border-r border-[#B6B09F]/20 flex flex-col p-4 md:p-6 md:overflow-y-auto custom-scrollbar z-10 shrink-0">
         <div className="mb-8">
           <h3 className="text-xs font-black uppercase tracking-widest text-[#7A756A] mb-4 flex items-center">
             <Layers className="w-4 h-4 mr-2" />
@@ -245,7 +245,7 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
       </div>
 
       {/* Main Canvas */}
-      <div className="w-full md:flex-1 bg-[#dcd7c9] relative flex flex-col h-[50%] md:h-full">
+      <div className="w-full md:flex-1 bg-[#dcd7c9] relative flex flex-col h-96 md:h-full shrink-0">
         {mode === 'batch' ? (
           <div className="absolute inset-0 p-8 overflow-y-auto">
             <BatchProcessor
