@@ -46,6 +46,8 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
   const [result, setResult] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const [fileName, setFileName] = useState<string>('');
+
   const selectedRes = RESOLUTIONS.find(r => r.label === resolution) || RESOLUTIONS[0];
 
   const processBatchImage = async (file: File) => {
@@ -71,6 +73,7 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
         return;
       }
       setMimeType(file.type);
+      setFileName(file.name);
       const reader = new FileReader();
       reader.onload = () => {
         setImage(reader.result as string);
@@ -197,67 +200,6 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
             </div>
           </div>
         </div>
-
-        <div className="mt-auto">
-          {mode === 'single' && (
-            <>
-              {/* Cost indicator */}
-              <div className={`rounded-xl p-3 mb-4 ${credits < selectedRes.cost ? 'bg-red-50 border border-red-200' : 'bg-amber-50 border border-amber-200'}`}>
-                <div className="flex items-center justify-between">
-                  <div className={`flex items-center space-x-2 text-[10px] font-bold uppercase ${credits < selectedRes.cost ? 'text-red-700' : 'text-amber-700'}`}>
-                    <Coins className="w-4 h-4" />
-                    <span>Custo: {selectedRes.cost} {selectedRes.cost === 1 ? 'crédito' : 'créditos'}</span>
-                  </div>
-                </div>
-                {credits < selectedRes.cost && (
-                  <p className="text-red-600 text-[10px] font-bold mt-1 text-center">
-                    Faltam {selectedRes.cost - credits} créditos
-                  </p>
-                )}
-              </div>
-
-              <input
-                type="file"
-                onChange={handleFileUpload}
-                className="hidden"
-                id="image-upload"
-                accept="image/*"
-              />
-              {!image ? (
-                <label
-                  htmlFor="image-upload"
-                  className="w-full relative border-2 border-dashed border-[#B6B09F] hover:border-black bg-white/50 hover:bg-white rounded-3xl p-8 transition-all duration-300 text-center cursor-pointer flex flex-col items-center justify-center group mb-4"
-                >
-                  <div className="w-16 h-16 bg-[#F2F2F2] rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <Upload className="w-8 h-8 text-[#7A756A]" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-black uppercase tracking-widest">Arraste uma imagem</p>
-                    <p className="text-[10px] font-bold uppercase text-[#7A756A] mt-2">ou clique para selecionar (JPG, PNG)</p>
-                  </div>
-                </label>
-              ) : (
-                <button
-                  onClick={handleGenerate}
-                  disabled={isRendering || credits <= 0}
-                  className={`w-full py-5 rounded-2xl flex items-center justify-center font-black text-xs uppercase tracking-widest shadow-xl hover:scale-[1.02] active:scale-95 transition-all ${isRendering || credits <= 0 ? 'bg-zinc-300 text-zinc-500 cursor-not-allowed' : 'bg-black text-white'
-                    }`}
-                >
-                  {isRendering ? (
-                    <span className="animate-pulse">Renderizando...</span>
-                  ) : (
-                    <>
-                      <Wand2 className="w-4 h-4 mr-2" />
-                      Renderizar Agora
-                    </>
-                  )}
-                </button>
-              )}
-            </>
-          )}
-
-
-        </div>
       </div>
 
       {/* Main Canvas */}
@@ -280,25 +222,105 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
                   <img src={result} alt="Resultado" className="max-w-full max-h-full object-contain shadow-2xl rounded-lg" />
                 </div>
                 <div className="mt-6 flex justify-center gap-4">
-                  <button onClick={() => { setResult(null); setImage(null) }} className="px-6 py-3 bg-white text-black rounded-xl font-black text-xs uppercase tracking-widest shadow-lg hover:bg-gray-50 transition-all">Novo Render</button>
+                  <button onClick={() => { setResult(null); setImage(null); setFileName(''); }} className="px-6 py-3 bg-white text-black rounded-xl font-black text-xs uppercase tracking-widest shadow-lg hover:bg-gray-50 transition-all">Novo Render</button>
                   <button onClick={downloadResult} className="px-8 py-3 bg-black text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-lg flex items-center hover:bg-neutral-800 transition-all">
                     <Download className="w-4 h-4 mr-2" /> Download
                   </button>
                 </div>
               </div>
-            ) : image ? (
-              <div className="relative w-full h-full flex flex-col items-center justify-center">
-                <img src={image} alt="Preview" className="max-w-full max-h-full object-contain opacity-50 blur-sm rounded-lg" />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <label htmlFor="image-upload" className="bg-black/80 text-white px-6 py-3 rounded-full font-bold text-xs uppercase tracking-widest cursor-pointer hover:bg-black transition-all backdrop-blur-md flex items-center">
-                    <RotateCcw className="w-3 h-3 mr-2" /> Trocar Imagem
-                  </label>
-                </div>
-              </div>
             ) : (
-              <div className="text-center text-[#7A756A] opacity-40">
-                <ImageIcon className="w-24 h-24 mx-auto mb-4" />
-                <p className="text-sm font-black uppercase tracking-[0.2em]">Área de Trabalho Vazia</p>
+              // Single Mode Preparation UI (Matches Batch UI)
+              <div className="w-full max-w-2xl mx-auto mb-8 animate-in fade-in slide-in-from-bottom-4">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-2">
+                    <h3 className="text-sm font-black uppercase tracking-widest text-[#7A756A]">Renderização Única</h3>
+                  </div>
+                </div>
+
+                {/* Cost indicator */}
+                <div className={`rounded-xl p-3 mb-4 ${credits < selectedRes.cost ? 'bg-red-50 border border-red-200' : 'bg-amber-50 border border-amber-200'}`}>
+                  <div className="flex items-center justify-between">
+                    <div className={`flex items-center space-x-2 text-[10px] font-bold uppercase ${credits < selectedRes.cost ? 'text-red-700' : 'text-amber-700'}`}>
+                      <Coins className="w-4 h-4" />
+                      <span>Custo: {selectedRes.cost} {selectedRes.cost === 1 ? 'crédito' : 'créditos'}</span>
+                    </div>
+                    {credits < selectedRes.cost && (
+                      <span className="text-red-600 text-[10px] font-black uppercase ml-auto">
+                        Faltam {selectedRes.cost - credits} créditos
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div
+                  className={`relative border-2 border-dashed rounded-3xl p-8 transition-all duration-300 text-center
+                            ${image ? 'border-black bg-white' : 'border-[#B6B09F] hover:border-black hover:bg-white'}
+                        `}
+                >
+                  <input
+                    type="file"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                    id="image-upload"
+                    accept="image/*"
+                  />
+
+                  {!image ? (
+                    <label
+                      htmlFor="image-upload"
+                      className="cursor-pointer space-y-4 py-8 block"
+                    >
+                      <div className="w-16 h-16 bg-[#F2F2F2] rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                        <Upload className="w-8 h-8 text-[#7A756A]" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-black uppercase tracking-widest">Arraste uma imagem</p>
+                        <p className="text-[10px] font-bold uppercase text-[#7A756A] mt-2">ou clique para selecionar (JPG, PNG)</p>
+                      </div>
+                    </label>
+                  ) : (
+                    // File List Item Style
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 gap-3">
+                        <div className="flex items-center bg-[#F2F2F2] p-3 rounded-xl gap-4">
+                          <img src={image} className="w-12 h-12 object-cover rounded-lg bg-white" />
+                          <div className="flex-1 text-left overflow-hidden">
+                            <p className="text-[10px] font-bold truncate">{fileName || "Imagem Selecionada"}</p>
+                            <p className="text-[9px] font-bold uppercase text-[#7A756A]">
+                              {isRendering ? 'Renderizando...' : 'Aguardando'}
+                            </p>
+                          </div>
+                          <div className="flex items-center">
+                            {isRendering ? (
+                              <div className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
+                            ) : (
+                              <button onClick={() => { setImage(null); setFileName(''); }} className="ml-3 p-1 hover:bg-black/10 rounded-full">
+                                <RotateCcw className="w-3 h-3" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-3 pt-4 border-t border-[#B6B09F]/20">
+                        <button
+                          onClick={handleGenerate}
+                          disabled={isRendering || credits < selectedRes.cost}
+                          className="flex-1 bg-black text-white py-4 rounded-xl font-black text-xs uppercase tracking-widest flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed hover:bg-zinc-800 transition-colors"
+                        >
+                          {isRendering ? 'Processando...' : `Renderizar Agora (${selectedRes.cost} créditos)`}
+                        </button>
+                        <button
+                          onClick={() => { setImage(null); setFileName(''); }}
+                          disabled={isRendering}
+                          className="px-6 border-2 border-black/10 hover:border-black rounded-xl font-black text-xs uppercase tracking-widest disabled:opacity-30"
+                        >
+                          Limpar
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
