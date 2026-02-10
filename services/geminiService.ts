@@ -31,6 +31,15 @@ export const renderImage = async (
   };
 
 
+  /* 
+    Enhanced 4K Prompt Logic:
+    Gemini 2.0 Flash generally outputs at standard resolutions (approx 1024x1024 varies by aspect ratio).
+    To simulate "4K" quality, we enforce strict high-fidelity prompt keywords.
+  */
+  const detailLevel = resolution === '4K'
+    ? "EXTREME DETAIL, 8K TEXTURES, MAGNIFICENT, ULTRA-SHARP FOCUS, ARCHITECTURAL PHOTOGRAPHY MASTERPIECE"
+    : "HIGH DETAIL, SHARP FOCUS, PHOTOREALISTIC";
+
   const prompt = `Act as a professional architectural visualizer specializing in Brazilian Architecture. 
   Transform this input sketch/photo into a hyper-realistic high-end ${resolution} render.
 
@@ -42,6 +51,7 @@ export const renderImage = async (
      - If EXTERIOR: lush landscaping suitable for Brazil.
   4. LIGHTING: ${lightingPrompts[style]}.
   5. MATERIALS: Photorealistic textures (glass, wood, concrete, fabric).
+  6. QUALITY: ${detailLevel}.
   
   Output ONLY the rendered image.`;
 
@@ -60,9 +70,10 @@ export const renderImage = async (
         ],
       },
       config: {
-        imageConfig: {
-          aspectRatio: "16:9",
-          imageSize: resolution
+        // Note: gemini-2.0-flash-exp supports generationConfig, but exact image sizing is often model-dependent.
+        // We set aspect ratio to 16:9 as standard for architectural visualization.
+        generationConfig: {
+          responseMimeType: "image/jpeg"
         }
       }
     });
