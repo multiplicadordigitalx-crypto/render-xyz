@@ -6,35 +6,35 @@ import { ArrowLeft, ArrowRight, Star } from 'lucide-react';
 const testimonials = [
     {
         quote:
-            "A velocidade do Render XYZ mudou completamente nosso fluxo de trabalho. Conseguimos entregar prévias para clientes em minutos durante reuniões.",
+            "Eu costumava levar 4 horas para gerar um render E meus clientes sempre pediam alterações na hora. MAS com a Render XYZ, eu faço isso em segundos. PORTANTO, fecho muito mais projetos nas reuniões.",
         name: "Ana Silva",
         designation: "Arquiteta Senior na Studio Arch",
         src: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=1888&auto=format&fit=crop",
     },
     {
         quote:
-            "A qualidade 4K é impressionante. Paramos de usar nossa renderfarm interna porque o custo-benefício aqui é muito superior.",
+            "Nós tínhamos uma renderfarm interna cara E ainda assim sofríamos com prazos. MAS a Render XYZ entregou qualidade superior na nuvem. PORTANTO, cortamos nossos custos em 90%.",
         name: "Carlos Mendes",
         designation: "Diretor de Arte na Vixel",
         src: "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?q=80&w=2070&auto=format&fit=crop",
     },
     {
         quote:
-            "Interface limpa e direta. Meus estagiários aprenderam a usar em menos de 1 minuto. A biblioteca de estilos é um salva-vidas.",
+            "Eu achava que precisava de um PC de R$ 20k E cursos complexos de V-Ray. MAS a Render XYZ roda liso no meu notebook simples. PORTANTO, agora posso trabalhar de qualquer lugar.",
         name: "Isabella Rossi",
         designation: "Designer de Interiores",
         src: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=1888&auto=format&fit=crop",
     },
     {
         quote:
-            "O suporte é fantástico e a ferramenta está sempre evoluindo. É raro ver uma plataforma que ouve tanto os usuários.",
+            "O suporte é fantástico E a ferramenta está sempre evoluindo. MAS o que me ganhou foi a facilidade. PORTANTO, é a única ferramenta que recomendo para meus alunos.",
         name: "Flávio Cardoso",
         designation: "Visualizador 3D Freelancer",
         src: "https://images.unsplash.com/photo-1599566150163-29194dcaad36?q=80&w=1887&auto=format&fit=crop",
     },
     {
         quote:
-            "Reduzimos nosso tempo de entrega em 40%. O retorno sobre o investimento foi imediato logo no primeiro projeto grande.",
+            "Estávamos perdendo tempo configurando luzes E texturas manualmente. MAS a IA da Render XYZ faz isso sozinha. PORTANTO, nosso tempo de entrega caiu pela metade.",
         name: "Fernanda Costa",
         designation: "Sócia na Costa & Arquitetos",
         src: "https://images.unsplash.com/photo-1557053910-d9eadeed1c58?q=80&w=1887&auto=format&fit=crop",

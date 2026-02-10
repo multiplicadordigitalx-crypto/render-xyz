@@ -17,11 +17,11 @@ export const Hero: React.FC<HeroProps> = ({ onStartNow, onSeeInAction }) => {
                     <div className="w-2 h-2 bg-black rounded-full animate-pulse mr-3" />
                     <span className="text-[8px] md:text-[10px] font-black uppercase tracking-[0.3em]">Inteligência Artificial Avançada</span>
                 </div>
-                <h1 className="text-4xl md:text-[7rem] font-black mb-8 md:mb-12 leading-[1.1] md:leading-[0.85] tracking-tighter uppercase">
-                    Render Realista <br className="hidden md:block" /> <span className="gradient-text">com um Clique</span>
+                <h1 className="text-4xl md:text-[6rem] font-black mb-8 md:mb-12 leading-[1.1] md:leading-[0.9] tracking-tighter uppercase">
+                    A Nova Era da <br className="hidden md:block" /> <span className="gradient-text">Arquitetura</span>
                 </h1>
                 <p className="text-[#7A756A] text-sm md:text-xl mb-10 md:mb-16 max-w-3xl mx-auto font-bold uppercase tracking-[0.1em] leading-relaxed">
-                    Poupe semanas de trabalho e milhares de reais. Render XYZ entrega visualizações de elite instantaneamente.
+                    Diga adeus ao V-Ray, Lumion e computadores caros. A Render XYZ usa Inteligência Artificial para transformar seus rascunhos em imagens premiadas instantaneamente.
                 </p>
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4 md:gap-8">
                     <button
