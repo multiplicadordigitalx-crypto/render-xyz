@@ -20,8 +20,8 @@ const STYLES: RenderStyle[] = ['Dia', 'Noite', 'Fim de Tarde', 'Nublado'];
 
 const RESOLUTIONS: { label: RenderResolution; cost: number }[] = [
   { label: '1K', cost: 1 },
-  { label: '2K', cost: 2 },
-  { label: '4K', cost: 3 },
+  { label: '2K', cost: 3 },
+  { label: '4K', cost: 5 },
 ];
 
 interface RenderToolProps {
