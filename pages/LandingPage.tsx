@@ -1,4 +1,5 @@
 import React from 'react';
+import { Header } from '../components/landing/Header';
 import { Hero } from '../components/landing/Hero';
 import { DemoSlider } from '../components/landing/DemoSlider';
 import { HowItWorks } from '../components/landing/HowItWorks';
@@ -18,11 +19,7 @@ interface LandingPageProps {
 export const LandingPage: React.FC<LandingPageProps> = ({ onAuth, creditPackages, onBuyCredits }) => {
     return (
         <div className="min-h-screen bg-[#F2F2F2] text-black overflow-x-hidden">
-            {/* Note: Navbar is lifted to App layout or kept here if specific to Landing */}
-            {/* Assuming Navbar stays in App for now or we duplicate/refactor it. 
-                 For now, let's assume App handles the layout or we include it here.
-                 Based on current App.tsx, Navbar is inside the main div.
-             */}
+            <Header onAuth={onAuth} />
 
             <Hero
                 onStartNow={() => onAuth('register')}
