@@ -81,6 +81,7 @@ export const DashboardPage: React.FC<DashboardProps> = ({
                     <div className="flex items-center bg-[#F2F2F2] border border-[#B6B09F]/20 px-3 py-1.5 rounded-lg">
                         <Coins className="w-3 h-3 mr-2 text-[#7A756A]" />
                         <span className="text-xs font-black">{credits}</span>
+                        <span className="text-[10px] font-black text-[#7A756A] ml-1">CRÉDITOS</span>
                         <button onClick={() => navigate('/planos')} className="ml-3 bg-black text-white p-0.5 rounded hover:bg-zinc-800 transition-all"><Plus className="w-3 h-3" /></button>
                     </div>
 
