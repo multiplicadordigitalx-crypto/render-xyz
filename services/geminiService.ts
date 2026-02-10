@@ -29,11 +29,20 @@ export const renderImage = async (
     'Nublado': 'Overcast cloudy day, soft diffused lighting, no harsh shadows, realistic moody atmosphere, natural tones.'
   };
 
-  const prompt = `Transform this architecture sketch or photo into a hyper-realistic high-end ${resolution} architectural render. 
-  Lighting Condition: ${lightingPrompts[style]}. 
-  Maintain the original geometry, structure, and perspective exactly. 
-  Add realistic textures and professional materials (glass, wood, concrete, fabric).
-  The output must be a single realistic image part.`;
+
+  const prompt = `Act as a professional architectural visualizer specializing in Brazilian Architecture. 
+  Transform this input sketch/photo into a hyper-realistic high-end ${resolution} render.
+
+  CRITICAL RULES:
+  1. STRICT ADHERENCE: Maintain the EXACT geometry, perspective, and structural elements of the input. DO NOT hallucinate, add, or remove windows, doors, or walls. Follow the drawing lines precisely.
+  2. BRAZILIAN CONTEXT: Use materials and aesthetics typical of high-end Brazilian architecture (Concrete, Wood, lush tropical vegetation, Cobogós if applicable). The style should be "Modern Brazilian" or "Tropical Modernism".
+  3. CONTEXT AWARENESS: Analyze if the image is an INTERIOR or EXTERIOR view.
+     - If INTERIOR: Do NOT put sun, clouds, or outdoor elements inside the room. Ensure lighting comes from windows/openings.
+     - If EXTERIOR: lush landscaping suitable for Brazil.
+  4. LIGHTING: ${lightingPrompts[style]}.
+  5. MATERIALS: Photorealistic textures (glass, wood, concrete, fabric).
+  
+  Output ONLY the rendered image.`;
 
   try {
     const response = await ai.models.generateContent({
