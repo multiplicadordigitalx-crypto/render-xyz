@@ -45,7 +45,7 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
   const [resolution, setResolution] = useState<RenderResolution>('1K');
   const [isRendering, setIsRendering] = useState(false);
   const [result, setResult] = useState<string | null>(null);
-  const [result, setResult] = useState<string | null>(null);
+
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
