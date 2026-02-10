@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
-import { Upload, Wand2, Download, RotateCcw, AlertCircle, CheckCircle2, Coins, ShieldCheck, Lock, Maximize2, Image as ImageIcon, Zap, Layers } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Upload, Wand2, Download, RotateCcw, AlertCircle, CheckCircle2, Coins, ShieldCheck, Lock, Maximize2, Image as ImageIcon, Zap, Layers, ShoppingCart } from 'lucide-react';
 import { RenderStyle, RenderResolution, UserPlan } from '../types';
 import { renderImage } from '../services/geminiService';
 import { storageService } from '../services/storageService';
@@ -44,7 +45,9 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
   const [resolution, setResolution] = useState<RenderResolution>('1K');
   const [isRendering, setIsRendering] = useState(false);
   const [result, setResult] = useState<string | null>(null);
+  const [result, setResult] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const [fileName, setFileName] = useState<string>('');
 
@@ -245,9 +248,18 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
                       <span>Custo: {selectedRes.cost} {selectedRes.cost === 1 ? 'crédito' : 'créditos'}</span>
                     </div>
                     {credits < selectedRes.cost && (
-                      <span className="text-red-600 text-[10px] font-black uppercase ml-auto">
-                        Faltam {selectedRes.cost - credits} créditos
-                      </span>
+                      <div className="flex items-center space-x-3">
+                        <span className="text-red-600 text-[10px] font-black uppercase">
+                          Faltam {selectedRes.cost - credits} créditos
+                        </span>
+                        <button
+                          onClick={() => navigate('/planos')}
+                          className="bg-red-600 text-white px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-red-700 transition-colors flex items-center shadow-sm"
+                        >
+                          <ShoppingCart className="w-3 h-3 mr-1" />
+                          Comprar Agora
+                        </button>
+                      </div>
                     )}
                   </div>
                 </div>

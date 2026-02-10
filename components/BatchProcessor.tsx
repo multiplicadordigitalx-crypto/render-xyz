@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
-import { Upload, X, Loader2, CheckCircle2, Image as ImageIcon, AlertCircle, Coins } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Upload, X, Loader2, CheckCircle2, Image as ImageIcon, AlertCircle, Coins, ShoppingCart } from 'lucide-react';
 import { RenderStyle } from '../types';
 
 interface BatchProcessorProps {
@@ -30,6 +31,7 @@ export const BatchProcessor: React.FC<BatchProcessorProps> = ({
     const [queue, setQueue] = useState<BatchItem[]>([]);
     const [processingId, setProcessingId] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const navigate = useNavigate();
 
     const totalCostPerItem = costPerRender + BATCH_SURCHARGE;
     const pendingCount = queue.filter(i => i.status === 'pending').length;
@@ -113,13 +115,20 @@ export const BatchProcessor: React.FC<BatchProcessorProps> = ({
 
                 {/* Insufficient credits warning */}
                 {!hasEnoughCredits && pendingCount > 0 && (
-                    <div className="mt-3 pt-3 border-t border-red-200 text-center">
-                        <p className="text-red-700 text-[11px] font-black uppercase">
+                    <div className="mt-3 pt-3 border-t border-red-200 text-center flex flex-col items-center">
+                        <p className="text-red-700 text-[11px] font-black uppercase mb-2">
                             ⚠️ Você tem {credits} créditos, precisa de {totalCostNeeded}
                         </p>
-                        <p className="text-red-600 text-[10px] font-bold mt-1">
+                        <p className="text-red-600 text-[10px] font-bold mb-3">
                             Faltam {totalCostNeeded - credits} créditos para processar {pendingCount} {pendingCount === 1 ? 'imagem' : 'imagens'}
                         </p>
+                        <button
+                            onClick={() => navigate('/planos')}
+                            className="bg-red-600 text-white px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-700 transition-colors flex items-center shadow-lg transform hover:scale-105"
+                        >
+                            <ShoppingCart className="w-3 h-3 mr-2" />
+                            Comprar Pacote de Créditos
+                        </button>
                     </div>
                 )}
             </div>
