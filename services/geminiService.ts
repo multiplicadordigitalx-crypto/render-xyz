@@ -70,11 +70,7 @@ export const renderImage = async (
         ],
       },
       config: {
-        // Note: gemini-2.0-flash-exp supports generationConfig, but exact image sizing is often model-dependent.
-        // We set aspect ratio to 16:9 as standard for architectural visualization.
-        generationConfig: {
-          responseMimeType: "image/jpeg"
-        }
+        // config is optional in the new SDK, relying on model defaults
       }
     });
 
