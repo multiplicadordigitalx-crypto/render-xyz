@@ -1,4 +1,5 @@
 import React from 'react';
+import { useScrollReveal } from '../services/scrollReveal';
 import { Header } from '../components/landing/Header';
 import { Hero } from '../components/landing/Hero';
 import { DemoSlider } from '../components/landing/DemoSlider';
@@ -18,6 +19,7 @@ interface LandingPageProps {
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({ onAuth, creditPackages, onBuyCredits, landingSettings }) => {
+    useScrollReveal([landingSettings]);
     return (
         <div className="min-h-screen bg-[#F2F2F2] text-black overflow-x-hidden">
             <Header onAuth={onAuth} />

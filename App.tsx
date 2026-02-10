@@ -37,7 +37,6 @@ import { CheckoutPage } from './pages/CheckoutPage';
 // Types & Services
 import { MOCK_MODE } from './services/geminiService';
 import { Toaster, toast } from 'react-hot-toast';
-import { useScrollReveal } from './services/scrollReveal';
 import { AppUser, CreditPackage, LandingSettings, PricingPlan, RenderHistoryItem, RenderStyle } from './types';
 import { stripeService } from './services/stripeService';
 
@@ -164,7 +163,7 @@ const App: React.FC = () => {
             const settingsDoc = await getDoc(doc(db, "settings", "global"));
             if (settingsDoc.exists()) {
               const data = settingsDoc.data();
-              if (data.landing) setLandingSettings(data.landing);
+              if (data.landing) setLandingSettings({ ...DEFAULT_LANDING, ...data.landing });
               if (data.pricing) setPricingPlans(data.pricing);
               if (data.credits) setCreditPackages(data.credits);
             }
