@@ -32,7 +32,8 @@ export const renderImage = async (
     console.log("DEBUG: API Key detectada com sucesso.", { length: apiKey.length });
   }
 
-  const ai = new GoogleGenAI(apiKey);
+  // @google/genai SDK requires an object { apiKey: string }
+  const ai = new GoogleGenAI({ apiKey: apiKey });
 
   const lightingPrompts: Record<RenderStyle, string> = {
     'Dia': 'Bright sunny day lighting, clear blue sky, sharp realistic shadows, vibrant natural colors.',
