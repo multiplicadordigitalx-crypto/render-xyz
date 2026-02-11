@@ -88,6 +88,13 @@ const App: React.FC = () => {
   useEffect(() => {
     // 1. Check API Key
     const checkKey = async () => {
+      // Check for environment variable first (Production/Local .env)
+      const envKey = import.meta.env.VITE_GEMINI_API_KEY;
+      if (envKey && envKey.length > 20) { // Basic validation
+        setHasApiKey(true);
+        return;
+      }
+
       if (MOCK_MODE) {
         setHasApiKey(true);
         return;
