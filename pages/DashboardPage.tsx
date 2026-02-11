@@ -38,15 +38,59 @@ export const DashboardPage: React.FC<DashboardProps> = ({
         document.body.removeChild(link);
     };
 
+    const [manualKey, setManualKey] = useState("");
+
     // Only show API Key activation screen for Admins
     if (!hasApiKey && user.role === 'admin') {
+        const handleManualKeySubmit = () => {
+            if (manualKey.length > 30) {
+                localStorage.setItem('gemini_api_key', manualKey);
+                setHasApiKey(true);
+                window.location.reload(); // Force reload to ensure service picks up the new key
+            } else {
+                alert("Chave muito curta. Verifique se copiou corretamente.");
+            }
+        };
+
         return (
             <div className="min-h-screen bg-[#EAE4D5] flex items-center justify-center p-4">
                 <div className="max-w-xl w-full bg-[#F2F2F2] border border-[#B6B09F]/30 rounded-[35px] p-8 md:p-12 text-center shadow-2xl">
                     <div className="w-16 h-16 bg-black rounded-2xl flex items-center justify-center mx-auto mb-8"><Key className="text-white w-8 h-8" /></div>
                     <h2 className="text-2xl md:text-4xl font-black uppercase mb-4 tracking-tighter">Ativação</h2>
                     <p className="text-[#7A756A] text-xs font-bold uppercase tracking-widest mb-10">Vincule uma chave API Studio para iniciar.</p>
-                    <button onClick={handleOpenSelectKey} className="w-full py-5 bg-black text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl hover:bg-zinc-800 transition-all">Selecionar Chave</button>
+
+                    <div className="space-y-3">
+                        <button onClick={handleOpenSelectKey} className="w-full py-4 bg-black text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-xl hover:bg-zinc-800 transition-all flex items-center justify-center gap-2">
+                            <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span> Via Extensão (AI Studio)
+                        </button>
+
+                        <div className="relative">
+                            <div className="absolute inset-0 flex items-center">
+                                <span className="w-full border-t border-gray-300" />
+                            </div>
+                            <div className="relative flex justify-center text-xs uppercase">
+                                <span className="bg-[#F2F2F2] px-2 text-gray-500 font-bold">Ou cole sua chave</span>
+                            </div>
+                        </div>
+
+                        <div className="flex gap-2">
+                            <input
+                                type="text"
+                                value={manualKey}
+                                onChange={(e) => setManualKey(e.target.value)}
+                                placeholder="AIzaSy..."
+                                className="flex-1 p-3 rounded-xl border border-gray-300 text-xs font-mono focus:border-black outline-none"
+                            />
+                            <button
+                                onClick={handleManualKeySubmit}
+                                className="px-4 bg-gray-900 text-white rounded-xl font-bold text-xs uppercase hover:bg-black"
+                            >
+                                Salvar
+                            </button>
+                        </div>
+                        <p className="text-[9px] text-gray-400 mt-2">A chave será salva no seu navegador (Local Storage).</p>
+                    </div>
+
                     <button onClick={onLogout} className="mt-8 text-[9px] font-black uppercase tracking-widest text-[#7A756A] hover:text-black">Sair</button>
                 </div>
             </div>
