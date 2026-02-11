@@ -112,7 +112,8 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
       onRenderComplete(publicUrl, style, selectedRes.cost);
       toast.success('Pronto!', { id: loadingToast });
     } catch (err: any) {
-      toast.error('Erro na renderização', { id: loadingToast });
+      const errorMsg = err.message || "Erro desconhecido";
+      toast.error(`Erro: ${errorMsg}`, { id: loadingToast, duration: 5000 });
       const errorMsg = err.message || "";
       if (errorMsg.includes("Requested entity was not found")) {
         setError("Chave inválida. Selecione novamente.");
