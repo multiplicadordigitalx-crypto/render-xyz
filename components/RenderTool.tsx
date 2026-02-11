@@ -47,6 +47,7 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
   const [result, setResult] = useState<string | null>(null);
 
   const [error, setError] = useState<string | null>(null);
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const navigate = useNavigate();
 
   const [fileName, setFileName] = useState<string>('');
@@ -125,12 +126,33 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
     }
   };
 
-  const downloadResult = () => {
+  const downloadResult = async () => {
     if (result) {
-      const link = document.createElement('a');
-      link.href = result;
-      link.download = `renderxyz-${style.toLowerCase()}.png`;
-      link.click();
+      try {
+        const loadingToast = toast.loading('Preparando download...');
+        const response = await fetch(result);
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `renderxyz-${style.toLowerCase()}-${Date.now()}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        toast.success('Download concluído!', { id: loadingToast });
+      } catch (err) {
+        console.error("Erro no download:", err);
+        toast.error("Falha ao baixar imagem.");
+      }
+    }
+  };
+
+  const handleRefine = () => {
+    if (result) {
+      setImage(result);
+      setResult(null);
+      toast.success('Pronto para refinar!');
     }
   };
 
@@ -221,11 +243,17 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
           <div className={`absolute inset-0 p-8 ${result ? 'flex items-center justify-center' : 'overflow-y-auto'}`}>
             {result ? (
               <div className="relative w-full h-full flex flex-col">
-                <div className="flex-1 flex items-center justify-center overflow-hidden">
-                  <img src={result} alt="Resultado" className="max-w-full max-h-full object-contain shadow-2xl rounded-lg" />
+                <div className="flex-1 flex items-center justify-center overflow-hidden cursor-zoom-in group" onClick={() => setIsLightboxOpen(true)}>
+                  <img src={result} alt="Resultado" className="max-w-full max-h-full object-contain shadow-2xl rounded-lg transition-transform duration-300 group-hover:scale-[1.02]" />
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center pointer-events-none">
+                    <Maximize2 className="text-white opacity-0 group-hover:opacity-100 w-12 h-12 transition-opacity" />
+                  </div>
                 </div>
-                <div className="mt-6 flex justify-center gap-4">
-                  <button onClick={() => { setResult(null); setImage(null); setFileName(''); }} className="px-6 py-3 bg-white text-black rounded-xl font-black text-xs uppercase tracking-widest shadow-lg hover:bg-gray-50 transition-all">Novo Render</button>
+                <div className="mt-6 flex flex-wrap justify-center gap-4">
+                  <button onClick={() => { setResult(null); setImage(null); setFileName(''); }} className="px-6 py-3 bg-white text-black rounded-xl font-black text-xs uppercase tracking-widest shadow-lg hover:bg-gray-50 transition-all border border-black/5">Novo Render</button>
+                  <button onClick={handleRefine} className="px-6 py-3 bg-amber-500 text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-lg hover:bg-amber-600 transition-all flex items-center">
+                    <Wand2 className="w-4 h-4 mr-2" /> Refinar Render
+                  </button>
                   <button onClick={downloadResult} className="px-8 py-3 bg-black text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-lg flex items-center hover:bg-neutral-800 transition-all">
                     <Download className="w-4 h-4 mr-2" /> Download
                   </button>
@@ -346,6 +374,37 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
           </div>
         )}
       </div>
+
+      {/* Lightbox / Expansion */}
+      {isLightboxOpen && result && (
+        <div
+          className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center p-4 md:p-12 animate-in fade-in zoom-in duration-300"
+          onClick={() => setIsLightboxOpen(false)}
+        >
+          <div className="absolute top-6 right-6 flex gap-4">
+            <button
+              onClick={(e) => { e.stopPropagation(); downloadResult(); }}
+              className="bg-white/10 hover:bg-white/20 p-4 rounded-full text-white transition-colors"
+              title="Download"
+            >
+              <Download className="w-6 h-6" />
+            </button>
+            <button
+              className="bg-white/10 hover:bg-white/20 p-4 rounded-full text-white transition-colors"
+              onClick={() => setIsLightboxOpen(false)}
+            >
+              <RotateCcw className="w-6 h-6" />
+            </button>
+          </div>
+          <img
+            src={result}
+            alt="Expanded Render"
+            className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          />
+          <p className="text-white/50 text-[10px] uppercase tracking-widest mt-6 font-bold">Clique fora para fechar</p>
+        </div>
+      )}
     </div>
   );
 };
