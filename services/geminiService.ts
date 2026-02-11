@@ -20,7 +20,13 @@ export const renderImage = async (
   }
 
   // Always use a new instance right before the call to ensure the latest API key is used
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  // Priority: 1. Environment Variable (.env) -> 2. Local Storage (for debugging)
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem('gemini_api_key');
+
+  if (!apiKey || apiKey.includes("YOUR_AB")) {
+    throw new Error("Chave de API não encontrada (VITE_GEMINI_API_KEY). Verifique o .env ou o painel da Vercel.");
+  }
+
   const ai = new GoogleGenAI(apiKey);
 
   const lightingPrompts: Record<RenderStyle, string> = {
