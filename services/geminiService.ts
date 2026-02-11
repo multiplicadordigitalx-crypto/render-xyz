@@ -32,26 +32,40 @@ export const renderImage = async (
 
 
   /* 
-    Enhanced 4K Prompt Logic:
-    Gemini 2.0 Flash generally outputs at standard resolutions (approx 1024x1024 varies by aspect ratio).
-    To simulate "4K" quality, we enforce strict high-fidelity prompt keywords.
+    Enhanced Resolution Tier Logic:
+    We use prompt engineering to simulate resolution differences since the model output is fixed size.
   */
-  const detailLevel = resolution === '4K'
-    ? "EXTREME DETAIL, 8K TEXTURES, MAGNIFICENT, ULTRA-SHARP FOCUS, ARCHITECTURAL PHOTOGRAPHY MASTERPIECE"
-    : "HIGH DETAIL, SHARP FOCUS, PHOTOREALISTIC";
+  let detailLevel = "";
+  let qualityKeywords = "";
+
+  switch (resolution) {
+    case '1K':
+      detailLevel = "STANDARD QUALITY. Good for quick visualization. Balanced details. Standard lighting.";
+      qualityKeywords = "nice render, standard architectural visualization";
+      break;
+    case '2K':
+      detailLevel = "HIGH DEFINITION. Sharp focus, refined textures, professional lighting, crisp edges.";
+      qualityKeywords = "high fidelity, professional architectural photography, 4k textures, detailed foliage";
+      break;
+    case '4K':
+      detailLevel = "ULTRA-PREMIUM MASTERPIECE. 8K TEXTURES. RAYTRACING STYLE. EXTREME DETAIL. MICRO-SURFACE DETAILS.";
+      qualityKeywords = "award winning photography, unreal engine 5 render, global illumination, macro details, perfect composition";
+      break;
+    default:
+      detailLevel = "HIGH QUALITY";
+      qualityKeywords = "photorealistic";
+  }
 
   const prompt = `Act as a professional architectural visualizer specializing in Brazilian Architecture. 
-  Transform this input sketch/photo into a hyper-realistic high-end ${resolution} render.
+  Transform this input sketch/photo into a ${resolution} render.
 
   CRITICAL RULES:
-  1. STRICT ADHERENCE: Maintain the EXACT geometry, perspective, and structural elements of the input. DO NOT hallucinate, add, or remove windows, doors, or walls. Follow the drawing lines precisely.
-  2. BRAZILIAN CONTEXT: Use materials and aesthetics typical of high-end Brazilian architecture (Concrete, Wood, lush tropical vegetation, Cobogós if applicable). The style should be "Modern Brazilian" or "Tropical Modernism".
-  3. CONTEXT AWARENESS: Analyze if the image is an INTERIOR or EXTERIOR view.
-     - If INTERIOR: Do NOT put sun, clouds, or outdoor elements inside the room. Ensure lighting comes from windows/openings.
-     - If EXTERIOR: lush landscaping suitable for Brazil.
-  4. LIGHTING: ${lightingPrompts[style]}.
-  5. MATERIALS: Photorealistic textures (glass, wood, concrete, fabric).
-  6. QUALITY: ${detailLevel}.
+  1. STRICT ADHERENCE: Maintain the EXACT geometry.
+  2. QUALITY TIER: ${detailLevel}
+  3. BRAZILIAN CONTEXT: "Modern Brazilian" or "Tropical Modernism".
+  4. INTERIOR/EXTERIOR AWARENESS: Check view type.
+  5. LIGHTING: ${lightingPrompts[style]}.
+  6. STYLE KEYWORDS: ${qualityKeywords}.
   
   Output ONLY the rendered image.`;
 
