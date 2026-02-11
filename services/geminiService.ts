@@ -2,9 +2,61 @@
 import { GoogleGenAI } from "@google/genai";
 import { RenderStyle, RenderResolution } from "../types";
 
-// MODO DE TESTE: Altere para 'false' para ativar a IA real
-// MODO DE TESTE: Altere para 'false' para ativar a IA real
 export const MOCK_MODE = false;
+
+const RESOLUTION_CONFIG: Record<RenderResolution, { targetWidth: number; scaleFactor: number }> = {
+  '1K': { targetWidth: 1024, scaleFactor: 1 },
+  '2K': { targetWidth: 2048, scaleFactor: 2 },
+  '4K': { targetWidth: 4096, scaleFactor: 4 },
+};
+
+/**
+ * Upscale an image using Canvas API with high-quality interpolation.
+ * Uses progressive scaling (2x steps) for better quality on large upscales.
+ */
+const upscaleImage = (base64Data: string, scaleFactor: number): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      let currentWidth = img.width;
+      let currentHeight = img.height;
+      const targetWidth = currentWidth * scaleFactor;
+      const targetHeight = currentHeight * scaleFactor;
+
+      // Progressive scaling: scale 2x at a time for better quality
+      let canvas = document.createElement('canvas');
+      let ctx = canvas.getContext('2d')!;
+
+      // Draw original first
+      canvas.width = currentWidth;
+      canvas.height = currentHeight;
+      ctx.drawImage(img, 0, 0);
+
+      while (currentWidth < targetWidth) {
+        const nextWidth = Math.min(currentWidth * 2, targetWidth);
+        const nextHeight = Math.min(currentHeight * 2, targetHeight);
+
+        const stepCanvas = document.createElement('canvas');
+        stepCanvas.width = nextWidth;
+        stepCanvas.height = nextHeight;
+        const stepCtx = stepCanvas.getContext('2d')!;
+
+        stepCtx.imageSmoothingEnabled = true;
+        stepCtx.imageSmoothingQuality = 'high';
+        stepCtx.drawImage(canvas, 0, 0, nextWidth, nextHeight);
+
+        canvas = stepCanvas;
+        ctx = stepCtx;
+        currentWidth = nextWidth;
+        currentHeight = nextHeight;
+      }
+
+      resolve(canvas.toDataURL('image/png'));
+    };
+    img.onerror = () => reject(new Error('Falha ao carregar imagem para upscale'));
+    img.src = base64Data;
+  });
+};
 
 export const renderImage = async (
   base64Image: string,
@@ -13,27 +65,19 @@ export const renderImage = async (
   resolution: RenderResolution = '1K'
 ): Promise<string> => {
   if (MOCK_MODE) {
-    // Simular delay de processamento (3 segundos)
     await new Promise(resolve => setTimeout(resolve, 3000));
-    // Retorna a própria imagem original para testar o fluxo sem gastar créditos de IA
     return base64Image;
   }
 
-  // Always use a new instance right before the call to ensure the latest API key is used
-  // Priority: 1. Environment Variable (.env) -> 2. Local Storage (for debugging)
   const apiKey = import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem('gemini_api_key');
 
   if (!apiKey || apiKey.includes("YOUR_AB")) {
-    console.error("DEBUG: API Key está faltando ou é inválida.", { keyLength: apiKey?.length, isDefined: !!apiKey });
     throw new Error("Chave de API não encontrada (VITE_GEMINI_API_KEY). Verifique o .env ou o painel da Vercel.");
   }
 
-  if (apiKey) {
-    console.log("DEBUG: API Key detectada com sucesso.", { length: apiKey.length });
-  }
+  console.log("DEBUG: API Key detectada com sucesso.", { length: apiKey.length });
 
-  // @google/genai SDK requires an object { apiKey: string }
-  const ai = new GoogleGenAI({ apiKey: apiKey });
+  const ai = new GoogleGenAI({ apiKey });
 
   const lightingPrompts: Record<RenderStyle, string> = {
     'Dia': 'Bright sunny day lighting, clear blue sky, sharp realistic shadows, vibrant natural colors.',
@@ -42,11 +86,6 @@ export const renderImage = async (
     'Nublado': 'Overcast cloudy day, soft diffused lighting, no harsh shadows, realistic moody atmosphere, natural tones.'
   };
 
-
-  /* 
-    Enhanced Resolution Tier Logic:
-    We use prompt engineering to simulate resolution differences since the model output is fixed size.
-  */
   let detailLevel = "";
   let qualityKeywords = "";
 
@@ -81,15 +120,43 @@ export const renderImage = async (
   
   Output ONLY the rendered image.`;
 
-  const modelsToTry = [
-    'gemini-2.0-flash',
+  // --- Model Selection per Resolution ---
+  // 4K: Try premium model first (native 4K), then fallback to base + upscale
+  // 2K: Use base model + 2x upscale
+  // 1K: Use base model natively (1024px output)
+
+  const baseModels = [
     'gemini-2.0-flash-exp',
-    'gemini-2.0-pro-exp-02-05'
+    'gemini-2.0-flash',
   ];
+
+  // For 4K, try the premium model first (native high-res support)
+  const premiumModels = [
+    'gemini-3-pro-image-preview',
+  ];
+
+  const modelsToTry = resolution === '4K'
+    ? [...premiumModels, ...baseModels]
+    : baseModels;
+
+  let generatedImageBase64: string | null = null;
+  let usedPremiumModel = false;
 
   for (const modelName of modelsToTry) {
     try {
-      console.log(`Tentando gerar com modelo: ${modelName}`);
+      console.log(`Tentando gerar com modelo: ${modelName} (resolução: ${resolution})`);
+
+      const isPremium = premiumModels.includes(modelName);
+
+      const config: Record<string, any> = {
+        responseModalities: ['Text', 'Image'],
+      };
+
+      // Premium model supports native resolution config
+      if (isPremium && resolution === '4K') {
+        config.imageConfig = { imageSize: '4K' };
+      }
+
       const response = await ai.models.generateContent({
         model: modelName,
         contents: {
@@ -103,36 +170,31 @@ export const renderImage = async (
             { text: prompt },
           ],
         },
-        config: {
-          // config is optional in the new SDK
-        }
+        config,
       });
 
       console.log(`Sucesso com modelo: ${modelName}`);
 
-      // Iterate through all parts to find the image part
       for (const part of response.candidates?.[0]?.content.parts || []) {
         if (part.inlineData) {
-          return `data:image/png;base64,${part.inlineData.data}`;
+          generatedImageBase64 = `data:image/png;base64,${part.inlineData.data}`;
+          usedPremiumModel = isPremium;
+          break;
         }
       }
 
-      // If we got a response but no image, maybe this model returned text refusing?
-      // Check for text refusal
+      if (generatedImageBase64) break;
+
       const textPart = response.candidates?.[0]?.content.parts?.find(p => p.text)?.text;
       if (textPart) {
         console.warn(`Modelo ${modelName} retornou texto em vez de imagem:`, textPart);
-        // Don't throw immediately, maybe next model works? 
-        // Actually, if it refused, it might be safety. But let's verify next model.
       }
 
     } catch (error: any) {
       console.warn(`Falha com modelo ${modelName}:`, error.message);
 
-      // If it's the last model, throw the error
       if (modelName === modelsToTry[modelsToTry.length - 1]) {
         console.error("Todas as tentativas de modelo falharam.");
-        // Enhance error for user
         if (error.message.includes("429") || error.message.includes("RESOURCE_EXHAUSTED")) {
           throw new Error("Cota excedida (429). Verifique o Billing no Google Cloud ou aguarde.");
         }
@@ -141,10 +203,27 @@ export const renderImage = async (
         }
         throw error;
       }
-      // Otherwise continue to next model
       continue;
     }
   }
 
-  throw new Error("Nenhum modelo conseguiu gerar a imagem. Tente novamente mais tarde.");
+  if (!generatedImageBase64) {
+    throw new Error("Nenhum modelo conseguiu gerar a imagem. Tente novamente mais tarde.");
+  }
+
+  // --- Post-Processing: Upscale if needed ---
+  const resConfig = RESOLUTION_CONFIG[resolution];
+
+  // Only upscale if we didn't use a premium model with native resolution
+  if (resConfig.scaleFactor > 1 && !usedPremiumModel) {
+    console.log(`Upscaling imagem: ${resConfig.scaleFactor}x para ${resolution} (${resConfig.targetWidth}px)`);
+    try {
+      generatedImageBase64 = await upscaleImage(generatedImageBase64, resConfig.scaleFactor);
+      console.log(`Upscale concluído: ${resolution}`);
+    } catch (upscaleError) {
+      console.warn("Upscale falhou, retornando imagem original:", upscaleError);
+    }
+  }
+
+  return generatedImageBase64;
 };

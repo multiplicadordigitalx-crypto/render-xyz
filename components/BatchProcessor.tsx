@@ -145,12 +145,16 @@ export const BatchProcessor: React.FC<BatchProcessorProps> = ({
                     className="hidden"
                     onChange={handleFileSelect}
                     accept="image/*"
+                    aria-label="Upload files for batch processing"
                 />
 
                 {queue.length === 0 ? (
                     <div
                         onClick={() => fileInputRef.current?.click()}
                         className="cursor-pointer space-y-4 py-8"
+                        role="button"
+                        aria-label="Click to upload files"
+                        tabIndex={0}
                     >
                         <div className="w-16 h-16 bg-[#F2F2F2] rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
                             <Upload className="w-8 h-8 text-[#7A756A]" />
@@ -165,7 +169,11 @@ export const BatchProcessor: React.FC<BatchProcessorProps> = ({
                         <div className="grid grid-cols-1 gap-3 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
                             {queue.map(item => (
                                 <div key={item.id} className="flex items-center bg-[#F2F2F2] p-3 rounded-xl gap-4">
-                                    <img src={item.previewUrl} className="w-12 h-12 object-cover rounded-lg bg-white" />
+                                    <img
+                                        src={item.previewUrl}
+                                        alt={item.file.name}
+                                        className="w-12 h-12 object-cover rounded-lg bg-white"
+                                    />
                                     <div className="flex-1 text-left overflow-hidden">
                                         <p className="text-[10px] font-bold truncate">{item.file.name}</p>
                                         <p className="text-[9px] font-bold uppercase text-[#7A756A]">
@@ -182,7 +190,11 @@ export const BatchProcessor: React.FC<BatchProcessorProps> = ({
                                         {item.status === 'error' && <AlertCircle className="w-4 h-4 text-red-500" />}
 
                                         {item.status === 'pending' && (
-                                            <button onClick={() => removeQueueItem(item.id)} className="ml-3 p-1 hover:bg-black/10 rounded-full">
+                                            <button
+                                                onClick={() => removeQueueItem(item.id)}
+                                                className="ml-3 p-1 hover:bg-black/10 rounded-full"
+                                                aria-label="Remove item"
+                                            >
                                                 <X className="w-3 h-3" />
                                             </button>
                                         )}
@@ -196,6 +208,7 @@ export const BatchProcessor: React.FC<BatchProcessorProps> = ({
                                 onClick={processQueue}
                                 disabled={!!processingId || pendingCount === 0 || !hasEnoughCredits}
                                 className="flex-1 bg-black text-white py-4 rounded-xl font-black text-xs uppercase tracking-widest flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed hover:bg-zinc-800 transition-colors"
+                                aria-label="Start batch processing"
                             >
                                 {processingId ? (
                                     <>
@@ -212,6 +225,7 @@ export const BatchProcessor: React.FC<BatchProcessorProps> = ({
                                 onClick={() => { setQueue([]); setProcessingId(null); }}
                                 disabled={!!processingId}
                                 className="px-6 border-2 border-black/10 hover:border-black rounded-xl font-black text-xs uppercase tracking-widest disabled:opacity-30"
+                                aria-label="Clear queue"
                             >
                                 Limpar
                             </button>
