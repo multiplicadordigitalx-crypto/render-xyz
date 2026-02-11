@@ -127,19 +127,21 @@ export const renderImage = async (
 
   const baseModels = [
     'gemini-2.5-flash-image',             // 2025/2026 stable image model
+    'imagen-3.0-fast-generate-001',       // High speed Imagen
+    'imagen-3.0-generate-001',            // Standard Imagen
     'gemini-2.0-flash-exp-image-generation', // Specific exp variant
     'gemini-2.0-flash-exp',               // General exp (some regions)
-    'gemini-2.0-flash',                   // Stable (modality check)
   ];
 
-  // For 4K, try the premium model first
+  // For 4K, try the premium models first
   const premiumModels = [
     'gemini-3-pro-image-preview',
     'imagen-3.0-generate-002',
+    'imagen-3.0-generate-001',
   ];
 
   const modelsToTry = resolution === '4K'
-    ? [...premiumModels, ...baseModels]
+    ? [...new Set([...premiumModels, ...baseModels])]
     : baseModels;
 
   let generatedImageBase64: string | null = null;
