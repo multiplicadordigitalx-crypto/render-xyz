@@ -24,7 +24,12 @@ export const renderImage = async (
   const apiKey = import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem('gemini_api_key');
 
   if (!apiKey || apiKey.includes("YOUR_AB")) {
+    console.error("DEBUG: API Key está faltando ou é inválida.", { keyLength: apiKey?.length, isDefined: !!apiKey });
     throw new Error("Chave de API não encontrada (VITE_GEMINI_API_KEY). Verifique o .env ou o painel da Vercel.");
+  }
+
+  if (apiKey) {
+    console.log("DEBUG: API Key detectada com sucesso.", { length: apiKey.length });
   }
 
   const ai = new GoogleGenAI(apiKey);
