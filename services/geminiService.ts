@@ -88,23 +88,9 @@ export const renderImage = async (
   let detailLevel = "";
   let qualityKeywords = "";
 
-  switch (resolution) {
-    case '1K':
-      detailLevel = "PROFESSIONAL ARCHITECTURAL QUALITY. Photorealistic textures, high contrast, realistic materials.";
-      qualityKeywords = "photorealistic render, architectural photography, sharp details, v-ray style";
-      break;
-    case '2K':
-      detailLevel = "ULTRA-DETAILED HYPER-REALISTIC. 4K textures, Octane Render style, high-fidelity surfaces, professional architectural photography.";
-      qualityKeywords = "masterpiece, hyper-realistic, high fidelity, professional lighting, crisp edges, realistic foliage";
-      break;
-    case '4K':
-      detailLevel = "8K ULTRA-PREMIUM MASTERPIECE. UNREAL ENGINE 5 STYLE. RAYTRACING. EXTREME MICRO-DETAILS. MOVIE QUALITY.";
-      qualityKeywords = "award winning architectural photography, photorealism, raytracing, global illumination, macro texture details, perfect realism";
-      break;
-    default:
-      detailLevel = "HIGH QUALITY";
-      qualityKeywords = "photorealistic";
-  }
+  // Ensure high quality for ALL resolutions, technical resolution only affects final size
+  detailLevel = "8K ULTRA-PREMIUM MASTERPIECE. UNREAL ENGINE 5 STYLE. RAYTRACING. EXTREME MICRO-DETAILS. MOVIE QUALITY.";
+  qualityKeywords = "award winning architectural photography, photorealism, raytracing, global illumination, macro texture details, perfect realism, masterpiece, crisp edges";
 
   const prompt = `Act as a world-class architectural visualizer. 
   Transform this input (sketch, Sketchup model, or line-art) into a HYPER-REALISTIC ${resolution} render.
@@ -119,22 +105,20 @@ export const renderImage = async (
 
   Output ONLY the final rendered image. NO toolbars, NO text, NO watermarks.`;
 
-  const baseModels = [
+  // Unified model list: always try the best models first for all resolutions
+  const modelsToTry = [
+    'gemini-3-pro-image-preview',
+    'imagen-3.0-generate-002',
     'imagen-3',
+    'imagen-3.0-generate-001',
     'gemini-2.0-flash-exp-image-generation',
     'gemini-2.5-flash-image',
-    'imagen-3.0-fast-generate-001',
   ];
 
   const premiumModels = [
     'gemini-3-pro-image-preview',
     'imagen-3.0-generate-002',
-    'imagen-3',
   ];
-
-  const modelsToTry = resolution === '4K'
-    ? [...new Set([...premiumModels, ...baseModels])]
-    : baseModels;
 
   const keysToTry = [geminiKey, firebaseKey].filter(k => k && !k.includes("YOUR_AB")) as string[];
 
