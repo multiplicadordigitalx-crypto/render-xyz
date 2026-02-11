@@ -70,8 +70,9 @@ export const renderImage = async (
   Output ONLY the rendered image.`;
 
   try {
+    console.log("Iniciando geração com modelo: gemini-2.0-flash");
     const response = await ai.models.generateContent({
-      model: 'gemini-2.0-flash-exp', // Using the latest available Flash model ("Nano Banana" equivalent)
+      model: 'gemini-2.0-flash',
       contents: {
         parts: [
           {
@@ -88,6 +89,8 @@ export const renderImage = async (
       }
     });
 
+    console.log("Resposta Gemini recebida. Processando...");
+
     // Iterate through all parts to find the image part as per guidelines
     for (const part of response.candidates?.[0]?.content.parts || []) {
       if (part.inlineData) {
@@ -95,9 +98,16 @@ export const renderImage = async (
       }
     }
 
-    throw new Error("Não foi possível gerar a imagem. Tente outro estilo ou imagem.");
+    throw new Error("A IA gerou uma resposta, mas não continha imagem. Tente simplificaro prompt.");
   } catch (error: any) {
-    console.error("Gemini API Error:", error);
-    throw error;
+    console.error("Gemini API Fatal Error:", error);
+
+    // Extract more details if available
+    if (error.response) {
+      console.error("API Response Status:", error.response.status);
+      console.error("API Response Data:", await error.response.json());
+    }
+
+    throw new Error(`Erro na IA: ${error.message || "Falha desconhecida"}`);
   }
 };
