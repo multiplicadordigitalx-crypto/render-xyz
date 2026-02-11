@@ -69,15 +69,14 @@ export const renderImage = async (
     return base64Image;
   }
 
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem('gemini_api_key');
+  // Priority: 1. Environment Variable -> 2. Local Storage -> 3. Firebase Key Fallback
+  const geminiKey = import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem('gemini_api_key');
+  const firebaseKey = import.meta.env.VITE_FIREBASE_API_KEY;
+  const primaryKey = geminiKey || firebaseKey;
 
-  if (!apiKey || apiKey.includes("YOUR_AB")) {
-    throw new Error("Chave de API não encontrada (VITE_GEMINI_API_KEY). Verifique o .env ou o painel da Vercel.");
+  if (!primaryKey || primaryKey.includes("YOUR_AB")) {
+    throw new Error("Chave de API não encontrada. Verifique o .env ou o painel da Vercel.");
   }
-
-  console.log("DEBUG: API Key detectada com sucesso.", { length: apiKey.length });
-
-  const ai = new GoogleGenAI({ apiKey });
 
   const lightingPrompts: Record<RenderStyle, string> = {
     'Dia': 'Bright sunny day lighting, clear blue sky, sharp realistic shadows, vibrant natural colors.',
@@ -120,111 +119,93 @@ export const renderImage = async (
   
   Output ONLY the rendered image.`;
 
-  // --- Model Selection per Resolution ---
-  // 4K: Try premium model first (native 4K), then fallback to base + upscale
-  // 2K: Use base model + 2x upscale
-  // 1K: Use base model natively (1024px output)
-
   const baseModels = [
-    'gemini-2.5-flash-image',             // 2025/2026 stable image model
-    'imagen-3.0-fast-generate-001',       // High speed Imagen
-    'imagen-3.0-generate-001',            // Standard Imagen
-    'gemini-2.0-flash-exp-image-generation', // Specific exp variant
-    'gemini-2.0-flash-exp',               // General exp (some regions)
+    'imagen-3',
+    'gemini-2.0-flash-exp-image-generation',
+    'gemini-2.5-flash-image',
+    'imagen-3.0-fast-generate-001',
   ];
 
-  // For 4K, try the premium models first
   const premiumModels = [
     'gemini-3-pro-image-preview',
     'imagen-3.0-generate-002',
-    'imagen-3.0-generate-001',
+    'imagen-3',
   ];
 
   const modelsToTry = resolution === '4K'
     ? [...new Set([...premiumModels, ...baseModels])]
     : baseModels;
 
+  const keysToTry = [geminiKey, firebaseKey].filter(k => k && !k.includes("YOUR_AB")) as string[];
+
   let generatedImageBase64: string | null = null;
   let usedPremiumModel = false;
+  let lastError = "";
 
-  for (const modelName of modelsToTry) {
-    try {
-      console.log(`Tentando gerar com modelo: ${modelName} (resolução: ${resolution})`);
+  for (const currentKey of keysToTry) {
+    const aiInstance = new GoogleGenAI({ apiKey: currentKey });
 
-      const isPremium = premiumModels.includes(modelName);
+    for (const modelName of modelsToTry) {
+      try {
+        console.log(`Tentando: ${modelName} | Key: ${currentKey.substring(0, 5)}...`);
 
-      const config: Record<string, any> = {
-        responseModalities: ['Text', 'Image'],
-      };
+        const isPremium = premiumModels.includes(modelName);
+        const config: any = { responseModalities: ['Text', 'Image'] };
 
-      // Premium model supports native resolution config
-      if (isPremium && resolution === '4K') {
-        config.imageConfig = { imageSize: '4K' };
-      }
+        if (isPremium && resolution === '4K') {
+          config.imageConfig = { imageSize: '4K' };
+        }
 
-      const response = await ai.models.generateContent({
-        model: modelName,
-        contents: {
-          parts: [
-            {
-              inlineData: {
-                data: base64Image.split(',')[1],
-                mimeType: mimeType,
-              },
-            },
-            { text: prompt },
-          ],
-        },
-        config,
-      });
+        const response = await aiInstance.models.generateContent({
+          model: modelName,
+          contents: {
+            parts: [
+              { inlineData: { data: base64Image.split(',')[1], mimeType } },
+              { text: prompt },
+            ],
+          },
+          config,
+        });
 
-      console.log(`Sucesso com modelo: ${modelName}`);
+        console.log(`Sucesso com modelo: ${modelName}`);
 
-      for (const part of response.candidates?.[0]?.content.parts || []) {
-        if (part.inlineData) {
-          generatedImageBase64 = `data:image/png;base64,${part.inlineData.data}`;
-          usedPremiumModel = isPremium;
-          break;
+        for (const part of response.candidates?.[0]?.content.parts || []) {
+          if (part.inlineData) {
+            generatedImageBase64 = `data:image/png;base64,${part.inlineData.data}`;
+            usedPremiumModel = isPremium;
+            break;
+          }
+        }
+
+        if (generatedImageBase64) break;
+
+      } catch (error: any) {
+        lastError = error.message;
+        console.warn(`Erro no modelo ${modelName} (Key: ${currentKey.substring(0, 5)}):`, lastError);
+
+        // If quota hit (429) or forbidden (403), try next key if available
+        if (keysToTry.length > 1 && currentKey === keysToTry[0] && (lastError.includes("429") || lastError.includes("403"))) {
+          console.warn("Troca de chave detectada devido a limite ou permissão.");
+          break; // Exit model loop for current key
         }
       }
-
-      if (generatedImageBase64) break;
-
-      const textPart = response.candidates?.[0]?.content.parts?.find(p => p.text)?.text;
-      if (textPart) {
-        console.warn(`Modelo ${modelName} retornou texto em vez de imagem:`, textPart);
-      }
-
-    } catch (error: any) {
-      console.warn(`Falha com modelo ${modelName}:`, error.message);
-
-      if (modelName === modelsToTry[modelsToTry.length - 1]) {
-        console.error("Todas as tentativas de modelo falharam.");
-        if (error.message.includes("429") || error.message.includes("RESOURCE_EXHAUSTED")) {
-          throw new Error("Cota excedida (429). Verifique o Billing no Google Cloud ou aguarde.");
-        }
-        if (error.message.includes("404")) {
-          throw new Error("Modelo não disponível na sua região ou chave inválida.");
-        }
-        throw error;
-      }
-      continue;
     }
+    if (generatedImageBase64) break;
   }
 
   if (!generatedImageBase64) {
-    throw new Error("Nenhum modelo conseguiu gerar a imagem. Tente novamente mais tarde.");
+    if (lastError.includes("429")) throw new Error("LIMITE ATINGIDO: Suas chaves de API chegaram ao limite do Google. Ative o faturamento ou aguarde.");
+    if (lastError.includes("404")) throw new Error("MODELO INDISPONÍVEL: Os modelos de imagem não estão disponíveis para esta chave/região.");
+    throw new Error(lastError || "Nenhum modelo de IA disponível respondeu.");
   }
 
   // --- Post-Processing: Upscale if needed ---
   const resConfig = RESOLUTION_CONFIG[resolution];
 
-  // Only upscale if we didn't use a premium model with native resolution
   if (resConfig.scaleFactor > 1 && !usedPremiumModel) {
-    console.log(`Upscaling imagem: ${resConfig.scaleFactor}x para ${resolution} (${resConfig.targetWidth}px)`);
+    console.log(`Upscaling imagem: ${resConfig.scaleFactor}x para ${resolution}`);
     try {
       generatedImageBase64 = await upscaleImage(generatedImageBase64, resConfig.scaleFactor);
-      console.log(`Upscale concluído: ${resolution}`);
     } catch (upscaleError) {
       console.warn("Upscale falhou, retornando imagem original:", upscaleError);
     }
