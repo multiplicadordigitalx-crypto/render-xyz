@@ -38,7 +38,8 @@ export const DashboardPage: React.FC<DashboardProps> = ({
         document.body.removeChild(link);
     };
 
-    if (!hasApiKey) {
+    // Only show API Key activation screen for Admins
+    if (!hasApiKey && user.role === 'admin') {
         return (
             <div className="min-h-screen bg-[#EAE4D5] flex items-center justify-center p-4">
                 <div className="max-w-xl w-full bg-[#F2F2F2] border border-[#B6B09F]/30 rounded-[35px] p-8 md:p-12 text-center shadow-2xl">
