@@ -79,10 +79,10 @@ export const renderImage = async (
   }
 
   const lightingPrompts: Record<RenderStyle, string> = {
-    'Dia': 'Bright sunny day lighting, clear blue sky, sharp realistic shadows, vibrant natural colors.',
-    'Noite': 'Night time scene, dramatic artificial interior and exterior lighting, glowing windows, dark starry sky, high contrast.',
-    'Fim de Tarde': 'Golden hour sunset lighting, warm orange and purple hues, long soft shadows, cinematic atmosphere.',
-    'Nublado': 'Overcast cloudy day, soft diffused lighting, no harsh shadows, realistic moody atmosphere, natural tones.'
+    'Dia': 'Ultra-realistic bright sunny day, global illumination, natural sunlight, sharp high-contrast realistic shadows, vibrant materials.',
+    'Noite': 'Hyper-realistic night scene, dramatic architectural interior/exterior lighting, warm glowing windows, dark natural sky, high contrast, Rayleigh scattering.',
+    'Fim de Tarde': 'Golden hour sunset masterpiece, long soft volumetric shadows, warm orange/purple hues, cinematic lighting, realistic textures.',
+    'Nublado': 'Overcast moody day, soft diffused realistic lighting, realistic ambient occlusion, no harsh shadows, natural architectural textures.'
   };
 
   let detailLevel = "";
@@ -90,34 +90,34 @@ export const renderImage = async (
 
   switch (resolution) {
     case '1K':
-      detailLevel = "STANDARD QUALITY. Good for quick visualization. Balanced details. Standard lighting.";
-      qualityKeywords = "nice render, standard architectural visualization";
+      detailLevel = "PROFESSIONAL ARCHITECTURAL QUALITY. Photorealistic textures, high contrast, realistic materials.";
+      qualityKeywords = "photorealistic render, architectural photography, sharp details, v-ray style";
       break;
     case '2K':
-      detailLevel = "HIGH DEFINITION. Sharp focus, refined textures, professional lighting, crisp edges.";
-      qualityKeywords = "high fidelity, professional architectural photography, 4k textures, detailed foliage";
+      detailLevel = "ULTRA-DETAILED HYPER-REALISTIC. 4K textures, Octane Render style, high-fidelity surfaces, professional architectural photography.";
+      qualityKeywords = "masterpiece, hyper-realistic, high fidelity, professional lighting, crisp edges, realistic foliage";
       break;
     case '4K':
-      detailLevel = "ULTRA-PREMIUM MASTERPIECE. 8K TEXTURES. RAYTRACING STYLE. EXTREME DETAIL. MICRO-SURFACE DETAILS.";
-      qualityKeywords = "award winning photography, unreal engine 5 render, global illumination, macro details, perfect composition";
+      detailLevel = "8K ULTRA-PREMIUM MASTERPIECE. UNREAL ENGINE 5 STYLE. RAYTRACING. EXTREME MICRO-DETAILS. MOVIE QUALITY.";
+      qualityKeywords = "award winning architectural photography, photorealism, raytracing, global illumination, macro texture details, perfect realism";
       break;
     default:
       detailLevel = "HIGH QUALITY";
       qualityKeywords = "photorealistic";
   }
 
-  const prompt = `Act as a professional architectural visualizer specializing in Brazilian Architecture. 
-  Transform this input sketch/photo into a ${resolution} render.
+  const prompt = `Act as a world-class architectural visualizer. 
+  Transform this input (sketch, Sketchup model, or line-art) into a HYPER-REALISTIC ${resolution} render.
 
-  CRITICAL RULES:
-  1. STRICT ADHERENCE: Maintain the EXACT geometry.
-  2. QUALITY TIER: ${detailLevel}
-  3. BRAZILIAN CONTEXT: "Modern Brazilian" or "Tropical Modernism".
-  4. INTERIOR/EXTERIOR AWARENESS: Check view type.
-  5. LIGHTING: ${lightingPrompts[style]}.
-  6. STYLE KEYWORDS: ${qualityKeywords}.
-  
-  Output ONLY the rendered image.`;
+  ### TOP PRIORITY RULES:
+  1. **STRICT GEOMETRIC PRESERVATION**: The output MUST have the EXACT SAME camera angle, perspective, and architectural geometry as the input. DO NOT change the position of walls, windows, or structural elements.
+  2. **HYPER-REALISM**: Transform all surfaces into high-end realistic materials (concrete, wood, glass, stone, grass).
+  3. **UI & LOGO REMOVAL**: If the input is a screenshot from a tool (like Sketchup, AutoCAD, or Windows), IGNORE the toolbars, UI buttons, window borders, and logos. Render ONLY the central architectural project.
+  4. **VISUAL QUALITY**: ${detailLevel}
+  5. **CONTEXT**: "Modern Brazilian Architecture" / "Tropical Modernism".
+  6. **LIGHTING & STYLE**: ${lightingPrompts[style]}. Keywords: ${qualityKeywords}.
+
+  Output ONLY the final rendered image. NO toolbars, NO text, NO watermarks.`;
 
   const baseModels = [
     'imagen-3',
