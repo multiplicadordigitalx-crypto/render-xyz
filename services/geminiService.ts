@@ -126,13 +126,16 @@ export const renderImage = async (
   // 1K: Use base model natively (1024px output)
 
   const baseModels = [
-    'gemini-2.0-flash-exp',
-    'gemini-2.0-flash',
+    'gemini-2.5-flash-image',             // 2025/2026 stable image model
+    'gemini-2.0-flash-exp-image-generation', // Specific exp variant
+    'gemini-2.0-flash-exp',               // General exp (some regions)
+    'gemini-2.0-flash',                   // Stable (modality check)
   ];
 
-  // For 4K, try the premium model first (native high-res support)
+  // For 4K, try the premium model first
   const premiumModels = [
     'gemini-3-pro-image-preview',
+    'imagen-3.0-generate-002',
   ];
 
   const modelsToTry = resolution === '4K'
