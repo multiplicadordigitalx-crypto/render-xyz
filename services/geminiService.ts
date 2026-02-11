@@ -81,45 +81,70 @@ export const renderImage = async (
   
   Output ONLY the rendered image.`;
 
-  try {
-    console.log("Iniciando geração com modelo: gemini-2.0-flash");
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.0-flash',
-      contents: {
-        parts: [
-          {
-            inlineData: {
-              data: base64Image.split(',')[1],
-              mimeType: mimeType,
+  const modelsToTry = [
+    'gemini-2.0-flash',
+    'gemini-2.0-flash-exp',
+    'gemini-2.0-pro-exp-02-05'
+  ];
+
+  for (const modelName of modelsToTry) {
+    try {
+      console.log(`Tentando gerar com modelo: ${modelName}`);
+      const response = await ai.models.generateContent({
+        model: modelName,
+        contents: {
+          parts: [
+            {
+              inlineData: {
+                data: base64Image.split(',')[1],
+                mimeType: mimeType,
+              },
             },
-          },
-          { text: prompt },
-        ],
-      },
-      config: {
-        // config is optional in the new SDK, relying on model defaults
+            { text: prompt },
+          ],
+        },
+        config: {
+          // config is optional in the new SDK
+        }
+      });
+
+      console.log(`Sucesso com modelo: ${modelName}`);
+
+      // Iterate through all parts to find the image part
+      for (const part of response.candidates?.[0]?.content.parts || []) {
+        if (part.inlineData) {
+          return `data:image/png;base64,${part.inlineData.data}`;
+        }
       }
-    });
 
-    console.log("Resposta Gemini recebida. Processando...");
-
-    // Iterate through all parts to find the image part as per guidelines
-    for (const part of response.candidates?.[0]?.content.parts || []) {
-      if (part.inlineData) {
-        return `data:image/png;base64,${part.inlineData.data}`;
+      // If we got a response but no image, maybe this model returned text refusing?
+      // Check for text refusal
+      const textPart = response.candidates?.[0]?.content.parts?.find(p => p.text)?.text;
+      if (textPart) {
+        console.warn(`Modelo ${modelName} retornou texto em vez de imagem:`, textPart);
+        // Don't throw immediately, maybe next model works? 
+        // Actually, if it refused, it might be safety. But let's verify next model.
       }
+
+    } catch (error: any) {
+      console.warn(`Falha com modelo ${modelName}:`, error.message);
+
+      // If it's the last model, throw the error
+      if (modelName === modelsToTry[modelsToTry.length - 1]) {
+        console.error("Todas as tentativas de modelo falharam.");
+        // Enhance error for user
+        if (error.message.includes("429") || error.message.includes("RESOURCE_EXHAUSTED")) {
+          throw new Error("Cota excedida (429). Verifique o Billing no Google Cloud ou aguarde.");
+        }
+        if (error.message.includes("404")) {
+          throw new Error("Modelo não disponível na sua região ou chave inválida.");
+        }
+        throw error;
+      }
+      // Otherwise continue to next model
+      continue;
     }
-
-    throw new Error("A IA gerou uma resposta, mas não continha imagem. Tente simplificaro prompt.");
-  } catch (error: any) {
-    console.error("Gemini API Fatal Error:", error);
-
-    // Extract more details if available
-    if (error.response) {
-      console.error("API Response Status:", error.response.status);
-      console.error("API Response Data:", await error.response.json());
-    }
-
-    throw new Error(`Erro na IA: ${error.message || "Falha desconhecida"}`);
   }
+
+  throw new Error("Nenhum modelo conseguiu gerar a imagem. Tente novamente mais tarde.");
 };
