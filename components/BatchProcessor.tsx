@@ -134,8 +134,8 @@ export const BatchProcessor: React.FC<BatchProcessorProps> = ({
             </div>
 
             <div
-                className={`relative border-2 border-dashed rounded-3xl p-8 transition-all duration-300 text-center
-                    ${queue.length > 0 ? 'border-black bg-white' : 'border-[#B6B09F] hover:border-black hover:bg-white'}
+                className={`relative border-2 border-dashed rounded-3xl p-8 transition-all duration-300 text-center flex flex-col items-center justify-center
+                    ${queue.length > 0 ? 'border-black bg-white h-[400px]' : 'border-[#B6B09F] hover:border-black hover:bg-white min-h-[400px]'}
                 `}
             >
                 <input
@@ -151,7 +151,7 @@ export const BatchProcessor: React.FC<BatchProcessorProps> = ({
                 {queue.length === 0 ? (
                     <div
                         onClick={() => fileInputRef.current?.click()}
-                        className="cursor-pointer space-y-4 py-8"
+                        className="cursor-pointer space-y-4 py-8 w-full h-full flex flex-col items-center justify-center"
                         role="button"
                         aria-label="Click to upload files"
                         tabIndex={0}
@@ -165,10 +165,10 @@ export const BatchProcessor: React.FC<BatchProcessorProps> = ({
                         </div>
                     </div>
                 ) : (
-                    <div className="space-y-4">
-                        <div className="grid grid-cols-1 gap-3 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+                    <div className="space-y-4 w-full h-full flex flex-col">
+                        <div className="grid grid-cols-1 gap-3 overflow-y-auto pr-2 custom-scrollbar flex-1 content-start">
                             {queue.map(item => (
-                                <div key={item.id} className="flex items-center bg-[#F2F2F2] p-3 rounded-xl gap-4">
+                                <div key={item.id} className="flex items-center bg-[#F2F2F2] p-3 rounded-xl gap-4 shrink-0">
                                     <img
                                         src={item.previewUrl}
                                         alt={item.file.name}
@@ -203,7 +203,7 @@ export const BatchProcessor: React.FC<BatchProcessorProps> = ({
                             ))}
                         </div>
 
-                        <div className="flex gap-3 pt-4 border-t border-[#B6B09F]/20">
+                        <div className="flex gap-3 pt-4 border-t border-[#B6B09F]/20 shrink-0">
                             <button
                                 onClick={processQueue}
                                 disabled={!!processingId || pendingCount === 0 || !hasEnoughCredits}
