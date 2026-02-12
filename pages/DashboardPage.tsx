@@ -155,7 +155,7 @@ export const DashboardPage: React.FC<DashboardProps> = ({
             {/* Main Studio Area */}
             <main className="flex-1 flex flex-col overflow-hidden relative">
                 {/* Render Tool (Top Canvas) */}
-                <div className="flex-1 p-4 overflow-y-auto w-full max-w-7xl mx-auto">
+                <div className="flex-1 p-4 overflow-hidden flex flex-col">
                     <RenderTool
                         onRenderComplete={onRenderComplete}
                         credits={credits}
