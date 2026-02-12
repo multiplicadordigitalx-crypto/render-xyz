@@ -89,20 +89,21 @@ export const renderImage = async (
   let qualityKeywords = "";
 
   // Ensure high quality for ALL resolutions, technical resolution only affects final size
-  detailLevel = "RAW CANDID PHOTOGRAPHY. 8K. DSLR. NATURAL IMPERFECTIONS. FILM GRAIN.";
-  qualityKeywords = "award winning photography, canon eos 5d, f/8, iso 100, natural lighting, photorealism, depth of field, real life texture, organic chaos, lived-in feel";
+  detailLevel = "HIGH-END ARCHITECTURAL PHOTOGRAPHY. 8K. SHARP FOCUS. CLEAN RESIDENTIAL COMPOSITION.";
+  qualityKeywords = "magazine quality, architectural digest, canon eos r5, 24mm tilt-shift lens, sharp details, professional lighting, manicured garden, paved surfaces, high-end production value";
 
-  const prompt = `Act as a professional photographer. 
-  Transform this input (sketch, Sketchup model, or line-art) into a INDISTINGUISHABLE FROM REALITY photograph.
+  const prompt = `Act as a professional architectural photographer. 
+  Transform this input (sketch, Sketchup model, or line-art) into a CLEAN, PHOTOREALISTIC ARCHITECTURAL PHOTOGRAPH.
 
   ### TOP PRIORITY RULES:
   1. **STRICT GEOMETRIC PRESERVATION**: The output MUST have the EXACT SAME camera angle, perspective, and architectural geometry as the input. DO NOT change the position of walls, windows, or structural elements.
-  2. **TRUE PHOTOREALISM**: This must look like a real photo, NOT a render. Add natural imperfections, dust, slightly uneven surfaces, and organic vegetation. Avoid "perfect" 3D edges.
-  3. **UI & LOGO REMOVAL**: If the input is a screenshot from a tool (like Sketchup, AutoCAD, or Windows), IGNORE the toolbars, UI buttons, window borders, and logos. Render ONLY the central architectural project.
-  4. **VISUAL QUALITY**: ${detailLevel}
-  5. **CONTEXT**: "Real world Brazilian Architecture" / "Tropical Reality".
-  6. **LIGHTING & STYLE**: ${lightingPrompts[style]}. Keywords: ${qualityKeywords}.
-  7. **NEGATIVE PROMPT**: Do not look like a 3D render, no architectural visualization style, no plastic textures, no perfect CGI lighting, no watermark, no text.
+  2. **ARCHITECTURAL REALISM**: This is a RESIDENTIAL PROJECT. It must look like a built house, NOT a ruin or swamp. Use clean materials (fresh paint, new concrete, clean glass).
+  3. **LANDSCAPING**: Use a MANICURED GARDEN style. Short grass, pruned plants, clean pool water. NO overgrown vegetation, NO mud, NO swamp water.
+  4. **CRITICAL: REMOVE ALL UI**: The input is a screenshot containing software interfaces (taskbars, toolbars, menus). You MUST remove these completely. Inpaint the missing areas with natural ground/sky. The final image must look like a photo taken on site, with NO computer interface elements visible.
+  5. **VISUAL QUALITY**: ${detailLevel}
+  6. **CONTEXT**: "Modern Residential Project" in a clean, upscale environment.
+  7. **LIGHTING & STYLE**: ${lightingPrompts[style]}. Keywords: ${qualityKeywords}.
+  8. **NEGATIVE PROMPT**: Swamp, ruins, overgrown, abandoned, dirty, mud, jungle, computer UI, software interface, text, watermark, blur, distortion.
 
   Output ONLY the final image.`;
 
