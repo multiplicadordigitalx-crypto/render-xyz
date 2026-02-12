@@ -50,16 +50,34 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const navigate = useNavigate();
 
-  // Helper to convert URL to Base64
+  // Helper to convert URL to Base64 using proxy to avoid CORS
   const urlToBase64 = async (url: string): Promise<string> => {
-    const response = await fetch(url);
-    const blob = await response.blob();
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
+    // Use the local proxy if running locally or the deployed one
+    const proxyUrl = `/api/proxy-image?url=${encodeURIComponent(url)}`;
+
+    try {
+      const response = await fetch(proxyUrl);
+      if (!response.ok) throw new Error('Falha no proxy de imagem');
+
+      const blob = await response.blob();
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    } catch (e) {
+      console.error("Proxy failed, trying direct fetch (fallback)", e);
+      // Fallback for local development if proxy isn't set up
+      const response = await fetch(url);
+      const blob = await response.blob();
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    }
   };
 
   // Listen for external refine requests
