@@ -86,8 +86,8 @@ export const BatchProcessor: React.FC<BatchProcessorProps> = ({
     const completedCount = queue.filter(i => i.status === 'completed').length;
 
     return (
-        <div className="w-full max-w-2xl mx-auto mb-8 animate-in fade-in slide-in-from-bottom-4">
-            <div className="flex items-center justify-between mb-4">
+        <div className="w-full max-w-2xl mx-auto h-full flex flex-col animate-in fade-in slide-in-from-bottom-4">
+            <div className="flex items-center justify-between mb-4 shrink-0">
                 <div className="flex items-center space-x-2">
                     <div className="bg-black text-white px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest">BETA</div>
                     <h3 className="text-sm font-black uppercase tracking-widest text-[#7A756A]">Renderização em Lote</h3>
@@ -100,7 +100,7 @@ export const BatchProcessor: React.FC<BatchProcessorProps> = ({
             </div>
 
             {/* Cost indicator */}
-            <div className={`rounded-xl p-3 mb-4 ${!hasEnoughCredits && pendingCount > 0 ? 'bg-red-50 border border-red-200' : 'bg-amber-50 border border-amber-200'}`}>
+            <div className={`rounded-xl p-3 mb-4 shrink-0 ${!hasEnoughCredits && pendingCount > 0 ? 'bg-red-50 border border-red-200' : 'bg-amber-50 border border-amber-200'}`}>
                 <div className="flex items-center justify-between">
                     <div className={`flex items-center space-x-2 text-[10px] font-bold uppercase ${!hasEnoughCredits && pendingCount > 0 ? 'text-red-700' : 'text-amber-700'}`}>
                         <Coins className="w-4 h-4" />
@@ -134,8 +134,8 @@ export const BatchProcessor: React.FC<BatchProcessorProps> = ({
             </div>
 
             <div
-                className={`relative border-2 border-dashed rounded-3xl p-8 transition-all duration-300 text-center flex flex-col items-center justify-center
-                    ${queue.length > 0 ? 'border-black bg-white h-[400px]' : 'border-[#B6B09F] hover:border-black hover:bg-white min-h-[400px]'}
+                className={`relative border-2 border-dashed rounded-3xl p-8 transition-all duration-300 text-center flex flex-col items-center justify-center flex-1 min-h-0 overflow-hidden
+                    ${queue.length > 0 ? 'border-black bg-white' : 'border-[#B6B09F] hover:border-black hover:bg-white'}
                 `}
             >
                 <input
