@@ -50,12 +50,32 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const navigate = useNavigate();
 
+  // Helper to convert URL to Base64
+  const urlToBase64 = async (url: string): Promise<string> => {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  };
+
   // Listen for external refine requests
   React.useEffect(() => {
-    const handleLoadImage = (e: CustomEvent) => {
-      setImage(e.detail);
-      setMode('single');
-      setResult(null);
+    const handleLoadImage = async (e: CustomEvent) => {
+      try {
+        const loadingToast = toast.loading('Carregando imagem...');
+        const base64 = await urlToBase64(e.detail);
+        setImage(base64);
+        setMode('single');
+        setResult(null);
+        toast.success('Imagem carregada!', { id: loadingToast });
+      } catch (err) {
+        toast.error('Erro ao carregar imagem para refino.');
+        console.error(err);
+      }
     };
     window.addEventListener('load-image-for-refine' as any, handleLoadImage as any);
     return () => window.removeEventListener('load-image-for-refine' as any, handleLoadImage as any);
@@ -159,11 +179,17 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
     }
   };
 
-  const handleRefine = () => {
+  const handleRefine = async () => {
     if (result) {
-      setImage(result);
-      setResult(null);
-      toast.success('Pronto para refinar!');
+      try {
+        const loadingToast = toast.loading('Preparando para refinar...');
+        const base64 = await urlToBase64(result);
+        setImage(base64);
+        setResult(null);
+        toast.success('Pronto para refinar!', { id: loadingToast });
+      } catch (err) {
+        toast.error('Erro ao preparar imagem.');
+      }
     }
   };
 
