@@ -13,7 +13,10 @@ import {
   CheckCircle2,
   Zap,
   Star,
-  Target
+  Target,
+  FileText,
+  X
+
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Boxes } from './ui/BackgroundBoxes';
@@ -71,6 +74,7 @@ export const AuthView: React.FC<AuthViewProps> = ({
     confirmPassword: '',
     terms: false
   });
+  const [showTerms, setShowTerms] = useState(false);
 
   const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>, isGoogleFlow = false) => {
     let value = e.target.value.replace(/\D/g, '');
@@ -310,8 +314,8 @@ export const AuthView: React.FC<AuthViewProps> = ({
                         disabled={lockedEmail}
                         readOnly={lockedEmail}
                         className={`w-full pl-14 pr-6 py-3.5 border rounded-2xl text-[10px] font-bold outline-none transition-all placeholder:text-[#7A756A]/60 ${lockedEmail
-                            ? 'bg-black/5 border-black/10 text-black cursor-not-allowed opacity-70'
-                            : 'bg-[#F2F2F2] border-transparent focus:bg-white focus:border-[#B6B09F]/30'
+                          ? 'bg-black/5 border-black/10 text-black cursor-not-allowed opacity-70'
+                          : 'bg-[#F2F2F2] border-transparent focus:bg-white focus:border-[#B6B09F]/30'
                           }`}
                         value={formData.email}
                         onChange={e => !lockedEmail && setFormData({ ...formData, email: e.target.value })}
@@ -338,7 +342,7 @@ export const AuthView: React.FC<AuthViewProps> = ({
                         </div>
                         <div className="flex items-start space-x-3 p-2 bg-[#F2F2F2]/50 rounded-xl hover:bg-[#F2F2F2] transition-colors cursor-pointer" onClick={() => setFormData({ ...formData, terms: !formData.terms })}>
                           <input type="checkbox" id="terms" required className="mt-1 w-4 h-4 accent-black cursor-pointer" checked={formData.terms} onChange={e => setFormData({ ...formData, terms: e.target.checked })} />
-                          <label className="text-[8px] font-bold text-[#7A756A] uppercase tracking-widest leading-relaxed cursor-pointer">Eu li e concordo com os <span className="text-black underline">Termos de Uso</span>.</label>
+                          <label className="text-[8px] font-bold text-[#7A756A] uppercase tracking-widest leading-relaxed cursor-pointer">Eu li e concordo com os <span className="text-black underline cursor-pointer hover:text-amber-600 transition-colors" onClick={(e) => { e.preventDefault(); setShowTerms(true); }}>Termos de Uso</span>.</label>
                         </div>
                       </div>
                     )}
@@ -384,6 +388,81 @@ export const AuthView: React.FC<AuthViewProps> = ({
           </div>
         </motion.div>
       </div>
+
+      <AnimatePresence>
+        {showTerms && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowTerms(false)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="bg-white rounded-[30px] shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col overflow-hidden relative z-10"
+            >
+              <div className="p-6 md:p-8 border-b border-gray-100 flex items-center justify-between shrink-0 bg-white">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-black text-white rounded-xl flex items-center justify-center">
+                    <FileText className="w-5 h-5" />
+                  </div>
+                  <h2 className="text-xl font-black uppercase tracking-tight">Termos de Uso</h2>
+                </div>
+                <button
+                  onClick={() => setShowTerms(false)}
+                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                >
+                  <X className="w-6 h-6 text-gray-400 hover:text-black" />
+                </button>
+              </div>
+
+              <div className="p-6 md:p-8 overflow-y-auto custom-scrollbar bg-gray-50/50">
+                <div className="prose prose-sm max-w-none text-gray-600 space-y-6">
+                  <p className="font-bold text-xs uppercase tracking-widest text-black">Última atualização: {new Date().toLocaleDateString('pt-BR')}</p>
+
+                  <section>
+                    <h3 className="text-black font-black uppercase tracking-wide text-sm mb-2">1. Aceitação dos Termos</h3>
+                    <p>Ao acessar e utilizar a plataforma Render XYZ, você concorda em cumprir e estar vinculado aos seguintes termos e condições de uso.</p>
+                  </section>
+
+                  <section>
+                    <h3 className="text-black font-black uppercase tracking-wide text-sm mb-2">2. Serviços Oferecidos</h3>
+                    <p>A Render XYZ fornece serviços de renderização de imagens arquitetônicas assistidos por Inteligência Artificial. Os resultados podem variar e dependem da qualidade dos inputs fornecidos pelo usuário.</p>
+                  </section>
+
+                  <section>
+                    <h3 className="text-black font-black uppercase tracking-wide text-sm mb-2">3. Créditos e Pagamentos</h3>
+                    <p>O uso da plataforma é baseado em créditos pré-pagos. Os créditos adquiridos não são reembolsáveis, exceto conforme exigido por lei. Os preços estão sujeitos a alterações sem aviso prévio.</p>
+                  </section>
+
+                  <section>
+                    <h3 className="text-black font-black uppercase tracking-wide text-sm mb-2">4. Propriedade Intelectual</h3>
+                    <p>Você mantém os direitos sobre as imagens originais enviadas. A Render XYZ concede a você uma licença perpétua e irrevogável para usar as imagens geradas para qualquer finalidade, comercial ou não.</p>
+                  </section>
+
+                  <section>
+                    <h3 className="text-black font-black uppercase tracking-wide text-sm mb-2">5. Limitação de Responsabilidade</h3>
+                    <p>A Render XYZ não se responsabiliza por danos diretos, indiretos, incidentais ou consequentes resultantes do uso ou da incapacidade de usar nossos serviços.</p>
+                  </section>
+                </div>
+              </div>
+
+              <div className="p-4 md:p-6 border-t border-gray-100 bg-white shrink-0 flex justify-end">
+                <button
+                  onClick={() => setShowTerms(false)}
+                  className="px-8 py-3 bg-black text-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-zinc-800 transition-all shadow-lg"
+                >
+                  Entendi
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
