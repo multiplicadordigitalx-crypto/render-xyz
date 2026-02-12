@@ -18,7 +18,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             return res.status(400).json({ error: 'Amount and credits are required' });
         }
 
-        const baseUrl = 'https://render-xyz.vercel.app';
+        const baseUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000';
 
         // Create Stripe Checkout Session
         const session = await stripe.checkout.sessions.create({
