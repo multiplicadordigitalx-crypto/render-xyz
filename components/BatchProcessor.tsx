@@ -4,9 +4,10 @@ import { Upload, X, Loader2, CheckCircle2, Image as ImageIcon, AlertCircle, Coin
 import { RenderStyle } from '../types';
 
 interface BatchProcessorProps {
-    onRender: (file: File) => Promise<void>;
+    onRender: (file: File, style: RenderStyle, resolution: any) => Promise<void>;
     isProcessing: boolean;
     style: RenderStyle;
+    resolution: any;
     credits: number;
     costPerRender: number;
 }
@@ -25,6 +26,7 @@ export const BatchProcessor: React.FC<BatchProcessorProps> = ({
     onRender,
     isProcessing: globalProcessing,
     style,
+    resolution,
     credits,
     costPerRender
 }) => {
@@ -69,7 +71,7 @@ export const BatchProcessor: React.FC<BatchProcessorProps> = ({
             updateItemStatus(item.id, 'processing');
 
             try {
-                await onRender(item.file);
+                await onRender(item.file, style, resolution);
                 updateItemStatus(item.id, 'completed');
             } catch (error) {
                 console.error("Error processing batch item:", error);

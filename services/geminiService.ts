@@ -96,15 +96,24 @@ export const renderImage = async (
   INPUT: A screenshot of a 3D modeling software (SketchUp/AutoCAD) showing a residential project.
   TASK: Generate a PHOTOREALISTIC PHOTO of the house in the real world.
 
-  ### CRITICAL INSTRUCTIONS (MUST FOLLOW):
-  1. **REMOVE THE SOFTWARE INTERFACE**: The input image contains toolbars, menus, taskbars, and window borders (Windows/Mac UI). You MUST REPLACE these entirely with REAL SKY and REAL GROUND. The final image should NOT look like a computer screen. It should look like a photo taken outdoors.
-  2. **TRANSFORM INTO REALITY**: This is NOT a 3D render. This is a BUILT HOUSE. Use photorealistic materials: real roof tiles, real concrete texture, real glass reflections.
-  3. **CLEAN ENVIRONMENT**: The garden is PERFECTLY MANICURED. Short green grass. Clean blue pool water. NO dirt. NO mud. NO overgrown jungle. NO swamp.
-  4. **PERSPECTIVE MATCH**: Keep the camera angle of the house exactly as is, but treat it as a real camera in a real location.
-  5. **VISUAL STYLE**: ${lightingPrompts[style]}. ${qualityKeywords}.
-  6. **NEGATIVE PROMPT**: Software interface, toolbars, menus, icons, mouse cursor, text, watermark, screenshots, 3d render style, cartoon, drawing, painting, swamp, mud, dirt, ruins, abandoned, overgrown, blur, noise.
+  ### STRICT RULE: PRESERVE GEOMETRY
+  1. **DO NOT INVENT** or hallucinate new buildings, landscapes, or structures. Use EXACTLY the geometry from the input.
+  2. **CAMERA MATCH**: The angle, perspective, and field of view must be IDENTICAL to the input.
 
-  GENERATE ONLY THE PHOTOGRAPH OF THE HOUSE. NO BORDERS. NO UI.`;
+  ### STRICT RULE: REMOVE INTERFACE
+  The input image contains software UI (windows, toolbars, menus, cursors, axes lines).
+  **YOU MUST ERASE ALL UI ELEMENTS** and replace them with appropriate background (sky, grass, trees) that matches the scene.
+  If a toolbar covers the sky, replace it with SKY. If a menu covers the grass, replace it with GRASS.
+
+  ### VISUAL STYLE & MATERIALS
+  1. **STYLE**: ${lightingPrompts[style]}.
+  2. **QUALITY**: ${qualityKeywords}.
+  3. **MATERIALS**: Transform simple colors into REAL TEXTURES (concrete, wood, glass, metal, grass).
+
+  ### NEGATIVE PROMPT (AVOID THESE):
+  Software interface, user interface, UI, HUD, buttons, text, menus, toolbars, taskbar, window borders, mouse cursor, axis lines, grid lines, sketch lines, cartoon, drawing, painting, watercolor, low quality, blurry, swamp, overgrown jungle, ruins, apocalyptic, messy, dirty, mud.
+
+  OUTPUT: A CLEAN, HIGH-QUALITY ARCHITECTURAL PHOTOGRAPH.`;
 
   // Unified model list: always try the best models first for all resolutions
   const modelsToTry = [

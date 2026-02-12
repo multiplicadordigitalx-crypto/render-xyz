@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Upload, Wand2, Download, RotateCcw, AlertCircle, CheckCircle2, Coins, ShieldCheck, Lock, Maximize2, Image as ImageIcon, Zap, Layers, ShoppingCart } from 'lucide-react';
@@ -100,19 +99,23 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
 
   const selectedRes = RESOLUTIONS.find(r => r.label === resolution) || RESOLUTIONS[0];
 
-  const processBatchImage = async (file: File) => {
-    if (credits < selectedRes.cost) {
-      throw new Error(`Créditos insuficientes (${selectedRes.cost} necessários)`);
+  const processBatchImage = async (file: File, batchStyle: RenderStyle, batchResolution: RenderResolution) => {
+    // Determine cost based on resolution
+    const resConfig = RESOLUTIONS.find(r => r.label === batchResolution) || RESOLUTIONS[0];
+    const cost = resConfig.cost;
+
+    if (credits < cost) {
+      throw new Error(`Créditos insuficientes (${cost} necessários)`);
     }
     const base64 = await fileToBase64(file);
     const type = file.type;
-    const rendered = await renderImage(base64, type, style, resolution);
+    const rendered = await renderImage(base64, type, batchStyle, batchResolution);
     const response = await fetch(rendered);
     const blob = await response.blob();
     const filename = `render-${Date.now()}-${Math.random().toString(36).substr(2, 5)}.png`;
     const uploadFile = new File([blob], filename, { type: "image/png" });
     const publicUrl = await storageService.uploadImage(uploadFile, "renders");
-    onRenderComplete(publicUrl, style, selectedRes.cost);
+    onRenderComplete(publicUrl, batchStyle, cost);
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -289,6 +292,7 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
               onRender={processBatchImage}
               isProcessing={isRendering}
               style={style}
+              resolution={resolution}
               credits={credits}
               costPerRender={selectedRes.cost}
             />
