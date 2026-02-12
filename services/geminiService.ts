@@ -89,23 +89,22 @@ export const renderImage = async (
   let qualityKeywords = "";
 
   // Ensure high quality for ALL resolutions, technical resolution only affects final size
-  detailLevel = "HIGH-END ARCHITECTURAL PHOTOGRAPHY. 8K. SHARP FOCUS. CLEAN RESIDENTIAL COMPOSITION.";
-  qualityKeywords = "magazine quality, architectural digest, canon eos r5, 24mm tilt-shift lens, sharp details, professional lighting, manicured garden, paved surfaces, high-end production value";
+  detailLevel = "AWARD-WINNING ARCHITECTURAL PHOTOGRAPHY. 8K. SHARP FOCUS. CLEAN AND INHABITED.";
+  qualityKeywords = "architectural digest, professional photography, daylight, manicured landscaping, clear glass, modern furniture, vibrant colors, high dynamic range, 8k resolution";
 
-  const prompt = `Act as a professional architectural photographer. 
-  Transform this input (sketch, Sketchup model, or line-art) into a CLEAN, PHOTOREALISTIC ARCHITECTURAL PHOTOGRAPH.
+  const prompt = `YOU ARE A PROFESSIONAL ARCHITECTURAL PHOTOGRAPHER.
+  INPUT: A screenshot of a 3D modeling software (SketchUp/AutoCAD) showing a residential project.
+  TASK: Generate a PHOTOREALISTIC PHOTO of the house in the real world.
 
-  ### TOP PRIORITY RULES:
-  1. **STRICT GEOMETRIC PRESERVATION**: The output MUST have the EXACT SAME camera angle, perspective, and architectural geometry as the input. DO NOT change the position of walls, windows, or structural elements.
-  2. **ARCHITECTURAL REALISM**: This is a RESIDENTIAL PROJECT. It must look like a built house, NOT a ruin or swamp. Use clean materials (fresh paint, new concrete, clean glass).
-  3. **LANDSCAPING**: Use a MANICURED GARDEN style. Short grass, pruned plants, clean pool water. NO overgrown vegetation, NO mud, NO swamp water.
-  4. **CRITICAL: REMOVE ALL UI**: The input is a screenshot containing software interfaces (taskbars, toolbars, menus). You MUST remove these completely. Inpaint the missing areas with natural ground/sky. The final image must look like a photo taken on site, with NO computer interface elements visible.
-  5. **VISUAL QUALITY**: ${detailLevel}
-  6. **CONTEXT**: "Modern Residential Project" in a clean, upscale environment.
-  7. **LIGHTING & STYLE**: ${lightingPrompts[style]}. Keywords: ${qualityKeywords}.
-  8. **NEGATIVE PROMPT**: Swamp, ruins, overgrown, abandoned, dirty, mud, jungle, computer UI, software interface, text, watermark, blur, distortion.
+  ### CRITICAL INSTRUCTIONS (MUST FOLLOW):
+  1. **REMOVE THE SOFTWARE INTERFACE**: The input image contains toolbars, menus, taskbars, and window borders (Windows/Mac UI). You MUST REPLACE these entirely with REAL SKY and REAL GROUND. The final image should NOT look like a computer screen. It should look like a photo taken outdoors.
+  2. **TRANSFORM INTO REALITY**: This is NOT a 3D render. This is a BUILT HOUSE. Use photorealistic materials: real roof tiles, real concrete texture, real glass reflections.
+  3. **CLEAN ENVIRONMENT**: The garden is PERFECTLY MANICURED. Short green grass. Clean blue pool water. NO dirt. NO mud. NO overgrown jungle. NO swamp.
+  4. **PERSPECTIVE MATCH**: Keep the camera angle of the house exactly as is, but treat it as a real camera in a real location.
+  5. **VISUAL STYLE**: ${lightingPrompts[style]}. ${qualityKeywords}.
+  6. **NEGATIVE PROMPT**: Software interface, toolbars, menus, icons, mouse cursor, text, watermark, screenshots, 3d render style, cartoon, drawing, painting, swamp, mud, dirt, ruins, abandoned, overgrown, blur, noise.
 
-  Output ONLY the final image.`;
+  GENERATE ONLY THE PHOTOGRAPH OF THE HOUSE. NO BORDERS. NO UI.`;
 
   // Unified model list: always try the best models first for all resolutions
   const modelsToTry = [
