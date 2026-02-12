@@ -1,6 +1,6 @@
 import React from 'react';
 import { RenderHistoryItem, RenderStyle } from '../types';
-import { Download, Trash2, Clock } from 'lucide-react';
+import { Download, Trash2, Clock, RotateCcw } from 'lucide-react';
 
 interface HistorySidebarProps {
     history: RenderHistoryItem[];
@@ -10,6 +10,8 @@ interface HistorySidebarProps {
 }
 
 export const HistorySidebar: React.FC<HistorySidebarProps> = ({ history, onSelect, onDelete, onDownload }) => {
+    const [selectedImage, setSelectedImage] = React.useState<RenderHistoryItem | null>(null);
+
     return (
         <div className="w-full bg-[#EAE4D5] border-t border-[#B6B09F]/20 flex flex-col shadow-[0_-10px_30px_-15px_rgba(0,0,0,0.05)] z-20">
             <div className="px-6 py-4 border-b border-[#B6B09F]/20 bg-[#EAE4D5] flex items-center justify-between">
@@ -31,7 +33,7 @@ export const HistorySidebar: React.FC<HistorySidebarProps> = ({ history, onSelec
                             <div key={item.id} className="group relative w-64 bg-[#F2F2F2] rounded-xl overflow-hidden border border-[#B6B09F]/20 hover:border-black transition-all flex-none shadow-sm hover:shadow-md">
                                 <div
                                     className="aspect-video cursor-pointer"
-                                    onClick={() => onSelect(item)}
+                                    onClick={() => setSelectedImage(item)}
                                 >
                                     <img src={item.url} alt="Render" className="w-full h-full object-cover" />
                                 </div>
@@ -61,6 +63,36 @@ export const HistorySidebar: React.FC<HistorySidebarProps> = ({ history, onSelec
                     )}
                 </div>
             </div>
+            {/* Lightbox Overlay */}
+            {selectedImage && (
+                <div
+                    className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center p-4 md:p-12 animate-in fade-in zoom-in duration-300"
+                    onClick={() => setSelectedImage(null)}
+                >
+                    <div className="absolute top-6 right-6 flex gap-4">
+                        <button
+                            onClick={(e) => { e.stopPropagation(); onDownload(selectedImage.url, selectedImage.style); }}
+                            className="bg-white/10 hover:bg-white/20 p-4 rounded-full text-white transition-colors"
+                            title="Download"
+                        >
+                            <Download className="w-6 h-6" />
+                        </button>
+                        <button
+                            className="bg-white/10 hover:bg-white/20 p-4 rounded-full text-white transition-colors"
+                            onClick={() => setSelectedImage(null)}
+                        >
+                            <RotateCcw className="w-6 h-6" />
+                        </button>
+                    </div>
+                    <img
+                        src={selectedImage.url}
+                        alt="Expanded Render"
+                        className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+                        onClick={(e) => e.stopPropagation()}
+                    />
+                    <p className="text-white/50 text-[10px] uppercase tracking-widest mt-6 font-bold">Clique fora para fechar</p>
+                </div>
+            )}
         </div>
     );
 };

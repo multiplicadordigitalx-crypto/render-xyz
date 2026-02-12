@@ -89,21 +89,22 @@ export const renderImage = async (
   let qualityKeywords = "";
 
   // Ensure high quality for ALL resolutions, technical resolution only affects final size
-  detailLevel = "8K ULTRA-PREMIUM MASTERPIECE. UNREAL ENGINE 5 STYLE. RAYTRACING. EXTREME MICRO-DETAILS. MOVIE QUALITY.";
-  qualityKeywords = "award winning architectural photography, photorealism, raytracing, global illumination, macro texture details, perfect realism, masterpiece, crisp edges";
+  detailLevel = "RAW CANDID PHOTOGRAPHY. 8K. DSLR. NATURAL IMPERFECTIONS. FILM GRAIN.";
+  qualityKeywords = "award winning photography, canon eos 5d, f/8, iso 100, natural lighting, photorealism, depth of field, real life texture, organic chaos, lived-in feel";
 
-  const prompt = `Act as a world-class architectural visualizer. 
-  Transform this input (sketch, Sketchup model, or line-art) into a HYPER-REALISTIC ${resolution} render.
+  const prompt = `Act as a professional photographer. 
+  Transform this input (sketch, Sketchup model, or line-art) into a INDISTINGUISHABLE FROM REALITY photograph.
 
   ### TOP PRIORITY RULES:
   1. **STRICT GEOMETRIC PRESERVATION**: The output MUST have the EXACT SAME camera angle, perspective, and architectural geometry as the input. DO NOT change the position of walls, windows, or structural elements.
-  2. **HYPER-REALISM**: Transform all surfaces into high-end realistic materials (concrete, wood, glass, stone, grass).
+  2. **TRUE PHOTOREALISM**: This must look like a real photo, NOT a render. Add natural imperfections, dust, slightly uneven surfaces, and organic vegetation. Avoid "perfect" 3D edges.
   3. **UI & LOGO REMOVAL**: If the input is a screenshot from a tool (like Sketchup, AutoCAD, or Windows), IGNORE the toolbars, UI buttons, window borders, and logos. Render ONLY the central architectural project.
   4. **VISUAL QUALITY**: ${detailLevel}
-  5. **CONTEXT**: "Modern Brazilian Architecture" / "Tropical Modernism".
+  5. **CONTEXT**: "Real world Brazilian Architecture" / "Tropical Reality".
   6. **LIGHTING & STYLE**: ${lightingPrompts[style]}. Keywords: ${qualityKeywords}.
+  7. **NEGATIVE PROMPT**: Do not look like a 3D render, no architectural visualization style, no plastic textures, no perfect CGI lighting, no watermark, no text.
 
-  Output ONLY the final rendered image. NO toolbars, NO text, NO watermarks.`;
+  Output ONLY the final image.`;
 
   // Unified model list: always try the best models first for all resolutions
   const modelsToTry = [
