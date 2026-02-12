@@ -1,15 +1,16 @@
 import React from 'react';
 import { RenderHistoryItem, RenderStyle } from '../types';
-import { Download, Trash2, Clock, RotateCcw } from 'lucide-react';
+import { Download, Trash2, Clock, RotateCcw, X, Wand2 } from 'lucide-react';
 
 interface HistorySidebarProps {
     history: RenderHistoryItem[];
     onSelect: (item: RenderHistoryItem) => void;
     onDelete: (id: string) => void;
     onDownload: (url: string, style: RenderStyle) => void;
+    onRefine?: (item: RenderHistoryItem) => void;
 }
 
-export const HistorySidebar: React.FC<HistorySidebarProps> = ({ history, onSelect, onDelete, onDownload }) => {
+export const HistorySidebar: React.FC<HistorySidebarProps> = ({ history, onSelect, onDelete, onDownload, onRefine }) => {
     const [selectedImage, setSelectedImage] = React.useState<RenderHistoryItem | null>(null);
 
     return (
@@ -69,28 +70,46 @@ export const HistorySidebar: React.FC<HistorySidebarProps> = ({ history, onSelec
                     className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center p-4 md:p-12 animate-in fade-in zoom-in duration-300"
                     onClick={() => setSelectedImage(null)}
                 >
-                    <div className="absolute top-6 right-6 flex gap-4">
+                    {/* Top Right Close Button */}
+                    <div className="absolute top-6 right-6">
                         <button
-                            onClick={(e) => { e.stopPropagation(); onDownload(selectedImage.url, selectedImage.style); }}
-                            className="bg-white/10 hover:bg-white/20 p-4 rounded-full text-white transition-colors"
-                            title="Download"
-                        >
-                            <Download className="w-6 h-6" />
-                        </button>
-                        <button
-                            className="bg-white/10 hover:bg-white/20 p-4 rounded-full text-white transition-colors"
+                            className="bg-white/10 hover:bg-white/20 p-3 rounded-full text-white transition-colors"
                             onClick={() => setSelectedImage(null)}
+                            title="Fechar"
                         >
-                            <RotateCcw className="w-6 h-6" />
+                            <X className="w-6 h-6" />
                         </button>
                     </div>
-                    <img
-                        src={selectedImage.url}
-                        alt="Expanded Render"
-                        className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
-                        onClick={(e) => e.stopPropagation()}
-                    />
-                    <p className="text-white/50 text-[10px] uppercase tracking-widest mt-6 font-bold">Clique fora para fechar</p>
+
+                    {/* Main Content */}
+                    <div className="flex flex-col items-center max-w-5xl w-full h-full" onClick={(e) => e.stopPropagation()}>
+                        <div className="relative flex-1 w-full h-0 flex items-center justify-center min-h-0">
+                            <img
+                                src={selectedImage.url}
+                                alt="Expanded Render"
+                                className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+                            />
+                        </div>
+
+                        {/* Bottom Actions */}
+                        <div className="mt-8 flex gap-4 shrink-0">
+                            <button
+                                onClick={() => { if (onRefine) onRefine(selectedImage); setSelectedImage(null); }}
+                                className="px-6 py-3 bg-amber-500 text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-lg hover:bg-amber-600 transition-all flex items-center"
+                            >
+                                <Wand2 className="w-4 h-4 mr-2" />
+                                Refinar
+                            </button>
+                            <button
+                                onClick={() => onDownload(selectedImage.url, selectedImage.style)}
+                                className="px-6 py-3 bg-white text-black rounded-xl font-black text-xs uppercase tracking-widest shadow-lg hover:bg-gray-200 transition-all flex items-center"
+                            >
+                                <Download className="w-4 h-4 mr-2" />
+                                Download
+                            </button>
+                        </div>
+                        <p className="text-white/30 text-[9px] uppercase tracking-widest mt-4 font-bold">Clique no X para fechar</p>
+                    </div>
                 </div>
             )}
         </div>

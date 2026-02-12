@@ -50,6 +50,17 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const navigate = useNavigate();
 
+  // Listen for external refine requests
+  React.useEffect(() => {
+    const handleLoadImage = (e: CustomEvent) => {
+      setImage(e.detail);
+      setMode('single');
+      setResult(null);
+    };
+    window.addEventListener('load-image-for-refine' as any, handleLoadImage as any);
+    return () => window.removeEventListener('load-image-for-refine' as any, handleLoadImage as any);
+  }, []);
+
   const [fileName, setFileName] = useState<string>('');
 
   const selectedRes = RESOLUTIONS.find(r => r.label === resolution) || RESOLUTIONS[0];
@@ -157,7 +168,7 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
   };
 
   return (
-    <div className="flex flex-col md:flex-row h-auto md:h-full w-full bg-[#EAE4D5] rounded-[20px] md:rounded-[30px] overflow-hidden border border-[#B6B09F]/30 shadow-2xl relative">
+    <div id="render-tool-root" className="flex flex-col md:flex-row h-auto md:h-full w-full bg-[#EAE4D5] rounded-[20px] md:rounded-[30px] overflow-hidden border border-[#B6B09F]/30 shadow-2xl relative">
       {/* Sidebar Controls */}
       <div className="w-full md:w-80 h-auto md:h-full bg-white/50 backdrop-blur-sm border-t md:border-t-0 md:border-r border-[#B6B09F]/20 flex flex-col p-4 md:p-6 md:overflow-y-auto custom-scrollbar z-10 shrink-0">
         <div className="mb-8">

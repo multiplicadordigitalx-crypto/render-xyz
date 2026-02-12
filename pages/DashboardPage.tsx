@@ -174,6 +174,11 @@ export const DashboardPage: React.FC<DashboardProps> = ({
                         }}
                         onDownload={downloadHistoryImage}
                         onDelete={onDeleteHistory}
+                        onRefine={(item) => {
+                            const element = document.getElementById('render-tool-root');
+                            if (element) element.scrollIntoView({ behavior: 'smooth' });
+                            window.dispatchEvent(new CustomEvent('load-image-for-refine', { detail: item.url }));
+                        }}
                     />
                 </div>
             </main>
