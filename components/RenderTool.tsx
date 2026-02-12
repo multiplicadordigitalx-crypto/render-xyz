@@ -50,34 +50,29 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const navigate = useNavigate();
 
-  // Helper to convert URL to Base64 using proxy to avoid CORS
-  const urlToBase64 = async (url: string): Promise<string> => {
+  // Helper to fetch image blob
+  const fetchImageBlob = async (url: string): Promise<Blob> => {
     // Use the local proxy if running locally or the deployed one
     const proxyUrl = `/api/proxy-image?url=${encodeURIComponent(url)}`;
 
     try {
       const response = await fetch(proxyUrl);
       if (!response.ok) throw new Error('Falha no proxy de imagem');
-
-      const blob = await response.blob();
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-      });
+      return await response.blob();
     } catch (e) {
       console.error("Proxy failed, trying direct fetch (fallback)", e);
-      // Fallback for local development if proxy isn't set up
       const response = await fetch(url);
-      const blob = await response.blob();
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-      });
+      return await response.blob();
     }
+  };
+
+  const blobToBase64 = (blob: Blob): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
   };
 
   // Listen for external refine requests
@@ -85,8 +80,10 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
     const handleLoadImage = async (e: CustomEvent) => {
       try {
         const loadingToast = toast.loading('Carregando imagem...');
-        const base64 = await urlToBase64(e.detail);
+        const blob = await fetchImageBlob(e.detail);
+        const base64 = await blobToBase64(blob);
         setImage(base64);
+        setMimeType(blob.type); // Set proper MIME type
         setMode('single');
         setResult(null);
         toast.success('Imagem carregada!', { id: loadingToast });
@@ -201,8 +198,10 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
     if (result) {
       try {
         const loadingToast = toast.loading('Preparando para refinar...');
-        const base64 = await urlToBase64(result);
+        const blob = await fetchImageBlob(result);
+        const base64 = await blobToBase64(blob);
         setImage(base64);
+        setMimeType(blob.type); // Set proper MIME type
         setResult(null);
         toast.success('Pronto para refinar!', { id: loadingToast });
       } catch (err) {
