@@ -187,7 +187,9 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, onRend
       setResult(publicUrl);
 
       // Pass originalUrl to completion handler
-      onRenderComplete(publicUrl, style, selectedRes.cost, originalUrl);
+      // Wait for persistence to COMPLETE before showing success
+      await onRenderComplete(publicUrl, style, selectedRes.cost, originalUrl);
+
 
       toast.success('Pronto!', { id: loadingToast });
     } catch (err: any) {
@@ -200,7 +202,7 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, onRend
 
       // Log an admin-friendly real error, but keep user UI error generic if needed
       if (onRenderError) {
-        onRenderError(err.message || errorMsg, selectedStyle); // Log the real technical error
+        onRenderError(err.message || errorMsg, style); // Log the real technical error
       }
 
       toast.error(`Erro: ${errorMsg}`, { id: loadingToast, duration: 5000 });

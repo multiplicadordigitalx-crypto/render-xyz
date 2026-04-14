@@ -11,7 +11,6 @@ import {
     Upload,
     Image as ImageIconLucide,
     FileVideo,
-    FileVideo,
     Save,
     Plus,
     ArrowLeft,
@@ -21,7 +20,7 @@ import {
 } from 'lucide-react';
 import { db, storage } from '../services/firebase';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
-import { collection, addDoc, getDocs, deleteDoc, query, orderBy, limit, onSnapshot, doc, updateDoc, setDoc } from 'firebase/firestore';
+import { collection, addDoc, getDocs, deleteDoc, query, orderBy, limit, onSnapshot, doc, updateDoc, setDoc, writeBatch } from 'firebase/firestore';
 import { PricingPlan, CreditPackage, AppUser, LandingSettings, PortfolioItem, CreditTransaction } from '../types';
 import { useNavigate } from 'react-router-dom';
 
@@ -43,7 +42,13 @@ export const AdminPage: React.FC<AdminPageProps> = ({
     setAppUsers
 }) => {
     const navigate = useNavigate();
-    const [activeTab, setActiveTab] = useState<'stats' | 'users' | 'content' | 'portfolio'>('content');
+    const [activeTab, setActiveTab] = useState<'stats' | 'users' | 'content' | 'portfolio'>(() => {
+        return (localStorage.getItem('admin_active_tab') as any) || 'content';
+    });
+
+    React.useEffect(() => {
+        localStorage.setItem('admin_active_tab', activeTab);
+    }, [activeTab]);
     const [tempLanding, setTempLanding] = useState<LandingSettings>(landingSettings);
     const [tempCreditPackages, setTempCreditPackages] = useState<CreditPackage[]>(creditPackages);
     const [searchTerm, setSearchTerm] = useState('');
@@ -122,24 +127,39 @@ export const AdminPage: React.FC<AdminPageProps> = ({
         const currentCredits = selectedUserForCredits.credits || 0;
         const newCredits = type === 'add' ? currentCredits + amount : Math.max(0, currentCredits - amount);
 
-        await handleUserUpdate(selectedUserForCredits.id, { credits: newCredits });
+        try {
+            const batch = writeBatch(db);
+            const userRef = doc(db, "users", selectedUserForCredits.id);
+            batch.update(userRef, { credits: newCredits });
 
-        // Register action in global logs
-        const loggedInAdminEmail = 'Admin'; // Or fetch current use context if available
-        await addDoc(collection(db, "credit_transactions"), {
-            userId: selectedUserForCredits.id,
-            userEmail: selectedUserForCredits.email,
-            amount: type === 'add' ? amount : -amount,
-            type: 'bonus',
-            status: 'success',
-            description: type === 'add' ? 'Ajuste Manual: Adição' : 'Ajuste Manual: Remoção',
-            adminEmail: loggedInAdminEmail,
-            timestamp: Date.now()
-        });
+            // Register action in global logs
+            const loggedInAdminEmail = 'Admin'; 
+            const txRef = doc(collection(db, "credit_transactions"));
+            batch.set(txRef, {
+                userId: selectedUserForCredits.id,
+                userEmail: selectedUserForCredits.email,
+                amount: type === 'add' ? amount : -amount,
+                type: 'bonus',
+                status: 'success',
+                description: type === 'add' ? 'Ajuste Manual: Adição' : 'Ajuste Manual: Remoção',
+                adminEmail: loggedInAdminEmail,
+                modelUsed: 'n/a',
+                timestamp: Date.now()
+            });
 
-        alert(`Créditos ${type === 'add' ? 'adicionados' : 'removidos'} com sucesso!`);
-        setSelectedUserForCredits(null);
-        setCreditAmount('');
+            await batch.commit();
+
+            // Update local state
+            const updated = appUsers.map(u => u.id === selectedUserForCredits.id ? { ...u, credits: newCredits } : u);
+            setAppUsers(updated);
+
+            alert(`Créditos ${type === 'add' ? 'adicionados' : 'removidos'} com sucesso!`);
+            setSelectedUserForCredits(null);
+            setCreditAmount('');
+        } catch (error) {
+            console.error("Error adjusting credits:", error);
+            alert("Erro ao processar operação de créditos.");
+        }
     };
 
     const fileInputBeforeRef = useRef<HTMLInputElement>(null);
@@ -339,6 +359,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({
                                                 <th className="px-6 py-4 text-[9px] font-black uppercase tracking-[0.2em] text-neutral-500">Data</th>
                                                 <th className="px-6 py-4 text-[9px] font-black uppercase tracking-[0.2em] text-neutral-500">Usuário</th>
                                                 <th className="px-6 py-4 text-[9px] font-black uppercase tracking-[0.2em] text-neutral-500">Ação / Descrição</th>
+                                                <th className="px-6 py-4 text-[9px] font-black uppercase tracking-[0.2em] text-neutral-500">Modelo</th>
                                                 <th className="px-6 py-4 text-[9px] font-black uppercase tracking-[0.2em] text-neutral-500">Custo</th>
                                                 <th className="px-6 py-4 text-[9px] font-black uppercase tracking-[0.2em] text-neutral-500">Status</th>
                                             </tr>
@@ -356,6 +377,9 @@ export const AdminPage: React.FC<AdminPageProps> = ({
                                                         <span className="font-black uppercase tracking-widest">{log.description}</span>
                                                         {log.errorMsg && <p className="text-red-500 text-[8px] mt-1 max-w-xs truncate" title={log.errorMsg}>{log.errorMsg}</p>}
                                                     </td>
+                                                    <td className="px-6 py-4 text-[9px] font-bold text-neutral-500 uppercase">
+                                                        {log.modelUsed || '-'}
+                                                    </td>
                                                     <td className="px-6 py-4 text-[11px] font-black">
                                                         <span className={log.amount < 0 || log.type === 'error' ? 'text-red-500' : 'text-emerald-500'}>
                                                             {log.type === 'error' ? '0' : log.amount}
@@ -371,7 +395,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({
                                                     </td>
                                                 </tr>
                                             )) : (
-                                                <tr><td colSpan={5} className="px-6 py-10 text-center text-xs font-black uppercase text-neutral-400">Nenhum log encontrado.</td></tr>
+                                                <tr><td colSpan={6} className="px-6 py-10 text-center text-xs font-black uppercase text-neutral-400">Nenhum log encontrado.</td></tr>
                                             )}
                                         </tbody>
                                     </table>

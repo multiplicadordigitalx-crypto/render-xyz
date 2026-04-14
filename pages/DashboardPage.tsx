@@ -225,6 +225,7 @@ export const DashboardPage: React.FC<DashboardProps> = ({
                         }}
                         onDownload={downloadHistoryImage}
                         onDelete={onDeleteHistory}
+                        isAdmin={user.role === 'admin'}
                         onRefine={(item) => {
                             const element = document.getElementById('render-tool-root');
                             if (element) element.scrollIntoView({ behavior: 'smooth' });

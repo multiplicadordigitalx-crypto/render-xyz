@@ -9,9 +9,10 @@ interface HistorySidebarProps {
     onDelete: (id: string) => void;
     onDownload: (url: string, style: RenderStyle) => void;
     onRefine?: (item: RenderHistoryItem) => void;
+    isAdmin?: boolean;
 }
 
-export const HistorySidebar: React.FC<HistorySidebarProps> = ({ history, onSelect, onDelete, onDownload, onRefine }) => {
+export const HistorySidebar: React.FC<HistorySidebarProps> = ({ history, onSelect, onDelete, onDownload, onRefine, isAdmin = false }) => {
     const [selectedImage, setSelectedImage] = React.useState<RenderHistoryItem | null>(null);
 
     return (
@@ -41,7 +42,12 @@ export const HistorySidebar: React.FC<HistorySidebarProps> = ({ history, onSelec
                                 </div>
                                 <div className="p-3 bg-white">
                                     <div className="flex justify-between items-center">
-                                        <span className="text-[9px] font-black uppercase tracking-wider text-neutral-500 truncate max-w-[80px]">{item.style}</span>
+                                        <div className="flex flex-col overflow-hidden">
+                                            <span className="text-[9px] font-black uppercase tracking-wider text-neutral-500 truncate">{item.style}</span>
+                                            {isAdmin && item.modelUsed && (
+                                                <span className="text-[7px] font-bold text-neutral-400 uppercase tracking-widest truncate">{item.modelUsed}</span>
+                                            )}
+                                        </div>
                                         <div className="flex space-x-1">
                                             <button
                                                 onClick={(e) => { e.stopPropagation(); onDownload(item.url, item.style); }}

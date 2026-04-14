@@ -26,6 +26,7 @@ export interface RenderHistoryItem {
   url: string;
   style: RenderStyle;
   originalUrl?: string; // URL da imagem original (antes)
+  modelUsed?: string;
   timestamp: number;
 }
 
@@ -74,6 +75,7 @@ export interface CreditTransaction {
   type: 'usage' | 'purchase' | 'bonus' | 'error';
   status?: 'success' | 'failed' | 'pending';
   description: string;
+  modelUsed?: string;
   errorMsg?: string;
   adminEmail?: string;
   userEmail?: string;

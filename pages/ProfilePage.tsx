@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Mail, Calendar, CreditCard, Shield, LogOut, ArrowLeft, History, TrendingUp, TrendingDown, Coins, X } from 'lucide-react';
+import { User, Mail, Calendar, CreditCard, Shield, LogOut, ArrowLeft, History, TrendingUp, TrendingDown, Coins, X, Plus } from 'lucide-react';
 import { AppUser, CreditTransaction } from '../types';
 import { useNavigate } from 'react-router-dom';
 import { collection, query, where, orderBy, onSnapshot } from 'firebase/firestore';
@@ -138,7 +138,13 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onLogout }) => {
                                                                 {tx.status === 'failed' && <span className="bg-red-100 text-red-600 text-[7px] px-1.5 py-0.5 rounded font-black uppercase tracking-widest">Falhou</span>}
                                                             </div>
                                                             <p className="text-[8px] font-bold text-neutral-400 uppercase">
-                                                                {new Date(tx.timestamp).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}
+                                                                {new Date(tx.timestamp).toLocaleString('pt-BR', { 
+                                                                    day: '2-digit', 
+                                                                    month: '2-digit', 
+                                                                    year: 'numeric',
+                                                                    hour: '2-digit',
+                                                                    minute: '2-digit'
+                                                                }).replace(',', ' •')}
                                                                 {user.role === 'admin' && tx.modelUsed && ` • Modelo: ${tx.modelUsed}`}
                                                             </p>
                                                             {tx.errorMsg && <p className="text-[8px] mt-1 text-red-500 font-bold truncate max-w-[200px]" title={tx.errorMsg}>{tx.errorMsg}</p>}
@@ -177,5 +183,4 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onLogout }) => {
     );
 };
 
-// Add explicit Plus import and any missing icons
-import { Plus } from 'lucide-react';
+

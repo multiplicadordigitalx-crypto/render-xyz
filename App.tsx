@@ -20,7 +20,7 @@ import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-
 
 // Firebase
 import { onAuthStateChanged } from 'firebase/auth';
-import { doc, getDoc, updateDoc, collection, query, where, orderBy, onSnapshot, addDoc, deleteDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, collection, query, where, orderBy, onSnapshot, addDoc, deleteDoc, writeBatch } from 'firebase/firestore';
 import { auth, db } from './services/firebase';
 import { authService } from './services/authService';
 
@@ -210,29 +210,37 @@ const App: React.FC = () => {
     const newCredits = credits - cost;
     setCredits(newCredits);
     try {
+      const batch = writeBatch(db);
+      
       // 1. Update user credits
-      await updateDoc(doc(db, "users", currentUser.id), { credits: newCredits });
+      const userRef = doc(db, "users", currentUser.id);
+      batch.update(userRef, { credits: newCredits });
 
       // 2. Add to history
-      await addDoc(collection(db, "history"), {
+      const historyRef = doc(collection(db, "history"));
+      batch.set(historyRef, {
         userId: currentUser.id,
         url,
         style,
         originalUrl: originalUrl || null,
+        modelUsed: 'gemini-3-pro/flash',
         timestamp: Date.now()
       });
 
       // 3. Log credit usage
-      await addDoc(collection(db, "credit_transactions"), {
+      const txRef = doc(collection(db, "credit_transactions"));
+      batch.set(txRef, {
         userId: currentUser.id,
         userEmail: currentUser.email,
         amount: cost,
         type: 'usage',
         status: 'success',
         description: `Renderização ${style}`,
-        modelUsed: 'gemini-3-pro/flash', // Simplified since we abstract it
+        modelUsed: 'gemini-3-pro/flash',
         timestamp: Date.now()
       });
+
+      await batch.commit();
 
     } catch (error) {
       console.error("Error saving render data:", error);
@@ -249,6 +257,7 @@ const App: React.FC = () => {
         type: 'error',
         status: 'failed',
         description: `Falha: Renderização ${style}`,
+        modelUsed: 'gemini-3-pro/flash',
         errorMsg: errorMsg,
         timestamp: Date.now()
       });

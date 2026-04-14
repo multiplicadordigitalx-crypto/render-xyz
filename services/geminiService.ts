@@ -4,12 +4,11 @@ import { RenderStyle, RenderResolution } from "../types";
 
 export const MOCK_MODE = false;
 
-const RESOLUTION_CONFIG: Record<RenderResolution, { targetWidth: number; scaleFactor: number }> = {
-  '1K': { targetWidth: 1024, scaleFactor: 1 },
-  '2K': { targetWidth: 2048, scaleFactor: 2 },
-  '4K': { targetWidth: 4096, scaleFactor: 4 },
+const RESOLUTION_CONFIG: Record<RenderResolution, { tier: string; scaleFactor: number }> = {
+  '1K': { tier: '1K', scaleFactor: 1 },
+  '2K': { tier: '2K', scaleFactor: 1 }, // Already high-res from Google, no manual upscale
+  '4K': { tier: '4K', scaleFactor: 1 }, // Already ultra-res from Google
 };
-
 /**
  * Upscale an image using Canvas API with high-quality interpolation.
  * Uses progressive scaling (2x steps) for better quality on large upscales.
@@ -23,11 +22,9 @@ const upscaleImage = (base64Data: string, scaleFactor: number): Promise<string> 
       const targetWidth = currentWidth * scaleFactor;
       const targetHeight = currentHeight * scaleFactor;
 
-      // Progressive scaling: scale 2x at a time for better quality
       let canvas = document.createElement('canvas');
       let ctx = canvas.getContext('2d')!;
 
-      // Draw original first
       canvas.width = currentWidth;
       canvas.height = currentHeight;
       ctx.drawImage(img, 0, 0);
@@ -54,6 +51,53 @@ const upscaleImage = (base64Data: string, scaleFactor: number): Promise<string> 
       resolve(canvas.toDataURL('image/png'));
     };
     img.onerror = () => reject(new Error('Falha ao carregar imagem para upscale'));
+    img.src = base64Data;
+  });
+};
+
+/**
+ * Resizes and center-crops an image to 1920x1080 (16:9).
+ * This ensures the AI always sees a standard Full HD framing.
+ */
+const compressImageForAI = (base64Data: string): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const targetWidth = 1920;
+      const targetHeight = 1080;
+      const targetRatio = targetWidth / targetHeight;
+      const originalRatio = img.width / img.height;
+
+      let drawWidth, drawHeight, offsetX, offsetY;
+
+      if (originalRatio > targetRatio) {
+        // Source is wider than 16:9
+        drawHeight = img.height;
+        drawWidth = img.height * targetRatio;
+        offsetX = (img.width - drawWidth) / 2;
+        offsetY = 0;
+      } else {
+        // Source is taller than 16:9
+        drawWidth = img.width;
+        drawHeight = img.width / targetRatio;
+        offsetX = 0;
+        offsetY = (img.height - drawHeight) / 2;
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = targetWidth;
+      canvas.height = targetHeight;
+      const ctx = canvas.getContext('2d')!;
+      
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      
+      // Draw centered crop
+      ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight, 0, 0, targetWidth, targetHeight);
+      
+      resolve(canvas.toDataURL('image/jpeg', 0.85));
+    };
+    img.onerror = () => reject(new Error('Falha ao processar imagem para IA'));
     img.src = base64Data;
   });
 };
@@ -127,7 +171,12 @@ export const renderImage = async (
     'gemini-3.1-flash-image-preview'
   ];
 
-  const keysToTry = [geminiKey, firebaseKey].filter(k => k && !k.includes("YOUR_AB")) as string[];
+  // Clean Key Logic: ONLY use Gemini keys, never Firebase project keys
+  const keysToTry = [geminiKey].filter(k => k && !k.includes("YOUR_AB")) as string[];
+  
+  // Pre-process image: Resize and compress to avoid 503/Payload Too Large errors
+  const optimizedImageBase64 = await compressImageForAI(base64Image);
+  const imageData = optimizedImageBase64.split(',')[1];
 
   let generatedImageBase64: string | null = null;
   let usedPremiumModel = false;
@@ -138,28 +187,27 @@ export const renderImage = async (
 
     for (const modelName of modelsToTry) {
       try {
-        const keyEnd = currentKey.substring(currentKey.length - 4);
-        console.log(`Tentando: ${modelName} | Key (final): ...${keyEnd}`);
-
         const isPremium = premiumModels.includes(modelName);
-        const config: any = { responseModalities: ['Text', 'Image'] };
-
-        if (isPremium && resolution === '4K') {
-          config.imageConfig = { imageSize: '4K' };
-        }
+        const resConfig = RESOLUTION_CONFIG[resolution];
+        
+        const config: any = { 
+          responseModalities: ['Text', 'Image'],
+          imageConfig: {
+            aspectRatio: '16:9',
+            imageSize: resConfig.tier
+          }
+        };
 
         const response = await aiInstance.models.generateContent({
           model: modelName,
           contents: {
             parts: [
-              { inlineData: { data: base64Image.split(',')[1], mimeType } },
+              { inlineData: { data: imageData, mimeType: 'image/jpeg' } },
               { text: prompt },
             ],
           },
           config,
         });
-
-        console.log(`Sucesso com modelo: ${modelName}`);
 
         for (const part of response.candidates?.[0]?.content.parts || []) {
           if (part.inlineData) {
@@ -173,11 +221,8 @@ export const renderImage = async (
 
       } catch (error: any) {
         lastError = error.message;
-        console.warn(`Erro no modelo ${modelName} (Key: ${currentKey.substring(0, 5)}):`, lastError);
-
         // If quota hit (429) or forbidden (403), try next key if available
         if (keysToTry.length > 1 && currentKey === keysToTry[0] && (lastError.includes("429") || lastError.includes("403"))) {
-          console.warn("Troca de chave detectada devido a limite ou permissão.");
           break; // Exit model loop for current key
         }
       }
@@ -194,6 +239,8 @@ export const renderImage = async (
       throw new Error("CHAVE BLOQUEADA: Sua chave de API do Google foi bloqueada ou o limite foi atingido. Verifique o Google AI Studio.");
     }
 
+    const isOverload = lastError.includes("503") || lastError.includes("overloaded") || lastError.includes("Service Unavailable");
+
     if (isOverload) {
       throw new Error("SERVIDOR EM CAPACIDADE MÁXIMA: O sistema está processando muitos pedidos ou em manutenção preventiva. Por favor, tente novamente em instantes.");
     }
@@ -209,7 +256,6 @@ export const renderImage = async (
   const resConfig = RESOLUTION_CONFIG[resolution];
 
   if (resConfig.scaleFactor > 1 && !usedPremiumModel) {
-    console.log(`Upscaling imagem: ${resConfig.scaleFactor}x para ${resolution}`);
     try {
       generatedImageBase64 = await upscaleImage(generatedImageBase64, resConfig.scaleFactor);
     } catch (upscaleError) {
