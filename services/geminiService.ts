@@ -116,19 +116,13 @@ export const renderImage = async (
 
   OUTPUT: A CLEAN, HIGH-QUALITY ARCHITECTURAL PHOTOGRAPH.`;
 
-  // Unified model list: always try the best models first for all resolutions
+  // Unified model list: focado apenas na Nano Banana 3.1 conforme solicitado
   const modelsToTry = [
-    'gemini-3-pro-image-preview',
-    'imagen-3.0-generate-002',
-    'imagen-3',
-    'imagen-3.0-generate-001',
-    'gemini-2.0-flash-exp-image-generation',
-    'gemini-2.5-flash-image',
+    'gemini-3.1-flash-image-preview', // Nano Banana 2
   ];
 
   const premiumModels = [
-    'gemini-3-pro-image-preview',
-    'imagen-3.0-generate-002',
+    'gemini-3.1-flash-image-preview',
   ];
 
   const keysToTry = [geminiKey, firebaseKey].filter(k => k && !k.includes("YOUR_AB")) as string[];
@@ -189,9 +183,10 @@ export const renderImage = async (
   }
 
   if (!generatedImageBase64) {
-    if (lastError.includes("429")) throw new Error("LIMITE ATINGIDO: Suas chaves de API chegaram ao limite do Google. Ative o faturamento ou aguarde.");
-    if (lastError.includes("404")) throw new Error("MODELO INDISPONÍVEL: Os modelos de imagem não estão disponíveis para esta chave/região.");
-    throw new Error(lastError || "Nenhum modelo de IA disponível respondeu.");
+    if (lastError.includes("429")) throw new Error("LIMITE ATINGIDO: Sua chave de API do Google chegou ao limite de uso. Aguarde alguns minutos ou ative o faturamento.");
+    if (lastError.includes("404")) throw new Error("MODELO 3.1 INDISPONÍVEL: O modelo Nano Banana 3.1 não foi encontrado nesta região ou chave.");
+    if (lastError.includes("503") || lastError.includes("504")) throw new Error("GOOGLE SOBRECARREGADO: O modelo Nano Banana 3.1 está com alta demanda agora. Tente novamente em instantes.");
+    throw new Error(`Erro na Nano Banana 3.1: ${lastError || "Sem resposta do modelo"}`);
   }
 
   // --- Post-Processing: Upscale if needed ---
