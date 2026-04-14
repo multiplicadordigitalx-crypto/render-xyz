@@ -35,6 +35,12 @@ service cloud.firestore {
       allow write: if false; 
     }
 
+    // Credit Transactions
+    match /credit_transactions/{transactionId} {
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+
     // Contact Messages
     match /contact_messages/{messageId} {
       // Allow public creation

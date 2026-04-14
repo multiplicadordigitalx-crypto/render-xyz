@@ -31,6 +31,9 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onLogout }) => {
             } as CreditTransaction));
             setTransactions(txList);
             setLoading(false);
+        }, (error) => {
+            console.error("Erro ao buscar transações de créditos:", error);
+            setLoading(false); // Para o girino se der erro (ex: falta de permissão)
         });
 
         return () => unsubscribe();
