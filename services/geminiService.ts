@@ -116,13 +116,15 @@ export const renderImage = async (
 
   OUTPUT: A CLEAN, HIGH-QUALITY ARCHITECTURAL PHOTOGRAPH.`;
 
-  // Unified model list: focado apenas na Nano Banana 3.1 conforme solicitado
+  // Unified model list: Prioridade no Pro com Fallback para o 3.1 Flash
   const modelsToTry = [
-    'gemini-3.1-flash-image-preview', // Nano Banana 2
+    'gemini-3-pro-image-preview',    // Qualidade Máxima (Nano Banana Pro)
+    'gemini-3.1-flash-image-preview' // Alta Velocidade (Nano Banana 2)
   ];
 
   const premiumModels = [
-    'gemini-3.1-flash-image-preview',
+    'gemini-3-pro-image-preview',
+    'gemini-3.1-flash-image-preview'
   ];
 
   const keysToTry = [geminiKey, firebaseKey].filter(k => k && !k.includes("YOUR_AB")) as string[];
@@ -183,10 +185,16 @@ export const renderImage = async (
   }
 
   if (!generatedImageBase64) {
-    if (lastError.includes("429")) throw new Error("LIMITE ATINGIDO: Sua chave de API do Google chegou ao limite de uso. Aguarde alguns minutos ou ative o faturamento.");
-    if (lastError.includes("404")) throw new Error("MODELO 3.1 INDISPONÍVEL: O modelo Nano Banana 3.1 não foi encontrado nesta região ou chave.");
-    if (lastError.includes("503") || lastError.includes("504")) throw new Error("GOOGLE SOBRECARREGADO: O modelo Nano Banana 3.1 está com alta demanda agora. Tente novamente em instantes.");
-    throw new Error(`Erro na Nano Banana 3.1: ${lastError || "Sem resposta do modelo"}`);
+    const isOverload = lastError.includes("429") || lastError.includes("503") || lastError.includes("504");
+    if (isOverload) {
+      throw new Error("SERVIDOR EM CAPACIDADE MÁXIMA: O sistema está processando muitos pedidos ou em manutenção preventiva. Por favor, tente novamente em instantes.");
+    }
+    
+    if (lastError.includes("404")) {
+      throw new Error("RECURSO INDISPONÍVEL: Este modo de renderização não está disponível no momento. Tente outro estilo ou resolução.");
+    }
+
+    throw new Error("ERRO NO PROCESSAMENTO: Ocorreu uma instabilidade na conexão com o servidor de IA. Por favor, tente novamente.");
   }
 
   // --- Post-Processing: Upscale if needed ---
