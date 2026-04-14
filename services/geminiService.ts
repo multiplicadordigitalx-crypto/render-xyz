@@ -138,7 +138,8 @@ export const renderImage = async (
 
     for (const modelName of modelsToTry) {
       try {
-        console.log(`Tentando: ${modelName} | Key: ${currentKey.substring(0, 5)}...`);
+        const keyEnd = currentKey.substring(currentKey.length - 4);
+        console.log(`Tentando: ${modelName} | Key (final): ...${keyEnd}`);
 
         const isPremium = premiumModels.includes(modelName);
         const config: any = { responseModalities: ['Text', 'Image'] };
