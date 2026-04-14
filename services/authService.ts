@@ -158,9 +158,16 @@ export const authService = {
    * Verifica se o CPF já está em uso por outro usuário
    */
   checkCpfInUse: async (cpf: string): Promise<boolean> => {
-    const q = query(collection(db, "users"), where("cpf", "==", cpf));
-    const querySnapshot = await getDocs(q);
-    return !querySnapshot.empty;
+    try {
+      const q = query(collection(db, "users"), where("cpf", "==", cpf));
+      const querySnapshot = await getDocs(q);
+      return !querySnapshot.empty;
+    } catch (error: any) {
+      if (error.code === 'permission-denied' || error.message?.includes('permission')) {
+        throw new Error("Este CPF já está cadastrado em outra conta.");
+      }
+      throw error;
+    }
   },
 
   /**

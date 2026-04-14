@@ -290,7 +290,7 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
           <div className="animate-in fade-in duration-500">
             <label className="text-[10px] font-black uppercase tracking-widest text-[#000] mb-3 flex items-center">
               <Maximize2 className="w-3 h-3 mr-2" />
-              Resolução de Saída
+              Resolução do Render
             </label>
             <div className="space-y-2">
               {RESOLUTIONS.map((r) => (
