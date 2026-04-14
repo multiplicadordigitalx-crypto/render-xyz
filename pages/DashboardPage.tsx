@@ -211,6 +211,7 @@ export const DashboardPage: React.FC<DashboardProps> = ({
                         userPlan={user.plan || 'free'}
                         onKeyReset={() => setHasApiKey(false)}
                         onUpgrade={() => navigate('/planos')}
+                        isAdmin={user.role === 'admin'}
                     />
                 </div>
 

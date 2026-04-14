@@ -30,13 +30,14 @@ interface RenderToolProps {
   userPlan: UserPlan;
   onKeyReset: () => void;
   onUpgrade?: () => void;
+  isAdmin?: boolean;
 }
 
 const shouldShowWatermark = (userPlan: UserPlan): boolean => {
   return userPlan === 'free';
 };
 
-export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credits, userPlan, onKeyReset, onUpgrade }) => {
+export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credits, userPlan, onKeyReset, onUpgrade, isAdmin = false }) => {
   const [mode, setMode] = useState<'single' | 'batch'>('single');
   const [image, setImage] = useState<string | null>(null);
   const [mimeType, setMimeType] = useState<string>('');
@@ -189,7 +190,13 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
 
       toast.success('Pronto!', { id: loadingToast });
     } catch (err: any) {
-      const errorMsg = err.message || "Erro desconhecido";
+      let errorMsg = err.message || "Erro desconhecido";
+
+      // If NOT admin, hide technical debug messages (like API key issues)
+      if (!isAdmin && (errorMsg.includes("CHAVE") || errorMsg.includes("API") || errorMsg.includes("RECURSO INDISPONÍVEL"))) {
+        errorMsg = "Em manutenção, tente em alguns instantes.";
+      }
+
       toast.error(`Erro: ${errorMsg}`, { id: loadingToast, duration: 5000 });
       if (errorMsg.includes("Requested entity was not found")) {
         setError("Chave inválida. Selecione novamente.");
