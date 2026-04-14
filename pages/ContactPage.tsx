@@ -42,8 +42,16 @@ export const ContactPage: React.FC = () => {
             });
 
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Erro ao enviar e-mail.');
+                let errorMessage = 'Erro ao enviar e-mail.';
+                try {
+                    const errorData = await response.json();
+                    errorMessage = errorData.error || errorMessage;
+                } catch (e) {
+                    // Se não for JSON (ex: erro 500 do Vercel), tenta pegar o texto
+                    const errorText = await response.text();
+                    console.error('Resposta não-JSON:', errorText);
+                }
+                throw new Error(errorMessage);
             }
             
             setSuccess(true);
