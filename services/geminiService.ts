@@ -185,7 +185,10 @@ export const renderImage = async (
   }
 
   if (!generatedImageBase64) {
-    const isOverload = lastError.includes("429") || lastError.includes("503") || lastError.includes("504");
+    if (lastError.includes("API_KEY_SERVICE_BLOCKED") || lastError.includes("403")) {
+      throw new Error("CHAVE BLOQUEADA: Sua chave de API do Google foi bloqueada ou o limite foi atingido. Verifique o Google AI Studio.");
+    }
+
     if (isOverload) {
       throw new Error("SERVIDOR EM CAPACIDADE MÁXIMA: O sistema está processando muitos pedidos ou em manutenção preventiva. Por favor, tente novamente em instantes.");
     }
