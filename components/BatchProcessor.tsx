@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Upload, X, Loader2, CheckCircle2, Image as ImageIcon, AlertCircle, Coins, ShoppingCart } from 'lucide-react';
 import { RenderStyle } from '../types';
+import { toast } from 'react-hot-toast';
 
 interface BatchProcessorProps {
     onRender: (file: File, style: RenderStyle, resolution: any) => Promise<void>;
@@ -42,13 +43,26 @@ export const BatchProcessor: React.FC<BatchProcessorProps> = ({
 
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
-            const newFiles = Array.from(e.target.files).map((file: File) => ({
+            const MAX_SIZE = 10 * 1024 * 1024; // 10MB
+            const filesArray = Array.from(e.target.files) as File[];
+            
+            const validFiles = filesArray.filter(file => file.size <= MAX_SIZE);
+            const tooLargeCount = filesArray.length - validFiles.length;
+
+            if (tooLargeCount > 0) {
+                toast.error(`${tooLargeCount} ${tooLargeCount === 1 ? 'arquivo foi ignorado' : 'arquivos foram ignorados'} por excederem o limite de 10MB.`, {
+                    duration: 5000
+                });
+            }
+
+            const newItems = validFiles.map((file: File) => ({
                 id: Math.random().toString(36).substr(2, 9),
                 file,
                 status: 'pending' as const,
                 previewUrl: URL.createObjectURL(file)
             }));
-            setQueue(prev => [...prev, ...newFiles]);
+            
+            setQueue(prev => [...prev, ...newItems]);
         }
     };
 

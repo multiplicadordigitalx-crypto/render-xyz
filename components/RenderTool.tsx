@@ -133,8 +133,10 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, onRend
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 10 * 1024 * 1024) {
-        setError("Máximo 10MB");
+      const MAX_SIZE = 10 * 1024 * 1024; // 10MB
+      if (file.size > MAX_SIZE) {
+        toast.error("Imagem muito grande! O limite é de 10MB para garantir a performance.");
+        setError("Máximo 10MB excedido");
         return;
       }
       setMimeType(file.type);
