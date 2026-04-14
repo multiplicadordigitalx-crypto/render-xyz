@@ -32,7 +32,15 @@ service cloud.firestore {
     // Global Settings (read-only for users)
     match /settings/{document=**} {
       allow read: if true;
-      allow write: if false; // Only manageable via Firebase Console for now
+      allow write: if false; 
+    }
+
+    // Contact Messages
+    match /contact_messages/{messageId} {
+      // Allow public creation
+      allow create: if true;
+      // Allow read/delete only for admins
+      allow read, delete: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
   }
 }

@@ -1,5 +1,7 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (req.method !== 'POST') {
@@ -13,24 +15,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(400).json({ error: 'Campos obrigatórios faltando.' });
     }
 
-    // Configurações do transportador (Hotmail/Outlook)
-    const transporter = nodemailer.createTransport({
-        host: 'smtp.office365.com',
-        port: 587,
-        secure: false, // TLS
-        auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS,
-        },
-        tls: {
-            ciphers: 'SSLv3',
-            rejectUnauthorized: false
-        }
-    });
-
     try {
-        const mailOptions = {
-            from: `"Contato Render XYZ" <${process.env.EMAIL_USER}>`,
+        const { data, error } = await resend.emails.send({
+            from: 'Render XYZ <onboarding@resend.dev>', // Usando domínio padrão do Resend para teste inicial
             to: process.env.EMAIL_RECEIVER || 'render-xyz@hotmail.com',
             subject: `Novo Contato: ${name}`,
             text: `
@@ -45,22 +32,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             `,
             html: `
                 <div style="font-family: sans-serif; padding: 20px; color: #333;">
-                    <h2 style="color: #000;">Novo Contato Recebido</h2>
+                    <h2 style="color: #000; text-transform: uppercase; font-weight: 900;">Novo Contato Recebido</h2>
+                    <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
                     <p><strong>Nome:</strong> ${name}</p>
                     <p><strong>E-mail:</strong> ${email}</p>
                     <p><strong>Telefone:</strong> ${phone || 'Não informado'}</p>
-                    <div style="margin-top: 20px; padding: 15px; background: #f4f4f4; border-radius: 10px;">
-                        <strong>Mensagem:</strong><br />
-                        ${message.replace(/\n/g, '<br />')}
+                    <div style="margin-top: 20px; padding: 20px; background: #F2F2F2; border-radius: 15px;">
+                        <strong style="font-size: 12px; color: #666; text-transform: uppercase;">Mensagem:</strong><br />
+                        <p style="margin-top: 10px; line-height: 1.6;">${message.replace(/\n/g, '<br />')}</p>
                     </div>
-                    <hr style="margin-top: 30px; border: 0; border-top: 1px solid #eee;" />
-                    <p style="font-size: 10px; color: #888;">Este é um e-mail automático enviado pelo sistema Render XYZ.</p>
+                    <p style="margin-top: 30px; font-size: 10px; color: #888; text-align: center;">© 2026 Render XYZ - Este é um e-mail automático.</p>
                 </div>
             `
-        };
+        });
 
-        await transporter.sendMail(mailOptions);
-        return res.status(200).json({ success: true });
+        if (error) {
+            console.error('Erro Resend:', error);
+            return res.status(500).json({ error: 'Erro ao enviar e-mail via Resend: ' + error.message });
+        }
+
+        return res.status(200).json({ success: true, data });
     } catch (error: any) {
         console.error('Erro ao enviar e-mail:', error);
         return res.status(500).json({ error: 'Erro ao enviar e-mail: ' + error.message });
