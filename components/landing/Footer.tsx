@@ -10,8 +10,9 @@ export const Footer: React.FC = () => {
                 <Link to="/" className="flex items-center mb-8 md:mb-0 hover:opacity-80 transition-opacity">
                     <img src="/assets/logo.png" alt="Render XYZ" className="h-6 md:h-8 grayscale hover:grayscale-0 transition-all" />
                 </Link>
-                <div className="flex space-x-8 md:space-x-12 mb-8 md:mb-0">
+                <div className="flex flex-wrap items-center justify-center gap-6 md:gap-8 mb-8 md:mb-0">
                     <Link to="/portfolio" className="hover:text-black transition-colors">Portfólio</Link>
+                    <Link to="/contato" className="hover:text-black transition-colors">Contato</Link>
                     <Link to="/termos" className="hover:text-black transition-colors">Termos</Link>
                     <Link to="/privacidade" className="hover:text-black transition-colors">Privacidade</Link>
                 </div>

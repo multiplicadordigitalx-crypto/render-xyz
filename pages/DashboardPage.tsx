@@ -3,7 +3,7 @@ import { RenderTool } from '../components/RenderTool';
 import { HistorySidebar } from '../components/HistorySidebar';
 import { CpfModal } from '../components/CpfModal';
 import { AppUser, CreditPackage, LandingSettings, PricingPlan, RenderHistoryItem, RenderStyle } from '../types';
-import { LogOut, User, Coins, Plus, ShieldCheck, Download, Trash2, Menu, Key } from 'lucide-react';
+import { LogOut, User, Coins, Plus, ShieldCheck, Download, Trash2, Menu, Key, Mail } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 
@@ -182,6 +182,13 @@ export const DashboardPage: React.FC<DashboardProps> = ({
                                 <ShieldCheck className="w-4 h-4" />
                             </button>
                         )}
+                        <button
+                            onClick={() => navigate('/contato')}
+                            className="p-2 hover:bg-neutral-100 rounded-lg transition-all text-neutral-500 hover:text-black"
+                            title="Suporte / Contato"
+                        >
+                            <Mail className="w-4 h-4" />
+                        </button>
                         <button
                             onClick={() => navigate('/perfil')}
                             className="p-2 hover:bg-neutral-100 rounded-lg transition-all text-neutral-500 hover:text-black"

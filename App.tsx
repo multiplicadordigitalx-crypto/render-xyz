@@ -35,6 +35,7 @@ import { CheckoutPage } from './pages/CheckoutPage';
 import { TermsPage } from './pages/TermsPage';
 import { PrivacyPage } from './pages/PrivacyPage';
 import { PortfolioPage } from './pages/PortfolioPage';
+import { ContactPage } from './pages/ContactPage';
 
 
 // Types & Services
@@ -274,6 +275,9 @@ const App: React.FC = () => {
           <Route path="/cadastro" element={
             <AuthPage mode="register" onSuccess={() => navigate('/dashboard')} />
           } />
+          <Route path="/termos" element={<TermsPage />} />
+          <Route path="/privacidade" element={<PrivacyPage />} />
+          <Route path="/contato" element={<ContactPage />} />
 
           {/* Protected Routes */}
           {/* Protected Routes */}
