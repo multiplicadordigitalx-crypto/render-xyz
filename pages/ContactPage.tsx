@@ -27,17 +27,30 @@ export const ContactPage: React.FC = () => {
         setLoading(true);
 
         try {
+            // 1. Salvar no Firestore (Log/Backup)
             await addDoc(collection(db, "contact_messages"), {
                 ...formData,
                 timestamp: Date.now(),
                 status: 'unread'
             });
             
+            // 2. Enviar E-mail via API
+            const response = await fetch('/api/send-email', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Erro ao enviar e-mail.');
+            }
+            
             setSuccess(true);
             toast.success('Mensagem enviada com sucesso!');
-        } catch (error) {
+        } catch (error: any) {
             console.error("Erro ao enviar contato:", error);
-            toast.error('Erro ao enviar mensagem. Tente novamente mais tarde.');
+            toast.error(error.message || 'Erro ao enviar mensagem.');
         } finally {
             setLoading(false);
         }

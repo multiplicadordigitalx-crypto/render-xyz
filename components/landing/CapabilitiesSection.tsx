@@ -29,7 +29,7 @@ const capabilities = [
 
 export const CapabilitiesSection = () => {
     return (
-        <section className="py-24 bg-white relative overflow-hidden">
+        <section id="how-it-works" className="py-24 bg-white relative overflow-hidden">
             <div className="container mx-auto px-4 max-w-7xl">
                 <div className="mb-20 text-center max-w-3xl mx-auto">
                     <span className="text-xs font-bold uppercase tracking-widest text-neutral-500 mb-4 block">Funcionalidades</span>
