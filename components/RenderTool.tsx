@@ -287,29 +287,27 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
             </div>
           </div>
 
-          {image && (
-            <div className="animate-in fade-in slide-in-from-left-4 duration-500">
-              <label className="text-[10px] font-black uppercase tracking-widest text-[#000] mb-3 flex items-center">
-                <Maximize2 className="w-3 h-3 mr-2" />
-                Resolução de Saída
-              </label>
-              <div className="space-y-2">
-                {RESOLUTIONS.map((r) => (
-                  <button
-                    key={r.label}
-                    onClick={() => setResolution(r.label)}
-                    className={`w-full px-4 py-3 rounded-xl text-[9px] font-black transition-all uppercase tracking-widest border flex justify-between items-center ${resolution === r.label
-                      ? 'bg-black text-white border-black shadow-lg scale-105'
-                      : 'bg-white text-neutral-500 border-transparent hover:border-neutral-200 hover:bg-white/80'
-                      }`}
-                  >
-                    <span>{r.label}</span>
-                    <span className="opacity-60">{r.cost} {r.cost === 1 ? 'crédito' : 'créditos'}</span>
-                  </button>
-                ))}
-              </div>
+          <div className="animate-in fade-in duration-500">
+            <label className="text-[10px] font-black uppercase tracking-widest text-[#000] mb-3 flex items-center">
+              <Maximize2 className="w-3 h-3 mr-2" />
+              Resolução de Saída
+            </label>
+            <div className="space-y-2">
+              {RESOLUTIONS.map((r) => (
+                <button
+                  key={r.label}
+                  onClick={() => setResolution(r.label)}
+                  className={`w-full px-4 py-3 rounded-xl text-[9px] font-black transition-all uppercase tracking-widest border flex justify-between items-center ${resolution === r.label
+                    ? 'bg-black text-white border-black shadow-lg scale-105'
+                    : 'bg-white text-neutral-500 border-transparent hover:border-neutral-200 hover:bg-white/80'
+                    }`}
+                >
+                  <span>{r.label}</span>
+                  <span className="opacity-60">{r.cost} {r.cost === 1 ? 'crédito' : 'créditos'}</span>
+                </button>
+              ))}
             </div>
-          )}
+          </div>
         </div>
       </div>
 
