@@ -161,14 +161,14 @@ export const DashboardPage: React.FC<DashboardProps> = ({
                 </div>
 
                 <div className="flex items-center space-x-4">
-                    <div className="flex items-center bg-gradient-to-r from-amber-100 to-yellow-100 border border-amber-300 px-3 py-1.5 rounded-xl shadow-sm cursor-pointer hover:shadow-md transition-all group" onClick={() => navigate('/planos')}>
-                        <Coins className="w-4 h-4 mr-2 text-amber-600 group-hover:scale-110 transition-transform" />
+                    <div className="flex items-center bg-gradient-to-r from-blue-50 to-sky-50 border border-blue-200 px-3 py-1.5 rounded-xl shadow-sm cursor-pointer hover:shadow-md transition-all group" onClick={() => navigate('/planos')}>
+                        <Coins className="w-4 h-4 mr-2 text-blue-600 group-hover:scale-110 transition-transform" />
                         <div className="flex flex-col justify-center mr-3">
-                            <span className="text-sm font-black text-amber-900 leading-none">{credits}</span>
-                            <span className="text-[8px] font-black text-amber-700 uppercase tracking-widest">Créditos</span>
+                            <span className="text-sm font-black text-blue-950 leading-none">{credits}</span>
+                            <span className="text-[8px] font-black text-blue-700 uppercase tracking-widest">Créditos</span>
                         </div>
-                        <button className="bg-amber-500 text-white px-2.5 py-1.5 rounded-lg hover:bg-amber-600 transition-all font-black text-[9px] uppercase tracking-widest flex items-center shadow-md">
-                           <Plus className="w-3 h-3 mr-1" /> Mais
+                        <button className="bg-blue-600 text-white p-1.5 rounded-lg hover:bg-blue-700 transition-all flex items-center justify-center shadow-md">
+                            <Plus className="w-4 h-4" />
                         </button>
                     </div>
 
