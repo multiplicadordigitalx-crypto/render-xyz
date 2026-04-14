@@ -71,7 +71,11 @@ export interface CreditTransaction {
   id: string;
   userId: string;
   amount: number;
-  type: 'usage' | 'purchase' | 'bonus';
+  type: 'usage' | 'purchase' | 'bonus' | 'error';
+  status?: 'success' | 'failed' | 'pending';
   description: string;
+  errorMsg?: string;
+  adminEmail?: string;
+  userEmail?: string;
   timestamp: number;
 }

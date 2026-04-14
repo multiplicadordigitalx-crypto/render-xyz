@@ -225,14 +225,35 @@ const App: React.FC = () => {
       // 3. Log credit usage
       await addDoc(collection(db, "credit_transactions"), {
         userId: currentUser.id,
+        userEmail: currentUser.email,
         amount: cost,
         type: 'usage',
+        status: 'success',
         description: `Renderização ${style}`,
+        modelUsed: 'gemini-3-pro/flash', // Simplified since we abstract it
         timestamp: Date.now()
       });
 
     } catch (error) {
       console.error("Error saving render data:", error);
+    }
+  };
+
+  const onRenderError = async (errorMsg: string, style: RenderStyle) => {
+    if (!currentUser) return;
+    try {
+      await addDoc(collection(db, "credit_transactions"), {
+        userId: currentUser.id,
+        userEmail: currentUser.email,
+        amount: 0,
+        type: 'error',
+        status: 'failed',
+        description: `Falha: Renderização ${style}`,
+        errorMsg: errorMsg,
+        timestamp: Date.now()
+      });
+    } catch (error) {
+      console.error("Error saving error log:", error);
     }
   };
 
@@ -289,6 +310,7 @@ const App: React.FC = () => {
                   credits={credits}
                   history={history}
                   onRenderComplete={onRenderComplete}
+                  onRenderError={onRenderError}
                   onLogout={handleLogout}
                   hasApiKey={hasApiKey}
                   handleOpenSelectKey={handleOpenSelectKey}

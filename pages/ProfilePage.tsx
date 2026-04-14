@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Mail, Calendar, CreditCard, Shield, LogOut, ArrowLeft, History, TrendingUp, TrendingDown, Coins } from 'lucide-react';
+import { User, Mail, Calendar, CreditCard, Shield, LogOut, ArrowLeft, History, TrendingUp, TrendingDown, Coins, X } from 'lucide-react';
 import { AppUser, CreditTransaction } from '../types';
 import { useNavigate } from 'react-router-dom';
 import { collection, query, where, orderBy, onSnapshot } from 'firebase/firestore';
@@ -125,18 +125,31 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onLogout }) => {
                                             {transactions.map((tx) => (
                                                 <div key={tx.id} className="flex items-center justify-between p-4 bg-neutral-50 border border-neutral-100 rounded-2xl">
                                                     <div className="flex items-center gap-4">
-                                                        <div className={`p-2 rounded-xl ${tx.type === 'purchase' || tx.type === 'bonus' ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'}`}>
-                                                            {tx.type === 'purchase' || tx.type === 'bonus' ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+                                                        <div className={`p-2 rounded-xl ${
+                                                            tx.type === 'error' || tx.status === 'failed' ? 'bg-red-100 text-red-600' :
+                                                            tx.type === 'purchase' || tx.type === 'bonus' ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'
+                                                        }`}>
+                                                            {tx.type === 'error' || tx.status === 'failed' ? <X className="w-4 h-4" /> :
+                                                             tx.type === 'purchase' || tx.type === 'bonus' ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
                                                         </div>
                                                         <div>
-                                                            <p className="text-[10px] font-black uppercase tracking-tight">{tx.description}</p>
+                                                            <div className="flex items-center gap-2">
+                                                                <p className="text-[10px] font-black uppercase tracking-tight">{tx.description}</p>
+                                                                {tx.status === 'failed' && <span className="bg-red-100 text-red-600 text-[7px] px-1.5 py-0.5 rounded font-black uppercase tracking-widest">Falhou</span>}
+                                                            </div>
                                                             <p className="text-[8px] font-bold text-neutral-400 uppercase">
                                                                 {new Date(tx.timestamp).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}
+                                                                {tx.modelUsed && ` • Modelo: ${tx.modelUsed}`}
                                                             </p>
+                                                            {tx.errorMsg && <p className="text-[8px] mt-1 text-red-500 font-bold truncate max-w-[200px]" title={tx.errorMsg}>{tx.errorMsg}</p>}
                                                         </div>
                                                     </div>
-                                                    <div className={`text-xs font-black ${tx.type === 'purchase' || tx.type === 'bonus' ? 'text-emerald-600' : 'text-red-500'}`}>
-                                                        {tx.type === 'purchase' || tx.type === 'bonus' ? '+' : '-'}{tx.amount}
+                                                    <div className={`text-xs font-black ${
+                                                        tx.type === 'error' || tx.status === 'failed' ? 'text-neutral-400' :
+                                                        tx.type === 'purchase' || tx.type === 'bonus' ? 'text-emerald-600' : 'text-red-500'
+                                                    }`}>
+                                                        {tx.type === 'error' || tx.status === 'failed' ? '0' : 
+                                                         tx.type === 'purchase' || tx.type === 'bonus' ? `+${tx.amount}` : `-${tx.amount}`}
                                                     </div>
                                                 </div>
                                             ))}

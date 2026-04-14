@@ -12,6 +12,7 @@ interface DashboardProps {
     credits: number;
     history: RenderHistoryItem[];
     onRenderComplete: (url: string, style: RenderStyle, cost?: number) => void;
+    onRenderError: (msg: string, style: RenderStyle) => void;
     onLogout: () => void;
     isAdminMode: boolean;
     hasApiKey: boolean;
@@ -19,9 +20,8 @@ interface DashboardProps {
     setHasApiKey: (has: boolean) => void;
     onDeleteHistory: (id: string) => void;
 }
-
 export const DashboardPage: React.FC<DashboardProps> = ({
-    user, credits, history, onRenderComplete, onLogout,
+    user, credits, history, onRenderComplete, onRenderError, onLogout,
     hasApiKey, handleOpenSelectKey, setHasApiKey,
     onDeleteHistory
 }) => {
@@ -207,6 +207,7 @@ export const DashboardPage: React.FC<DashboardProps> = ({
                 <div className="flex-1 p-4 overflow-hidden flex flex-col min-h-0">
                     <RenderTool
                         onRenderComplete={onRenderComplete}
+                        onRenderError={onRenderError}
                         credits={credits}
                         userPlan={user.plan || 'free'}
                         onKeyReset={() => setHasApiKey(false)}

@@ -11,16 +11,18 @@ import {
     Upload,
     Image as ImageIconLucide,
     FileVideo,
+    FileVideo,
     Save,
     Plus,
     ArrowLeft,
     Grid,
-    Trash2
+    Trash2,
+    Activity
 } from 'lucide-react';
 import { db, storage } from '../services/firebase';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
-import { collection, addDoc, getDocs, deleteDoc, query, orderBy, onSnapshot, doc, updateDoc, setDoc } from 'firebase/firestore';
-import { PricingPlan, CreditPackage, AppUser, LandingSettings, PortfolioItem } from '../types';
+import { collection, addDoc, getDocs, deleteDoc, query, orderBy, limit, onSnapshot, doc, updateDoc, setDoc } from 'firebase/firestore';
+import { PricingPlan, CreditPackage, AppUser, LandingSettings, PortfolioItem, CreditTransaction } from '../types';
 import { useNavigate } from 'react-router-dom';
 
 interface AdminPageProps {
@@ -50,9 +52,12 @@ export const AdminPage: React.FC<AdminPageProps> = ({
     const [portfolioItems, setPortfolioItems] = useState<PortfolioItem[]>([]);
     const [uploadingPortfolio, setUploadingPortfolio] = useState(false);
 
-    // Fetch portfolio items
+    // Global Logs
+    const [globalLogs, setGlobalLogs] = useState<CreditTransaction[]>([]);
+
+    // Fetch portfolio items and Global Logs based on active Tab
     React.useEffect(() => {
-        if (activeTab === 'portfolio') { // Changed to fetch only when tab is active
+        if (activeTab === 'portfolio') {
             const q = query(collection(db, 'portfolio'), orderBy('createdAt', 'desc'));
             const unsubscribe = onSnapshot(q, (snapshot) => {
                 const items = snapshot.docs.map(doc => ({
@@ -62,6 +67,13 @@ export const AdminPage: React.FC<AdminPageProps> = ({
                 setPortfolioItems(items);
             });
             return () => unsubscribe();
+        } else if (activeTab === 'stats') {
+            const qLogs = query(collection(db, 'credit_transactions'), orderBy('timestamp', 'desc'), limit(150));
+            const unsubscribeLogs = onSnapshot(qLogs, (snapshot) => {
+                const logs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as CreditTransaction));
+                setGlobalLogs(logs);
+            });
+            return () => unsubscribeLogs();
         }
     }, [activeTab]);
 
@@ -111,6 +123,19 @@ export const AdminPage: React.FC<AdminPageProps> = ({
         const newCredits = type === 'add' ? currentCredits + amount : Math.max(0, currentCredits - amount);
 
         await handleUserUpdate(selectedUserForCredits.id, { credits: newCredits });
+
+        // Register action in global logs
+        const loggedInAdminEmail = 'Admin'; // Or fetch current use context if available
+        await addDoc(collection(db, "credit_transactions"), {
+            userId: selectedUserForCredits.id,
+            userEmail: selectedUserForCredits.email,
+            amount: type === 'add' ? amount : -amount,
+            type: 'bonus',
+            status: 'success',
+            description: type === 'add' ? 'Ajuste Manual: Adição' : 'Ajuste Manual: Remoção',
+            adminEmail: loggedInAdminEmail,
+            timestamp: Date.now()
+        });
 
         alert(`Créditos ${type === 'add' ? 'adicionados' : 'removidos'} com sucesso!`);
         setSelectedUserForCredits(null);
@@ -189,7 +214,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({
                 <div className="flex-1 flex flex-col md:flex-row">
                     <div className="w-full md:w-64 border-b md:border-b-0 md:border-r border-neutral-200 p-2 md:p-6 flex flex-row md:flex-col space-x-2 md:space-x-0 md:space-y-2 bg-neutral-50 overflow-x-auto whitespace-nowrap">
                         <button onClick={() => setActiveTab('stats')} className={`flex items-center space-x-3 p-3 md:p-4 rounded-xl font-black text-[9px] md:text-[10px] uppercase tracking-widest ${activeTab === 'stats' ? 'bg-black text-white' : 'text-neutral-500 hover:bg-black/5'}`}>
-                            <BarChart3 className="w-4 h-4" /><span>Estatísticas</span>
+                            <Activity className="w-4 h-4" /><span>Auditoria / Logs</span>
                         </button>
                         <button onClick={() => setActiveTab('users')} className={`flex items-center space-x-3 p-3 md:p-4 rounded-xl font-black text-[9px] md:text-[10px] uppercase tracking-widest ${activeTab === 'users' ? 'bg-black text-white' : 'text-neutral-500 hover:bg-black/5'}`}>
                             <Users className="w-4 h-4" /><span>Usuários</span>
@@ -302,7 +327,57 @@ export const AdminPage: React.FC<AdminPageProps> = ({
                                 </div>
                             </div>
                         )}
-                        {activeTab === 'stats' && <div className="text-center p-20 opacity-20"><BarChart3 className="w-20 h-20 mx-auto mb-4" /><p className="font-black uppercase tracking-widest text-xs">Aguardando dados de tráfego</p></div>}
+                        {activeTab === 'stats' && (
+                            <div className="bg-white rounded-[30px] border border-neutral-200 overflow-hidden shadow-sm">
+                                <div className="p-6 border-b border-neutral-100 flex items-center justify-between">
+                                    <h3 className="text-xl font-black uppercase tracking-tight flex items-center"><Activity className="w-5 h-5 mr-3" /> Painel de Auditoria Global</h3>
+                                </div>
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left whitespace-nowrap">
+                                        <thead className="bg-[#F2F2F2] border-b border-neutral-100">
+                                            <tr>
+                                                <th className="px-6 py-4 text-[9px] font-black uppercase tracking-[0.2em] text-neutral-500">Data</th>
+                                                <th className="px-6 py-4 text-[9px] font-black uppercase tracking-[0.2em] text-neutral-500">Usuário</th>
+                                                <th className="px-6 py-4 text-[9px] font-black uppercase tracking-[0.2em] text-neutral-500">Ação / Descrição</th>
+                                                <th className="px-6 py-4 text-[9px] font-black uppercase tracking-[0.2em] text-neutral-500">Custo</th>
+                                                <th className="px-6 py-4 text-[9px] font-black uppercase tracking-[0.2em] text-neutral-500">Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-neutral-100">
+                                            {globalLogs.length > 0 ? globalLogs.map((log) => (
+                                                <tr key={log.id} className="hover:bg-neutral-50">
+                                                    <td className="px-6 py-4 text-[10px] font-bold text-neutral-500">
+                                                        {new Date(log.timestamp).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}
+                                                    </td>
+                                                    <td className="px-6 py-4 text-[11px] font-black">
+                                                        {log.userEmail || <span className="text-neutral-400">Desconhecido</span>}
+                                                    </td>
+                                                    <td className="px-6 py-4 text-[10px]">
+                                                        <span className="font-black uppercase tracking-widest">{log.description}</span>
+                                                        {log.errorMsg && <p className="text-red-500 text-[8px] mt-1 max-w-xs truncate" title={log.errorMsg}>{log.errorMsg}</p>}
+                                                    </td>
+                                                    <td className="px-6 py-4 text-[11px] font-black">
+                                                        <span className={log.amount < 0 || log.type === 'error' ? 'text-red-500' : 'text-emerald-500'}>
+                                                            {log.type === 'error' ? '0' : log.amount}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <span className={`px-2 py-1 rounded-md text-[8px] font-black uppercase tracking-widest ${
+                                                            log.status === 'success' ? 'bg-emerald-100 text-emerald-600' : 
+                                                            log.status === 'failed' ? 'bg-red-100 text-red-600' : 'bg-amber-100 text-amber-600'
+                                                        }`}>
+                                                            {log.status || 'Success'}
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            )) : (
+                                                <tr><td colSpan={5} className="px-6 py-10 text-center text-xs font-black uppercase text-neutral-400">Nenhum log encontrado.</td></tr>
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        )}
                         {activeTab === 'users' && (
                             <div className="bg-white rounded-[30px] border border-neutral-200 overflow-hidden shadow-sm">
                                 <div className="p-4"><input type="text" placeholder="Buscar usuário..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full p-2 bg-[#F2F2F2] rounded-lg text-xs" /></div>

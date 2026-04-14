@@ -26,6 +26,7 @@ const RESOLUTIONS: { label: RenderResolution; cost: number }[] = [
 
 interface RenderToolProps {
   onRenderComplete: (url: string, style: RenderStyle, cost: number, originalUrl?: string) => void;
+  onRenderError?: (msg: string, style: RenderStyle) => void;
   credits: number;
   userPlan: UserPlan;
   onKeyReset: () => void;
@@ -37,7 +38,7 @@ const shouldShowWatermark = (userPlan: UserPlan): boolean => {
   return userPlan === 'free';
 };
 
-export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credits, userPlan, onKeyReset, onUpgrade, isAdmin = false }) => {
+export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, onRenderError, credits, userPlan, onKeyReset, onUpgrade, isAdmin = false }) => {
   const [mode, setMode] = useState<'single' | 'batch'>('single');
   const [image, setImage] = useState<string | null>(null);
   const [mimeType, setMimeType] = useState<string>('');
@@ -195,6 +196,11 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
       // If NOT admin, hide technical debug messages (like API key issues)
       if (!isAdmin && (errorMsg.includes("CHAVE") || errorMsg.includes("API") || errorMsg.includes("RECURSO INDISPONÍVEL"))) {
         errorMsg = "Em manutenção, tente em alguns instantes.";
+      }
+
+      // Log an admin-friendly real error, but keep user UI error generic if needed
+      if (onRenderError) {
+        onRenderError(err.message || errorMsg, selectedStyle); // Log the real technical error
       }
 
       toast.error(`Erro: ${errorMsg}`, { id: loadingToast, duration: 5000 });
