@@ -6,6 +6,7 @@ import { renderImage } from '../services/geminiService';
 import { storageService } from '../services/storageService';
 import { toast } from 'react-hot-toast';
 import { BatchProcessor } from './BatchProcessor';
+import { BeforeAfterSlider } from './BeforeAfterSlider';
 
 const fileToBase64 = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -16,16 +17,15 @@ const fileToBase64 = (file: File): Promise<string> => {
   });
 };
 
-const STYLES: RenderStyle[] = ['Dia', 'Noite', 'Fim de Tarde', 'Nublado'];
+const STYLES: RenderStyle[] = ['Dia', 'Noite', 'Fim de Tarde', 'Nublado', 'Interior'];
 
 const RESOLUTIONS: { label: RenderResolution; cost: number }[] = [
-  { label: '1K', cost: 1 },
-  { label: '2K', cost: 3 },
-  { label: '4K', cost: 5 },
+  { label: '2K', cost: 1 },
+  { label: '4K', cost: 3 },
 ];
 
 interface RenderToolProps {
-  onRenderComplete: (url: string, style: RenderStyle, cost: number) => void;
+  onRenderComplete: (url: string, style: RenderStyle, cost: number, originalUrl?: string) => void;
   credits: number;
   userPlan: UserPlan;
   onKeyReset: () => void;
@@ -41,7 +41,7 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
   const [image, setImage] = useState<string | null>(null);
   const [mimeType, setMimeType] = useState<string>('');
   const [style, setStyle] = useState<RenderStyle>('Dia');
-  const [resolution, setResolution] = useState<RenderResolution>('1K');
+  const [resolution, setResolution] = useState<RenderResolution>('2K');
   const [isRendering, setIsRendering] = useState(false);
   const [result, setResult] = useState<string | null>(null);
 
@@ -109,12 +109,22 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
     }
     const base64 = await fileToBase64(file);
     const type = file.type;
+
+    // Upload original first to get URL (optional for batch, but good for consistency? 
+    // BatchProcessor handles its own logic, maybe we skip originalUrl for batch for now or update it later if needed.
+    // The current BatchProcessor doesn't seem to support originalUrl callback yet, so we leave it as is for now.)
+
     const rendered = await renderImage(base64, type, batchStyle, batchResolution);
     const response = await fetch(rendered);
     const blob = await response.blob();
     const filename = `render-${Date.now()}-${Math.random().toString(36).substr(2, 5)}.png`;
     const uploadFile = new File([blob], filename, { type: "image/png" });
     const publicUrl = await storageService.uploadImage(uploadFile, "renders");
+
+    // Note: Batch currently doesn't pass originalUrl. 
+    // If we want consistency, we'd need to upload 'file' too.
+    // For now, let's keep batch as is or update if requested. 
+    // The prompt was just "Add option to compare... like landing page", which implies Single Render flow mostly.
     onRenderComplete(publicUrl, batchStyle, cost);
   };
 
@@ -151,7 +161,21 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
     });
 
     try {
-      const rendered = await renderImage(image, mimeType, style, resolution);
+      // 1. Start Rendering
+      const renderPromise = renderImage(image, mimeType, style, resolution);
+
+      // 2. Upload Original Image (Parallel)
+      const uploadOriginalPromise = (async () => {
+        const response = await fetch(image);
+        const blob = await response.blob();
+        const originalFile = new File([blob], `original-${Date.now()}.png`, { type: mimeType || "image/png" });
+        return await storageService.uploadImage(originalFile, "originals");
+      })();
+
+      // Wait for both
+      const [rendered, originalUrl] = await Promise.all([renderPromise, uploadOriginalPromise]);
+
+      // 3. Upload Rendered Result
       const response = await fetch(rendered);
       const blob = await response.blob();
       const filename = `render-${Date.now()}.png`;
@@ -159,7 +183,10 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
       const publicUrl = await storageService.uploadImage(file, "renders");
 
       setResult(publicUrl);
-      onRenderComplete(publicUrl, style, selectedRes.cost);
+
+      // Pass originalUrl to completion handler
+      onRenderComplete(publicUrl, style, selectedRes.cost, originalUrl);
+
       toast.success('Pronto!', { id: loadingToast });
     } catch (err: any) {
       const errorMsg = err.message || "Erro desconhecido";
@@ -214,24 +241,24 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
   };
 
   return (
-    <div id="render-tool-root" className="flex flex-col md:flex-row h-auto md:h-full w-full bg-[#EAE4D5] rounded-[20px] md:rounded-[30px] overflow-hidden border border-[#B6B09F]/30 shadow-2xl relative">
+    <div id="render-tool-root" className="flex flex-col md:flex-row h-auto md:h-full w-full bg-white rounded-[20px] md:rounded-[30px] overflow-hidden border border-neutral-200 shadow-2xl relative">
       {/* Sidebar Controls */}
-      <div className="w-full md:w-80 h-auto md:h-full bg-white/50 backdrop-blur-sm border-t md:border-t-0 md:border-r border-[#B6B09F]/20 flex flex-col p-4 md:p-6 md:overflow-y-auto custom-scrollbar z-10 shrink-0">
+      <div className="w-full md:w-80 h-auto md:h-full bg-white/50 backdrop-blur-sm border-t md:border-t-0 md:border-r border-neutral-200 flex flex-col p-4 md:p-6 md:overflow-y-auto custom-scrollbar z-10 shrink-0">
         <div className="mb-8">
-          <h3 className="text-xs font-black uppercase tracking-widest text-[#7A756A] mb-4 flex items-center">
+          <h3 className="text-xs font-black uppercase tracking-widest text-neutral-500 mb-4 flex items-center">
             <Layers className="w-4 h-4 mr-2" />
             Modo de Trabalho
           </h3>
           <div className="flex bg-[#F2F2F2] rounded-xl p-1">
             <button
               onClick={() => setMode('single')}
-              className={`flex-1 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${mode === 'single' ? 'bg-black text-white shadow-md' : 'text-[#7A756A] hover:bg-black/5'}`}
+              className={`flex-1 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${mode === 'single' ? 'bg-black text-white shadow-md' : 'text-neutral-500 hover:bg-black/5'}`}
             >
               Única
             </button>
             <button
               onClick={() => setMode('batch')}
-              className={`flex-1 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${mode === 'batch' ? 'bg-black text-white shadow-md' : 'text-[#7A756A] hover:bg-black/5'}`}
+              className={`flex-1 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${mode === 'batch' ? 'bg-black text-white shadow-md' : 'text-neutral-500 hover:bg-black/5'}`}
             >
               Lote
             </button>
@@ -251,7 +278,7 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
                   onClick={() => setStyle(s)}
                   className={`px-3 py-3 rounded-xl text-[9px] font-black transition-all uppercase tracking-widest border text-left ${style === s
                     ? 'bg-black text-white border-black shadow-lg scale-105'
-                    : 'bg-white text-[#7A756A] border-transparent hover:border-[#B6B09F]/30 hover:bg-white/80'
+                    : 'bg-white text-neutral-500 border-transparent hover:border-neutral-200 hover:bg-white/80'
                     }`}
                 >
                   {s}
@@ -260,34 +287,36 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
             </div>
           </div>
 
-          <div>
-            <label className="text-[10px] font-black uppercase tracking-widest text-[#000] mb-3 flex items-center">
-              <Maximize2 className="w-3 h-3 mr-2" />
-              Resolução de Saída
-            </label>
-            <div className="space-y-2">
-              {RESOLUTIONS.map((r) => (
-                <button
-                  key={r.label}
-                  onClick={() => setResolution(r.label)}
-                  className={`w-full px-4 py-3 rounded-xl text-[9px] font-black transition-all uppercase tracking-widest border flex justify-between items-center ${resolution === r.label
-                    ? 'bg-black text-white border-black shadow-lg scale-105'
-                    : 'bg-white text-[#7A756A] border-transparent hover:border-[#B6B09F]/30 hover:bg-white/80'
-                    }`}
-                >
-                  <span>{r.label}</span>
-                  <span className="opacity-60">{r.cost} {r.cost === 1 ? 'crédito' : 'créditos'}</span>
-                </button>
-              ))}
+          {image && (
+            <div className="animate-in fade-in slide-in-from-left-4 duration-500">
+              <label className="text-[10px] font-black uppercase tracking-widest text-[#000] mb-3 flex items-center">
+                <Maximize2 className="w-3 h-3 mr-2" />
+                Resolução de Saída
+              </label>
+              <div className="space-y-2">
+                {RESOLUTIONS.map((r) => (
+                  <button
+                    key={r.label}
+                    onClick={() => setResolution(r.label)}
+                    className={`w-full px-4 py-3 rounded-xl text-[9px] font-black transition-all uppercase tracking-widest border flex justify-between items-center ${resolution === r.label
+                      ? 'bg-black text-white border-black shadow-lg scale-105'
+                      : 'bg-white text-neutral-500 border-transparent hover:border-neutral-200 hover:bg-white/80'
+                      }`}
+                  >
+                    <span>{r.label}</span>
+                    <span className="opacity-60">{r.cost} {r.cost === 1 ? 'crédito' : 'créditos'}</span>
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 
       {/* Main Canvas */}
-      <div className="w-full md:flex-1 bg-[#dcd7c9] relative flex flex-col min-h-[400px] md:h-auto shrink-0 overflow-y-auto">
+      <div className="w-full md:flex-1 bg-neutral-100 relative flex flex-col min-h-[400px] md:h-auto shrink-0 overflow-y-auto">
         {mode === 'batch' ? (
-          <div className="absolute inset-0 p-8 flex flex-col bg-[#dcd7c9] overflow-hidden">
+          <div className="absolute inset-0 p-8 flex flex-col bg-neutral-100 overflow-hidden">
             <BatchProcessor
               onRender={processBatchImage}
               isProcessing={isRendering}
@@ -301,13 +330,27 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
           <div className={`absolute inset-0 p-8 ${result ? 'flex items-center justify-center' : 'overflow-y-auto'}`}>
             {result ? (
               <div className="relative w-full h-full flex flex-col">
-                <div className="flex-1 flex items-center justify-center overflow-hidden cursor-zoom-in group" onClick={() => setIsLightboxOpen(true)}>
-                  <img src={result} alt="Resultado" className="max-w-full max-h-full object-contain shadow-2xl rounded-lg transition-transform duration-300 group-hover:scale-[1.02]" />
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center pointer-events-none">
-                    <Maximize2 className="text-white opacity-0 group-hover:opacity-100 w-12 h-12 transition-opacity" />
+                <div
+                  className="flex-1 flex items-center justify-center overflow-hidden cursor-zoom-in group p-4"
+                  onClick={() => setIsLightboxOpen(true)}
+                >
+                  {image && (
+                    <BeforeAfterSlider
+                      before={image}
+                      after={result}
+                      className="w-full h-full rounded-2xl shadow-2xl"
+                    />
+                  )}
+                  {/* Fallback if image is somehow missing, though it shouldn't be */}
+                  {!image && (
+                    <img src={result} alt="Resultado" className="max-w-full max-h-full object-contain shadow-2xl rounded-lg" />
+                  )}
+
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors flex items-center justify-center pointer-events-none">
+                    <Maximize2 className="text-white opacity-0 group-hover:opacity-100 w-12 h-12 transition-opacity drop-shadow-md" />
                   </div>
                 </div>
-                <div className="mt-6 flex flex-wrap justify-center gap-4">
+                <div className="mt-4 flex flex-wrap justify-center gap-4">
                   <button onClick={() => { setResult(null); setImage(null); setFileName(''); }} className="px-6 py-3 bg-white text-black rounded-xl font-black text-xs uppercase tracking-widest shadow-lg hover:bg-gray-50 transition-all border border-black/5">Novo Render</button>
                   <button onClick={handleRefine} className="px-6 py-3 bg-amber-500 text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-lg hover:bg-amber-600 transition-all flex items-center">
                     <Wand2 className="w-4 h-4 mr-2" /> Refinar Render
@@ -322,7 +365,7 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
               <div className="w-full max-w-2xl mx-auto mb-8 animate-in fade-in slide-in-from-bottom-4">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-2">
-                    <h3 className="text-sm font-black uppercase tracking-widest text-[#7A756A]">Renderização Única</h3>
+                    <h3 className="text-sm font-black uppercase tracking-widest text-neutral-500">Renderização Única</h3>
                   </div>
                 </div>
 
@@ -352,7 +395,7 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
 
                 <div
                   className={`relative border-2 border-dashed rounded-3xl p-8 transition-all duration-300 text-center
-                            ${image ? 'border-black bg-white' : 'border-[#B6B09F] hover:border-black hover:bg-white'}
+                            ${image ? 'border-black bg-white' : 'border-neutral-300 hover:border-black hover:bg-white'}
                         `}
                 >
                   <input
@@ -369,11 +412,11 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
                       className="cursor-pointer space-y-4 py-8 block"
                     >
                       <div className="w-16 h-16 bg-[#F2F2F2] rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                        <Upload className="w-8 h-8 text-[#7A756A]" />
+                        <Upload className="w-8 h-8 text-neutral-400" />
                       </div>
                       <div>
                         <p className="text-sm font-black uppercase tracking-widest">Arraste uma imagem</p>
-                        <p className="text-[10px] font-bold uppercase text-[#7A756A] mt-2">ou clique para selecionar (JPG, PNG)</p>
+                        <p className="text-[10px] font-bold uppercase text-neutral-400 mt-2">ou clique para selecionar (JPG, PNG)</p>
                       </div>
                     </label>
                   ) : (
@@ -384,7 +427,7 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
                           <img src={image} className="w-12 h-12 object-cover rounded-lg bg-white" />
                           <div className="flex-1 text-left overflow-hidden">
                             <p className="text-[10px] font-bold truncate">{fileName || "Imagem Selecionada"}</p>
-                            <p className="text-[9px] font-bold uppercase text-[#7A756A]">
+                            <p className="text-[9px] font-bold uppercase text-neutral-400">
                               {isRendering ? 'Renderizando...' : 'Aguardando'}
                             </p>
                           </div>
@@ -400,7 +443,7 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
                         </div>
                       </div>
 
-                      <div className="flex gap-3 pt-4 border-t border-[#B6B09F]/20">
+                      <div className="flex gap-3 pt-4 border-t border-neutral-200">
                         <button
                           onClick={handleGenerate}
                           disabled={isRendering || credits < selectedRes.cost}
@@ -454,12 +497,23 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, credit
               <RotateCcw className="w-6 h-6" />
             </button>
           </div>
-          <img
-            src={result}
-            alt="Expanded Render"
-            className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          />
+
+          <div className="w-full max-w-6xl h-full max-h-[85vh] flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+            {image ? (
+              <BeforeAfterSlider
+                before={image}
+                after={result}
+                className="w-full h-full max-w-full max-h-full rounded-xl"
+              />
+            ) : (
+              <img
+                src={result}
+                alt="Expanded Render"
+                className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+              />
+            )}
+          </div>
+
           <p className="text-white/50 text-[10px] uppercase tracking-widest mt-6 font-bold">Clique fora para fechar</p>
         </div>
       )}

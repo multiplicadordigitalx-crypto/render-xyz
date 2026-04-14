@@ -81,16 +81,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
                     transaction.update(userRef, { credits: newCredits });
 
-                    // Adicionar ao histórico de transações (opcional, mas bom)
-                    const transactionRef = db.collection('transactions').doc();
+                    // Adicionar ao histórico de transações
+                    const transactionRef = db.collection('credit_transactions').doc();
                     transaction.set(transactionRef, {
                         userId,
                         amount: creditsToAdd,
-                        type: 'credit_purchase',
-                        provider: 'asaas',
-                        paymentId: payment.id,
-                        value: payment.value,
-                        timestamp: new Date()
+                        type: 'purchase',
+                        description: `Compra de Pacote (${creditsToAdd} créditos) - Asaas`,
+                        timestamp: Date.now()
                     });
                 });
 

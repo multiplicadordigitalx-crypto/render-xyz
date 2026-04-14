@@ -92,10 +92,10 @@ export const BatchProcessor: React.FC<BatchProcessorProps> = ({
             <div className="flex items-center justify-between mb-4 shrink-0">
                 <div className="flex items-center space-x-2">
                     <div className="bg-black text-white px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest">BETA</div>
-                    <h3 className="text-sm font-black uppercase tracking-widest text-[#7A756A]">Renderização em Lote</h3>
+                    <h3 className="text-sm font-black uppercase tracking-widest text-neutral-500">Renderização em Lote</h3>
                 </div>
                 {queue.length > 0 && (
-                    <span className="text-[10px] font-bold uppercase text-[#7A756A]">
+                    <span className="text-[10px] font-bold uppercase text-neutral-500">
                         {completedCount} / {queue.length} Concluídos
                     </span>
                 )}
@@ -137,7 +137,7 @@ export const BatchProcessor: React.FC<BatchProcessorProps> = ({
 
             <div
                 className={`relative border-2 border-dashed rounded-3xl p-8 transition-all duration-300 text-center flex flex-col items-center justify-center flex-1 min-h-0 overflow-hidden
-                    ${queue.length > 0 ? 'border-black bg-white' : 'border-[#B6B09F] hover:border-black hover:bg-white'}
+                    ${queue.length > 0 ? 'border-black bg-white' : 'border-neutral-300 hover:border-black hover:bg-white'}
                 `}
             >
                 <input
@@ -159,11 +159,11 @@ export const BatchProcessor: React.FC<BatchProcessorProps> = ({
                         tabIndex={0}
                     >
                         <div className="w-16 h-16 bg-[#F2F2F2] rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                            <Upload className="w-8 h-8 text-[#7A756A]" />
+                            <Upload className="w-8 h-8 text-neutral-500" />
                         </div>
                         <div>
                             <p className="text-sm font-black uppercase tracking-widest">Arraste múltiplos arquivos</p>
-                            <p className="text-[10px] font-bold uppercase text-[#7A756A] mt-2">ou clique para selecionar (JPG, PNG)</p>
+                            <p className="text-[10px] font-bold uppercase text-neutral-500 mt-2">ou clique para selecionar (JPG, PNG)</p>
                         </div>
                     </div>
                 ) : (
@@ -178,7 +178,7 @@ export const BatchProcessor: React.FC<BatchProcessorProps> = ({
                                     />
                                     <div className="flex-1 text-left overflow-hidden">
                                         <p className="text-[10px] font-bold truncate">{item.file.name}</p>
-                                        <p className="text-[9px] font-bold uppercase text-[#7A756A]">
+                                        <p className="text-[9px] font-bold uppercase text-neutral-500">
                                             {item.status === 'pending' && 'Aguardando'}
                                             {item.status === 'processing' && 'Renderizando...'}
                                             {item.status === 'completed' && 'Concluído'}
@@ -205,7 +205,7 @@ export const BatchProcessor: React.FC<BatchProcessorProps> = ({
                             ))}
                         </div>
 
-                        <div className="flex gap-3 pt-4 border-t border-[#B6B09F]/20 shrink-0">
+                        <div className="flex gap-3 pt-4 border-t border-neutral-200 shrink-0">
                             <button
                                 onClick={processQueue}
                                 disabled={!!processingId || pendingCount === 0 || !hasEnoughCredits}

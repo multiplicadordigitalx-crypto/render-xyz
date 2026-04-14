@@ -15,7 +15,7 @@ export const TermsPage: React.FC = () => {
                     <ArrowLeft className="w-4 h-4 mr-2" /> Voltar
                 </button>
 
-                <div className="bg-white rounded-[40px] shadow-2xl overflow-hidden p-8 md:p-12 border border-[#B6B09F]/20">
+                <div className="bg-white rounded-[40px] shadow-2xl overflow-hidden p-8 md:p-12 border border-neutral-200">
                     <div className="flex items-center space-x-4 mb-10">
                         <div className="w-12 h-12 bg-black text-white rounded-2xl flex items-center justify-center">
                             <FileText className="w-6 h-6" />

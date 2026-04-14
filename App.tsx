@@ -50,8 +50,8 @@ const DEFAULT_CREDIT_PACKAGES: CreditPackage[] = [
 ];
 
 const DEFAULT_LANDING: LandingSettings = {
-  showcaseBefore: "/assets/projeto-sem-render.jpg",
-  showcaseAfter: "/assets/renderxyz-dia.jpg",
+  showcaseBefore: "/assets/projeto-sem-render.webp",
+  showcaseAfter: "/assets/renderxyz-noite.png",
   heroVideoUrl: "https://assets.mixkit.co/videos/preview/mixkit-architect-working-on-a-digital-tablet-34444-large.mp4",
   heroVideoPoster: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1000&auto=format&fit=crop"
 };
@@ -204,18 +204,32 @@ const App: React.FC = () => {
     }
   };
 
-  const onRenderComplete = async (url: string, style: RenderStyle, cost: number = 1) => {
+  const onRenderComplete = async (url: string, style: RenderStyle, cost: number = 1, originalUrl?: string) => {
     if (!currentUser) return;
     const newCredits = credits - cost;
     setCredits(newCredits);
     try {
+      // 1. Update user credits
       await updateDoc(doc(db, "users", currentUser.id), { credits: newCredits });
+
+      // 2. Add to history
       await addDoc(collection(db, "history"), {
         userId: currentUser.id,
         url,
         style,
+        originalUrl: originalUrl || null,
         timestamp: Date.now()
       });
+
+      // 3. Log credit usage
+      await addDoc(collection(db, "credit_transactions"), {
+        userId: currentUser.id,
+        amount: cost,
+        type: 'usage',
+        description: `Renderização ${style}`,
+        timestamp: Date.now()
+      });
+
     } catch (error) {
       console.error("Error saving render data:", error);
     }
@@ -240,8 +254,8 @@ const App: React.FC = () => {
     <div className="app-container">
       <Toaster position="top-right" />
       {appLoading ? (
-        <div className="min-h-screen bg-[#F2F2F2] flex items-center justify-center">
-          <div className="w-12 h-12 border-4 border-[#B6B09F]/30 border-t-black rounded-full animate-spin" />
+        <div className="min-h-screen bg-neutral-50 flex items-center justify-center">
+          <div className="w-12 h-12 border-4 border-neutral-200 border-t-black rounded-full animate-spin" />
         </div>
       ) : (
         <Routes>
@@ -262,19 +276,26 @@ const App: React.FC = () => {
           } />
 
           {/* Protected Routes */}
+          {/* Protected Routes */}
           <Route path="/dashboard" element={
-            isLoggedIn && currentUser ? (
-              <DashboardPage
-                user={currentUser}
-                credits={credits}
-                history={history}
-                onRenderComplete={onRenderComplete}
-                onLogout={handleLogout}
-                hasApiKey={hasApiKey}
-                handleOpenSelectKey={handleOpenSelectKey}
-                setHasApiKey={setHasApiKey}
-                onDeleteHistory={deleteFromHistory}
-              />
+            isLoggedIn ? (
+              currentUser ? (
+                <DashboardPage
+                  user={currentUser}
+                  credits={credits}
+                  history={history}
+                  onRenderComplete={onRenderComplete}
+                  onLogout={handleLogout}
+                  hasApiKey={hasApiKey}
+                  handleOpenSelectKey={handleOpenSelectKey}
+                  setHasApiKey={setHasApiKey}
+                  onDeleteHistory={deleteFromHistory}
+                />
+              ) : (
+                <div className="min-h-screen bg-[#F2F2F2] flex items-center justify-center">
+                  <div className="w-12 h-12 border-4 border-neutral-300 border-t-black rounded-full animate-spin" />
+                </div>
+              )
             ) : (
               <Navigate to="/login" />
             )

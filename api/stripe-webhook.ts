@@ -75,10 +75,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
                     if (userDoc.exists) {
                         const currentCredits = userDoc.data()?.credits || 0;
+                        const newCredits = currentCredits + credits;
                         await userDocRef.update({
-                            credits: currentCredits + credits
+                            credits: newCredits
                         });
-                        console.log(`Added ${credits} credits to user ${userId}. New total: ${currentCredits + credits}`);
+
+                        // Log transaction
+                        await db.collection('credit_transactions').add({
+                            userId: userId,
+                            amount: credits,
+                            type: 'purchase',
+                            description: `Compra de Pacote (${credits} créditos) - Stripe`,
+                            timestamp: Date.now()
+                        });
+
+                        console.log(`Added ${credits} credits to user ${userId}. New total: ${newCredits}`);
                     }
                 } else if (customerEmail) {
                     // Find user by email
@@ -90,10 +101,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                     if (!usersSnapshot.empty) {
                         const userDoc = usersSnapshot.docs[0];
                         const currentCredits = userDoc.data()?.credits || 0;
+                        const newCredits = currentCredits + credits;
                         await userDoc.ref.update({
-                            credits: currentCredits + credits
+                            credits: newCredits
                         });
-                        console.log(`Added ${credits} credits to user with email ${customerEmail}. New total: ${currentCredits + credits}`);
+
+                        // Log transaction
+                        await db.collection('credit_transactions').add({
+                            userId: userDoc.id,
+                            amount: credits,
+                            type: 'purchase',
+                            description: `Compra de Pacote (${credits} créditos) - Stripe`,
+                            timestamp: Date.now()
+                        });
+
+                        console.log(`Added ${credits} credits to user with email ${customerEmail}. New total: ${newCredits}`);
                     }
                 }
             } catch (error) {

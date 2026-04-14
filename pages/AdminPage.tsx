@@ -177,28 +177,28 @@ export const AdminPage: React.FC<AdminPageProps> = ({
             </button>
 
             <div className="bg-white w-full rounded-[30px] md:rounded-[40px] shadow-2xl overflow-hidden flex flex-col min-h-[85vh]">
-                <div className="p-4 md:p-8 border-b border-[#B6B09F]/20 flex justify-between items-center bg-white/50">
+                <div className="p-4 md:p-8 border-b border-neutral-200 flex justify-between items-center bg-white/50">
                     <div className="flex items-center space-x-3 md:space-x-4">
                         <img src="/assets/logo.png" alt="Render XYZ" className="h-8 md:h-12" />
-                        <div className="border-l border-[#B6B09F]/20 pl-4">
+                        <div className="border-l border-neutral-200 pl-4">
                             <h2 className="text-sm md:text-lg font-black uppercase tracking-tighter">Control</h2>
-                            <p className="text-[8px] md:text-[9px] font-black text-[#7A756A] uppercase tracking-[0.2em]">Gestão</p>
+                            <p className="text-[8px] md:text-[9px] font-black text-neutral-500 uppercase tracking-[0.2em]">Gestão</p>
                         </div>
                     </div>
                 </div>
                 <div className="flex-1 flex flex-col md:flex-row">
-                    <div className="w-full md:w-64 border-b md:border-b-0 md:border-r border-[#B6B09F]/20 p-2 md:p-6 flex flex-row md:flex-col space-x-2 md:space-x-0 md:space-y-2 bg-[#EAE4D5]/20 overflow-x-auto whitespace-nowrap">
-                        <button onClick={() => setActiveTab('stats')} className={`flex items-center space-x-3 p-3 md:p-4 rounded-xl font-black text-[9px] md:text-[10px] uppercase tracking-widest ${activeTab === 'stats' ? 'bg-black text-white' : 'text-[#7A756A] hover:bg-black/5'}`}>
+                    <div className="w-full md:w-64 border-b md:border-b-0 md:border-r border-neutral-200 p-2 md:p-6 flex flex-row md:flex-col space-x-2 md:space-x-0 md:space-y-2 bg-neutral-50 overflow-x-auto whitespace-nowrap">
+                        <button onClick={() => setActiveTab('stats')} className={`flex items-center space-x-3 p-3 md:p-4 rounded-xl font-black text-[9px] md:text-[10px] uppercase tracking-widest ${activeTab === 'stats' ? 'bg-black text-white' : 'text-neutral-500 hover:bg-black/5'}`}>
                             <BarChart3 className="w-4 h-4" /><span>Estatísticas</span>
                         </button>
-                        <button onClick={() => setActiveTab('users')} className={`flex items-center space-x-3 p-3 md:p-4 rounded-xl font-black text-[9px] md:text-[10px] uppercase tracking-widest ${activeTab === 'users' ? 'bg-black text-white' : 'text-[#7A756A] hover:bg-black/5'}`}>
+                        <button onClick={() => setActiveTab('users')} className={`flex items-center space-x-3 p-3 md:p-4 rounded-xl font-black text-[9px] md:text-[10px] uppercase tracking-widest ${activeTab === 'users' ? 'bg-black text-white' : 'text-neutral-500 hover:bg-black/5'}`}>
                             <Users className="w-4 h-4" /><span>Usuários</span>
                         </button>
                         {/* Removed Pricing Tab Button */}
-                        <button onClick={() => setActiveTab('content')} className={`flex items-center space-x-3 p-3 md:p-4 rounded-xl font-black text-[9px] md:text-[10px] uppercase tracking-widest ${activeTab === 'content' ? 'bg-black text-white' : 'text-[#7A756A] hover:bg-black/5'}`}>
+                        <button onClick={() => setActiveTab('content')} className={`flex items-center space-x-3 p-3 md:p-4 rounded-xl font-black text-[9px] md:text-[10px] uppercase tracking-widest ${activeTab === 'content' ? 'bg-black text-white' : 'text-neutral-500 hover:bg-black/5'}`}>
                             <Layers className="w-4 h-4" /><span>Landing</span>
                         </button>
-                        <button onClick={() => setActiveTab('portfolio' as any)} className={`flex items-center space-x-3 p-3 md:p-4 rounded-xl font-black text-[9px] md:text-[10px] uppercase tracking-widest ${activeTab === 'portfolio' ? 'bg-black text-white' : 'text-[#7A756A] hover:bg-black/5'}`}>
+                        <button onClick={() => setActiveTab('portfolio' as any)} className={`flex items-center space-x-3 p-3 md:p-4 rounded-xl font-black text-[9px] md:text-[10px] uppercase tracking-widest ${activeTab === 'portfolio' ? 'bg-black text-white' : 'text-neutral-500 hover:bg-black/5'}`}>
                             <Grid className="w-4 h-4" /><span>Portfólio</span>
                         </button>
                     </div>
@@ -209,30 +209,30 @@ export const AdminPage: React.FC<AdminPageProps> = ({
                                 <div className="space-y-8">
                                     <h3 className="text-xl font-black uppercase tracking-tight flex items-center"><ImageIconLucide className="w-5 h-5 mr-3" /> Gerenciar Ativos da Landing</h3>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                        <div className="bg-white p-6 md:p-8 rounded-[30px] border border-[#B6B09F]/20 shadow-sm space-y-4">
-                                            <label className="text-[9px] font-black uppercase tracking-widest text-[#7A756A] block">Slider: Imagem Antes (Anexo)</label>
+                                        <div className="bg-white p-6 md:p-8 rounded-[30px] border border-neutral-200 shadow-sm space-y-4">
+                                            <label className="text-[9px] font-black uppercase tracking-widest text-neutral-500 block">Slider: Imagem Antes (Anexo)</label>
                                             <input type="file" ref={fileInputBeforeRef} onChange={(e) => handleFileUpload(e, 'showcaseBefore')} className="hidden" accept="image/*" />
-                                            <button onClick={() => fileInputBeforeRef.current?.click()} className="w-full py-4 bg-[#F2F2F2] border-2 border-dashed border-[#B6B09F]/30 rounded-2xl flex items-center justify-center space-x-3 hover:border-black transition-all">
+                                            <button onClick={() => fileInputBeforeRef.current?.click()} className="w-full py-4 bg-[#F2F2F2] border-2 border-dashed border-neutral-200 rounded-2xl flex items-center justify-center space-x-3 hover:border-black transition-all">
                                                 <Upload className="w-5 h-5" /> <span className="text-[10px] font-black uppercase tracking-widest">Anexar Imagem</span>
                                             </button>
-                                            <div className="aspect-video rounded-xl overflow-hidden border border-[#B6B09F]/10 bg-[#F2F2F2] group relative">
+                                            <div className="aspect-video rounded-xl overflow-hidden border border-neutral-200 bg-[#F2F2F2] group relative">
                                                 <img src={tempLanding.showcaseBefore} alt="Preview Before" className="w-full h-full object-cover" />
                                             </div>
                                         </div>
-                                        <div className="bg-white p-6 md:p-8 rounded-[30px] border border-[#B6B09F]/20 shadow-sm space-y-4">
-                                            <label className="text-[9px] font-black uppercase tracking-widest text-[#7A756A] block">Slider: Imagem Depois (Anexo)</label>
+                                        <div className="bg-white p-6 md:p-8 rounded-[30px] border border-neutral-200 shadow-sm space-y-4">
+                                            <label className="text-[9px] font-black uppercase tracking-widest text-neutral-500 block">Slider: Imagem Depois (Anexo)</label>
                                             <input type="file" ref={fileInputAfterRef} onChange={(e) => handleFileUpload(e, 'showcaseAfter')} className="hidden" accept="image/*" />
-                                            <button onClick={() => fileInputAfterRef.current?.click()} className="w-full py-4 bg-[#F2F2F2] border-2 border-dashed border-[#B6B09F]/30 rounded-2xl flex items-center justify-center space-x-3 hover:border-black transition-all">
+                                            <button onClick={() => fileInputAfterRef.current?.click()} className="w-full py-4 bg-[#F2F2F2] border-2 border-dashed border-neutral-200 rounded-2xl flex items-center justify-center space-x-3 hover:border-black transition-all">
                                                 <Upload className="w-5 h-5" /> <span className="text-[10px] font-black uppercase tracking-widest">Anexar Imagem</span>
                                             </button>
-                                            <div className="aspect-video rounded-xl overflow-hidden border border-[#B6B09F]/10 bg-[#F2F2F2]">
+                                            <div className="aspect-video rounded-xl overflow-hidden border border-neutral-200 bg-[#F2F2F2]">
                                                 <img src={tempLanding.showcaseAfter} alt="Preview After" className="w-full h-full object-cover" />
                                             </div>
                                         </div>
                                         {/* Video input simplified for brevity, similar to original but adapting layout if needed. Using original structure. */}
-                                        <div className="bg-white p-6 md:p-8 rounded-[30px] border border-[#B6B09F]/20 shadow-sm space-y-6">
+                                        <div className="bg-white p-6 md:p-8 rounded-[30px] border border-neutral-200 shadow-sm space-y-6">
                                             <div>
-                                                <label className="text-[9px] font-black uppercase tracking-widest text-[#7A756A] block mb-2">Fluxo: Vídeo MP4 (Direto ou URL)</label>
+                                                <label className="text-[9px] font-black uppercase tracking-widest text-neutral-500 block mb-2">Fluxo: Vídeo MP4 (Direto ou URL)</label>
                                                 <div className="space-y-4">
                                                     <div className="flex flex-col space-y-2">
                                                         <input
@@ -280,7 +280,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({
 
                                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                                     {portfolioItems.map((item) => (
-                                        <div key={item.id} className="relative group rounded-2xl overflow-hidden aspect-square border border-[#B6B09F]/20 bg-white shadow-sm">
+                                        <div key={item.id} className="relative group rounded-2xl overflow-hidden aspect-square border border-neutral-200 bg-white shadow-sm">
                                             <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" />
                                             <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-4">
                                                 <button
@@ -294,7 +294,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({
                                         </div>
                                     ))}
                                     {portfolioItems.length === 0 && (
-                                        <div className="col-span-full py-20 text-center text-[#7A756A] opacity-50 border-2 border-dashed border-[#B6B09F]/20 rounded-[30px]">
+                                        <div className="col-span-full py-20 text-center text-neutral-400 opacity-50 border-2 border-dashed border-neutral-200 rounded-[30px]">
                                             <Grid className="w-12 h-12 mx-auto mb-4 opacity-50" />
                                             <p className="font-black uppercase tracking-widest text-xs">Nenhuma imagem no portfólio</p>
                                         </div>
@@ -304,20 +304,20 @@ export const AdminPage: React.FC<AdminPageProps> = ({
                         )}
                         {activeTab === 'stats' && <div className="text-center p-20 opacity-20"><BarChart3 className="w-20 h-20 mx-auto mb-4" /><p className="font-black uppercase tracking-widest text-xs">Aguardando dados de tráfego</p></div>}
                         {activeTab === 'users' && (
-                            <div className="bg-white rounded-[30px] border border-[#B6B09F]/20 overflow-hidden shadow-sm">
+                            <div className="bg-white rounded-[30px] border border-neutral-200 overflow-hidden shadow-sm">
                                 <div className="p-4"><input type="text" placeholder="Buscar usuário..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full p-2 bg-[#F2F2F2] rounded-lg text-xs" /></div>
                                 <table className="w-full text-left">
-                                    <thead className="bg-[#F2F2F2] border-b border-[#B6B09F]/10">
+                                    <thead className="bg-[#F2F2F2] border-b border-neutral-100">
                                         <tr>
-                                            <th className="px-8 py-5 text-[9px] font-black uppercase tracking-[0.3em] text-[#7A756A]">Usuário</th>
-                                            <th className="px-8 py-5 text-[9px] font-black uppercase tracking-[0.3em] text-[#7A756A]">Créditos</th>
-                                            <th className="px-8 py-5 text-[9px] font-black uppercase tracking-[0.3em] text-[#7A756A] text-right">Gerenciar Saldo</th>
+                                            <th className="px-8 py-5 text-[9px] font-black uppercase tracking-[0.3em] text-neutral-500">Usuário</th>
+                                            <th className="px-8 py-5 text-[9px] font-black uppercase tracking-[0.3em] text-neutral-500">Créditos</th>
+                                            <th className="px-8 py-5 text-[9px] font-black uppercase tracking-[0.3em] text-neutral-500 text-right">Gerenciar Saldo</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-[#B6B09F]/10">
+                                    <tbody className="divide-y divide-neutral-100">
                                         {filteredUsers.map((u) => (
                                             <tr key={u.id}>
-                                                <td className="px-8 py-6"><p className="text-xs font-black uppercase">{u.name}</p><p className="text-[9px] text-[#7A756A]">{u.email}</p></td>
+                                                <td className="px-8 py-6"><p className="text-xs font-black uppercase">{u.name}</p><p className="text-[9px] text-neutral-400">{u.email}</p></td>
                                                 <td className="px-8 py-6 font-black">{u.credits}</td>
                                                 <td className="px-8 py-6 text-right">
                                                     <button
@@ -340,30 +340,30 @@ export const AdminPage: React.FC<AdminPageProps> = ({
             {/* Credit Management Modal Overlay - Global Position */}
             {selectedUserForCredits && (
                 <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center animate-in fade-in p-4">
-                    <div className="bg-white border border-[#B6B09F]/20 shadow-2xl rounded-[30px] p-8 max-w-sm w-full relative overflow-hidden">
+                    <div className="bg-white border border-neutral-200 shadow-2xl rounded-[30px] p-8 max-w-sm w-full relative overflow-hidden">
                         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-black to-transparent opacity-20" />
 
                         <div className="text-center mb-8">
                             <div className="w-14 h-14 bg-[#F2F2F2] rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-inner">
-                                <Coins className="w-7 h-7 text-[#7A756A]" />
+                                <Coins className="w-7 h-7 text-neutral-500" />
                             </div>
                             <h3 className="text-xl font-black uppercase tracking-tight mb-1">Gerenciar Créditos</h3>
-                            <p className="text-xs text-[#7A756A] font-bold">{selectedUserForCredits.name}</p>
-                            <div className="mt-4 inline-flex items-center bg-[#F2F2F2] rounded-xl px-4 py-2 border border-[#B6B09F]/10">
-                                <span className="text-[9px] font-black uppercase tracking-widest text-[#7A756A] mr-2">Saldo Atual</span>
+                            <p className="text-xs text-neutral-500 font-bold">{selectedUserForCredits.name}</p>
+                            <div className="mt-4 inline-flex items-center bg-[#F2F2F2] rounded-xl px-4 py-2 border border-neutral-200">
+                                <span className="text-[9px] font-black uppercase tracking-widest text-neutral-500 mr-2">Saldo Atual</span>
                                 <span className="text-sm font-black text-black">{selectedUserForCredits.credits}</span>
                             </div>
                         </div>
 
                         <div className="space-y-6">
                             <div>
-                                <label className="text-[9px] font-black uppercase tracking-widest text-[#7A756A] block mb-2 pl-2">Quantidade</label>
+                                <label className="text-[9px] font-black uppercase tracking-widest text-neutral-500 block mb-2 pl-2">Quantidade</label>
                                 <input
                                     type="number"
                                     value={creditAmount}
                                     onChange={(e) => setCreditAmount(e.target.value)}
                                     placeholder="0"
-                                    className="w-full bg-[#F2F2F2] rounded-xl px-6 py-4 text-center font-black text-2xl focus:outline-none focus:ring-2 focus:ring-black placeholder:text-[#B6B09F]/50 transition-all"
+                                    className="w-full bg-[#F2F2F2] rounded-xl px-6 py-4 text-center font-black text-2xl focus:outline-none focus:ring-2 focus:ring-black placeholder:text-neutral-400 transition-all"
                                     autoFocus
                                 />
                             </div>
@@ -387,7 +387,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({
 
                             <button
                                 onClick={() => setSelectedUserForCredits(null)}
-                                className="w-full py-3 text-[#7A756A] font-black text-[10px] uppercase tracking-widest hover:text-black hover:bg-[#F2F2F2] rounded-xl transition-all"
+                                className="w-full py-3 text-neutral-500 font-black text-[10px] uppercase tracking-widest hover:text-black hover:bg-[#F2F2F2] rounded-xl transition-all"
                             >
                                 Cancelar
                             </button>

@@ -63,11 +63,11 @@ export const CreditModal: React.FC<CreditModalProps> = ({ creditPackages, onClos
                             return (
                                 <div
                                     key={pkg.id}
-                                    className={`relative bg-gradient-to-br from-[#F8F6F1] to-[#EAE4D5] border-2 ${style.highlight
+                                    className={`relative bg-gradient-to-br from-white to-neutral-50 border-2 ${style.highlight
                                         ? 'border-emerald-500 shadow-xl shadow-emerald-500/20 scale-105'
                                         : index === 1
                                             ? 'border-black'
-                                            : 'border-[#B6B09F]/30'
+                                            : 'border-neutral-200'
                                         } p-6 rounded-[25px] flex flex-col items-center text-center transition-all hover:shadow-lg`}
                                 >
                                     {/* Badge */}
@@ -83,7 +83,7 @@ export const CreditModal: React.FC<CreditModalProps> = ({ creditPackages, onClos
                                         ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white'
                                         : index === 1
                                             ? 'bg-black text-white'
-                                            : 'bg-[#B6B09F]/30 text-black'
+                                            : 'bg-neutral-100 text-black'
                                         }`}>
                                         <div className="text-center leading-tight">
                                             <span className="text-2xl font-black block">{pkg.amount}</span>
@@ -92,11 +92,11 @@ export const CreditModal: React.FC<CreditModalProps> = ({ creditPackages, onClos
                                     </div>
 
                                     {/* Package Name */}
-                                    <p className="text-[#7A756A] text-[9px] font-black uppercase tracking-widest mb-4">{pkg.description}</p>
+                                    <p className="text-neutral-500 text-[9px] font-black uppercase tracking-widest mb-4">{pkg.description}</p>
 
                                     {/* Price */}
                                     <div className="mb-6">
-                                        <span className="text-[#7A756A] text-sm">R$</span>
+                                        <span className="text-neutral-500 text-sm">R$</span>
                                         <span className="text-3xl font-black ml-1">{pkg.price}</span>
                                     </div>
 
@@ -124,7 +124,7 @@ export const CreditModal: React.FC<CreditModalProps> = ({ creditPackages, onClos
                     </div>
 
                     {/* Trust Badge */}
-                    <p className="text-center text-[9px] font-bold uppercase tracking-widest text-[#7A756A] mt-6">
+                    <p className="text-center text-[9px] font-bold uppercase tracking-widest text-neutral-500 mt-6">
                         🔒 Pagamento 100% seguro via cartão • Créditos nunca expiram
                     </p>
                 </div>

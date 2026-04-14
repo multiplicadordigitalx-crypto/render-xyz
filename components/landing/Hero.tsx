@@ -1,6 +1,9 @@
-
-import React from 'react';
-import { Boxes } from '../ui/BackgroundBoxes';
+import React, { useEffect, useMemo, useState } from "react";
+import { motion } from "framer-motion";
+import { MoveRight, PlayCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { AnimatedGridPattern } from "@/components/ui/AnimatedGridPattern";
+import { cn } from "@/lib/utils";
 
 interface HeroProps {
     onStartNow: () => void;
@@ -8,41 +11,103 @@ interface HeroProps {
 }
 
 export const Hero: React.FC<HeroProps> = ({ onStartNow, onSeeInAction }) => {
+    const [titleNumber, setTitleNumber] = useState(0);
+    const titles = useMemo(
+        () => ["qualidade", "fidelidade", "rapidez", "realismo", "precisão"],
+        []
+    );
+
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            if (titleNumber === titles.length - 1) {
+                setTitleNumber(0);
+            } else {
+                setTitleNumber(titleNumber + 1);
+            }
+        }, 2000);
+        return () => clearTimeout(timeoutId);
+    }, [titleNumber, titles]);
+
     return (
-        <section className="relative pt-32 md:pt-52 pb-20 md:pb-28 px-4 text-center reveal reveal-fade overflow-hidden">
-            <div className="absolute inset-0 w-full h-full bg-[#F2F2F2] z-20 [mask-image:radial-gradient(transparent,white)] pointer-events-none" />
-            <Boxes />
-            <div className="relative z-20 max-w-5xl mx-auto">
-                <div className="inline-flex items-center bg-[#EAE4D5] border border-[#B6B09F]/40 px-4 md:px-6 py-2 rounded-full mb-8 md:mb-12">
-                    <div className="w-2 h-2 bg-black rounded-full animate-pulse mr-3" />
-                    <span className="text-[8px] md:text-[10px] font-black uppercase tracking-[0.3em]">Inteligência Artificial Avançada</span>
-                </div>
-                <h1 className="text-4xl md:text-[6rem] font-black mb-8 md:mb-12 leading-[1.1] md:leading-[0.9] tracking-tighter uppercase">
-                    A Nova Era da <br className="hidden md:block" /> <span className="gradient-text">Arquitetura</span>
-                </h1>
-                <p className="text-[#7A756A] text-sm md:text-xl mb-10 md:mb-16 max-w-3xl mx-auto font-bold uppercase tracking-[0.1em] leading-relaxed">
-                    Diga adeus ao V-Ray, Lumion e computadores caros. A Render XYZ usa Inteligência Artificial para transformar seus rascunhos em imagens premiadas instantaneamente.
-                </p>
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-4 md:gap-8">
-                    <button
-                        onClick={onStartNow}
-                        className="w-full sm:w-auto px-12 py-6 md:py-7 bg-black text-white rounded-[25px] md:rounded-[40px] font-black text-xs md:text-sm uppercase tracking-widest shadow-2xl"
-                    >
-                        Começar Agora
-                    </button>
-                    <a
-                        href="#how-it-works"
-                        onClick={(e) => {
-                            e.preventDefault();
-                            document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' });
-                            onSeeInAction();
-                        }}
-                        className="w-full sm:w-auto px-12 py-6 md:py-7 bg-white text-black border border-[#B6B09F]/30 rounded-[25px] md:rounded-[40px] font-black text-xs md:text-sm uppercase tracking-widest"
-                    >
-                        Veja em Ação
-                    </a>
+        <section className="relative w-full pt-32 md:pt-48 pb-20 md:pb-32 overflow-hidden">
+            <div className="absolute inset-0 w-full h-full bg-white z-0 pointer-events-none" />
+
+            <AnimatedGridPattern
+                numSquares={30}
+                maxOpacity={0.1}
+                duration={3}
+                repeatDelay={1}
+                className={cn(
+                    "[mask-image:radial-gradient(500px_circle_at_center,white,transparent)]",
+                    "inset-x-0 inset-y-[-30%] h-[200%] skew-y-12"
+                )}
+            />
+
+            <div className="relative z-30 container mx-auto px-4">
+                <div className="flex gap-8 py-10 lg:py-20 items-center justify-center flex-col">
+                    <div>
+                        <div className="inline-flex items-center bg-neutral-100 border border-neutral-200 px-4 md:px-6 py-2 rounded-full cursor-default shadow-sm hover:bg-neutral-200 transition-colors">
+                            <img
+                                src="https://flagcdn.com/w40/br.png"
+                                alt="Brasil"
+                                className="w-4 h-4 rounded-full mr-3 object-cover shadow-sm"
+                            />
+                            <span className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-foreground">Desenvolvido para Brasileiros</span>
+                            <MoveRight className="w-4 h-4 ml-2 opacity-50" />
+                        </div>
+                    </div>
+                    <div className="flex gap-4 flex-col items-center">
+                        <h1 className="text-4xl md:text-7xl max-w-4xl tracking-tighter text-center font-regular leading-[1.1] md:leading-[1.1] font-sans">
+                            <span className="text-foreground">Renderize imagens com</span>
+                            <span className="relative flex w-full justify-center overflow-hidden text-center md:pb-4 md:pt-1 min-h-[1.2em]">
+                                &nbsp;
+                                {titles.map((title, index) => (
+                                    <motion.span
+                                        key={index}
+                                        className="absolute font-semibold bg-clip-text text-transparent bg-gradient-to-r from-neutral-800 via-neutral-600 to-neutral-800"
+                                        initial={{ opacity: 0, y: "-100%" }}
+                                        transition={{ type: "spring", stiffness: 50 }}
+                                        animate={
+                                            titleNumber === index
+                                                ? {
+                                                    y: 0,
+                                                    opacity: 1,
+                                                }
+                                                : {
+                                                    y: titleNumber > index ? "-150%" : "150%",
+                                                    opacity: 0,
+                                                }
+                                        }
+                                    >
+                                        {title}
+                                    </motion.span>
+                                ))}
+                            </span>
+                        </h1>
+
+                        <p className="text-lg md:text-xl leading-relaxed tracking-tight text-neutral-600 max-w-2xl text-center font-medium">
+                            Clientes estão deixando de fazer renders manuais e substituindo com o lançamento do RenderXYZ, o único capaz de entregar renders realistas para arquitetos, engenheiros e designers.
+                        </p>
+                    </div>
+                    <div className="flex flex-col sm:flex-row gap-4 w-full justify-center mt-4">
+                        <Button
+                            size="lg"
+                            className="gap-4 text-white bg-black hover:bg-black/90 rounded-full h-14 px-8 text-base font-bold tracking-wide shadow-xl"
+                            onClick={onStartNow}
+                        >
+                            Começar Agora <MoveRight className="w-4 h-4" />
+                        </Button>
+                        <Button
+                            size="lg"
+                            variant="outline"
+                            className="gap-4 border-neutral-300 hover:bg-neutral-100 rounded-full h-14 px-8 text-base font-bold tracking-wide"
+                            onClick={onSeeInAction} // Changed to use the prop
+                        >
+                            Veja em Ação <PlayCircle className="w-4 h-4" />
+                        </Button>
+                    </div>
                 </div>
             </div>
         </section>
     );
-};
+}

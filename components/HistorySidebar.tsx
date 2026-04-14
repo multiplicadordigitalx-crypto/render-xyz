@@ -1,6 +1,7 @@
 import React from 'react';
 import { RenderHistoryItem, RenderStyle } from '../types';
 import { Download, Trash2, Clock, RotateCcw, X, Wand2 } from 'lucide-react';
+import { BeforeAfterSlider } from './BeforeAfterSlider';
 
 interface HistorySidebarProps {
     history: RenderHistoryItem[];
@@ -14,9 +15,9 @@ export const HistorySidebar: React.FC<HistorySidebarProps> = ({ history, onSelec
     const [selectedImage, setSelectedImage] = React.useState<RenderHistoryItem | null>(null);
 
     return (
-        <div className="w-full bg-[#EAE4D5] border-t border-[#B6B09F]/20 flex flex-col shadow-[0_-10px_30px_-15px_rgba(0,0,0,0.05)] z-20">
-            <div className="px-6 py-4 border-b border-[#B6B09F]/20 bg-[#EAE4D5] flex items-center justify-between">
-                <h3 className="text-xs font-black uppercase tracking-widest flex items-center text-[#7A756A]">
+        <div className="w-full bg-white border-t border-neutral-200 flex flex-col shadow-[0_-10px_30px_-15px_rgba(0,0,0,0.05)] z-20">
+            <div className="px-6 py-4 border-b border-neutral-200 bg-white flex items-center justify-between">
+                <h3 className="text-xs font-black uppercase tracking-widest flex items-center text-neutral-500">
                     <Clock className="w-4 h-4 mr-2" />
                     Histórico & Portfólio
                 </h3>
@@ -25,13 +26,13 @@ export const HistorySidebar: React.FC<HistorySidebarProps> = ({ history, onSelec
             <div className="flex-1 overflow-x-auto p-4 custom-scrollbar">
                 <div className="flex space-x-4 min-w-max pb-2">
                     {history.length === 0 ? (
-                        <div className="w-full py-8 flex flex-col items-center justify-center text-[#7A756A] opacity-50 px-12">
+                        <div className="w-full py-8 flex flex-col items-center justify-center text-neutral-400 opacity-50 px-12">
                             <Clock className="w-6 h-6 mb-2" />
                             <p className="text-[10px] font-black uppercase tracking-widest text-center">Nenhum render recente</p>
                         </div>
                     ) : (
                         history.map((item) => (
-                            <div key={item.id} className="group relative w-64 bg-[#F2F2F2] rounded-xl overflow-hidden border border-[#B6B09F]/20 hover:border-black transition-all flex-none shadow-sm hover:shadow-md">
+                            <div key={item.id} className="group relative w-64 bg-[#F2F2F2] rounded-xl overflow-hidden border border-neutral-200 hover:border-black transition-all flex-none shadow-sm hover:shadow-md">
                                 <div
                                     className="aspect-video cursor-pointer"
                                     onClick={() => setSelectedImage(item)}
@@ -40,7 +41,7 @@ export const HistorySidebar: React.FC<HistorySidebarProps> = ({ history, onSelec
                                 </div>
                                 <div className="p-3 bg-white">
                                     <div className="flex justify-between items-center">
-                                        <span className="text-[9px] font-black uppercase tracking-wider text-[#7A756A] truncate max-w-[80px]">{item.style}</span>
+                                        <span className="text-[9px] font-black uppercase tracking-wider text-neutral-500 truncate max-w-[80px]">{item.style}</span>
                                         <div className="flex space-x-1">
                                             <button
                                                 onClick={(e) => { e.stopPropagation(); onDownload(item.url, item.style); }}
@@ -84,11 +85,19 @@ export const HistorySidebar: React.FC<HistorySidebarProps> = ({ history, onSelec
                     {/* Main Content */}
                     <div className="flex flex-col items-center max-w-5xl w-full h-full" onClick={(e) => e.stopPropagation()}>
                         <div className="relative flex-1 w-full h-0 flex items-center justify-center min-h-0">
-                            <img
-                                src={selectedImage.url}
-                                alt="Expanded Render"
-                                className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
-                            />
+                            {selectedImage.originalUrl ? (
+                                <BeforeAfterSlider
+                                    before={selectedImage.originalUrl}
+                                    after={selectedImage.url}
+                                    className="w-full h-full max-w-full max-h-full rounded-lg shadow-2xl"
+                                />
+                            ) : (
+                                <img
+                                    src={selectedImage.url}
+                                    alt="Expanded Render"
+                                    className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+                                />
+                            )}
                         </div>
 
                         {/* Bottom Actions */}

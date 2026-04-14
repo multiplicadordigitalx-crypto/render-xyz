@@ -9,9 +9,9 @@ export const BoxesCore = ({ className, ...rest }: { className?: string }) => {
     const cols = new Array(20).fill(1);
 
     const colors = [
-        "#B6B09F", // Project beige accent
+        "#737373", // Neutral 500
         "#000000", // Black
-        "#EAE4D5", // Light beige
+        "#D4D4D4", // Neutral 300
         "#A1A1AA", // Zinc 400
         "#71717A", // Zinc 500
     ];

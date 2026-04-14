@@ -46,11 +46,11 @@ export const PricingPage: React.FC<PricingPageProps> = ({ creditPackages }) => {
                                 return (
                                     <div
                                         key={pkg.id}
-                                        className={`relative bg-gradient-to-br from-[#F8F6F1] to-[#EAE4D5] border-2 ${style.highlight
+                                        className={`relative bg-gradient-to-br from-white to-neutral-100 border-2 ${style.highlight
                                             ? 'border-emerald-500 shadow-xl shadow-emerald-500/20 scale-105 z-10'
                                             : index === 1
                                                 ? 'border-black'
-                                                : 'border-[#B6B09F]/30'
+                                                : 'border-neutral-200'
                                             } p-6 rounded-[25px] flex flex-col items-center text-center transition-all hover:shadow-lg`}
                                     >
                                         {/* Badge */}
@@ -66,7 +66,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({ creditPackages }) => {
                                             ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white'
                                             : index === 1
                                                 ? 'bg-black text-white'
-                                                : 'bg-[#B6B09F]/30 text-black'
+                                                : 'bg-neutral-100 text-black'
                                             }`}>
                                             <div className="text-center leading-tight">
                                                 <span className="text-3xl font-black block">{pkg.amount}</span>
@@ -75,11 +75,11 @@ export const PricingPage: React.FC<PricingPageProps> = ({ creditPackages }) => {
                                         </div>
 
                                         {/* Package Name */}
-                                        <p className="text-[#7A756A] text-[10px] font-black uppercase tracking-widest mb-6">{pkg.description}</p>
+                                        <p className="text-neutral-500 text-[10px] font-black uppercase tracking-widest mb-6">{pkg.description}</p>
 
                                         {/* Price */}
                                         <div className="mb-8">
-                                            <span className="text-[#7A756A] text-sm">R$</span>
+                                            <span className="text-neutral-500 text-sm">R$</span>
                                             <span className="text-4xl font-black ml-1">{pkg.price}</span>
                                         </div>
 
@@ -107,7 +107,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({ creditPackages }) => {
                         </div>
 
                         {/* Trust Badge */}
-                        <p className="text-center text-[10px] font-bold uppercase tracking-widest text-[#7A756A] mt-10">
+                        <p className="text-center text-[10px] font-bold uppercase tracking-widest text-neutral-500 mt-10">
                             🔒 Pagamento 100% seguro via cartão • Créditos nunca expiram
                         </p>
                     </div>

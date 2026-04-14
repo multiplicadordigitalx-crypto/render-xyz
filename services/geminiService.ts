@@ -82,7 +82,8 @@ export const renderImage = async (
     'Dia': 'Ultra-realistic bright sunny day, global illumination, natural sunlight, sharp high-contrast realistic shadows, vibrant materials.',
     'Noite': 'Hyper-realistic night scene, dramatic architectural interior/exterior lighting, warm glowing windows, dark natural sky, high contrast, Rayleigh scattering.',
     'Fim de Tarde': 'Golden hour sunset masterpiece, long soft volumetric shadows, warm orange/purple hues, cinematic lighting, realistic textures.',
-    'Nublado': 'Overcast moody day, soft diffused realistic lighting, realistic ambient occlusion, no harsh shadows, natural architectural textures.'
+    'Nublado': 'Overcast moody day, soft diffused realistic lighting, realistic ambient occlusion, no harsh shadows, natural architectural textures.',
+    'Interior': 'Professional indoor architectural photography, soft natural light coming from windows, realistic interior artificial lighting (lamps/LEDs), global illumination, clean shadows, no exterior light artifacts inside walls, masterwork textures.'
   };
 
   let detailLevel = "";

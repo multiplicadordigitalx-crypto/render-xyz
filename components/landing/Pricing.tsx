@@ -1,7 +1,9 @@
-
 import React from 'react';
-import { CheckCircle, Zap, Coins, Sparkles, Clock, Shield, Gift, TrendingUp, Image } from 'lucide-react';
+import { Check, Info, Sparkles } from 'lucide-react';
 import { CreditPackage } from '../../types';
+import { Button } from '@/components/ui/button';
+import { motion } from 'framer-motion';
+import { CardSpotlight } from '@/components/ui/card-spotlight';
 
 interface PricingProps {
     creditPackages: CreditPackage[];
@@ -15,194 +17,126 @@ export const Pricing: React.FC<PricingProps> = ({ creditPackages, onBuyCredits }
         return (numericPrice / amount).toFixed(2).replace('.', ',');
     };
 
-    // Determine if package is the best value
-    const getBestValue = (index: number) => index === 2; // Third package is best value
-
     return (
-        <section id="pricing" className="py-20 md:py-36 px-4 bg-gradient-to-b from-[#EAE4D5] to-[#F2F2F2]">
-            <div className="max-w-6xl mx-auto">
-                {/* Header */}
-                <div className="text-center mb-16 md:mb-20">
-                    <div className="inline-flex items-center gap-3 bg-black text-white px-6 py-3 rounded-full mb-8">
-                        <Coins className="w-4 h-4" />
-                        <span className="text-[10px] font-black uppercase tracking-widest">Simples & Flexível</span>
-                    </div>
-                    <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter mb-6">
-                        Compre Créditos
-                    </h2>
-                    <p className="text-[#7A756A] text-sm md:text-base max-w-2xl mx-auto leading-relaxed">
-                        Sem assinatura, sem compromisso. Compre créditos quando precisar e use no seu ritmo.
-                    </p>
-                    <div className="flex flex-wrap justify-center gap-4 mt-6">
-                        <div className="bg-white px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest border border-[#B6B09F]/30">
-                            1K = 1 crédito
-                        </div>
-                        <div className="bg-white px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest border border-[#B6B09F]/30">
-                            2K = 2 créditos
-                        </div>
-                        <div className="bg-white px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest border border-[#B6B09F]/30">
-                            4K = 3 créditos
-                        </div>
-                    </div>
-                </div>
+        <section id="pricing" className="py-24 bg-neutral-50 relative overflow-hidden">
+            {/* Background Decor */}
+            <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-neutral-300 to-transparent opacity-50" />
 
-                {/* Free Credits Banner */}
-                <div className="bg-gradient-to-r from-emerald-500 to-teal-600 rounded-[25px] p-6 md:p-8 mb-12 text-white text-center reveal reveal-fade">
-                    <div className="flex flex-col md:flex-row items-center justify-center gap-4">
-                        <Gift className="w-8 h-8" />
-                        <div>
-                            <h3 className="text-lg md:text-xl font-black uppercase tracking-tight">
-                                Comece Grátis com 3 Créditos!
-                            </h3>
-                            <p className="text-white/80 text-[10px] md:text-xs font-bold uppercase tracking-widest">
-                                Crie sua conta e teste o poder do Render XYZ
-                            </p>
-                        </div>
+            <div className="container mx-auto px-4 max-w-7xl relative z-10">
+                {/* Header */}
+                <div className="text-center mb-16 max-w-3xl mx-auto">
+                    <div className="inline-flex items-center justify-center px-4 py-1.5 mb-6 rounded-full bg-neutral-100 text-neutral-600 border border-neutral-200 shadow-sm">
+                        <span className="text-xs font-bold uppercase tracking-widest flex items-center gap-2">
+                            Preços Flexíveis <Sparkles className="w-3 h-3" />
+                        </span>
                     </div>
+                    <h2 className="text-4xl md:text-5xl font-black tracking-tighter mb-6 text-neutral-900 font-sans">
+                        Pague apenas pelo <br /> que <span className="text-neutral-400">você usa</span>
+                    </h2>
+                    <p className="text-lg text-neutral-600 leading-relaxed font-sans">
+                        Sem assinaturas mensais ou contratos. Compre créditos e use quando quiser.
+                        <b> Seus créditos nunca expiram.</b>
+                    </p>
                 </div>
 
                 {/* Credit Packages */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 mb-16">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     {creditPackages.map((pkg, i) => {
-                        const isBestValue = getBestValue(i);
-                        const isPopular = i === 1;
+                        const isPopular = i === 2; // Assuming the third one is popular/best value
 
                         return (
-                            <div
+                            <motion.div
                                 key={pkg.id}
-                                className={`relative bg-white border-2 ${isBestValue
-                                    ? 'border-emerald-500 shadow-2xl shadow-emerald-500/20 scale-100 md:scale-105 z-10'
-                                    : isPopular
-                                        ? 'border-black shadow-xl'
-                                        : 'border-[#B6B09F]/30'
-                                    } rounded-[35px] p-8 md:p-10 flex flex-col reveal reveal-fade stagger-${i + 1} transition-all hover:shadow-xl`}
+                                initial={{ opacity: 0, y: 20 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ delay: i * 0.1, duration: 0.5 }}
+                                className="h-full"
                             >
-                                {/* Badge */}
-                                {isBestValue && (
-                                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-6 py-2 rounded-full text-[9px] font-black tracking-widest flex items-center gap-2 shadow-lg">
-                                        <TrendingUp className="w-3 h-3" />
-                                        CUSTO-BENEFÍCIO
-                                    </div>
-                                )}
-                                {isPopular && !isBestValue && (
-                                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-black text-white px-6 py-2 rounded-full text-[9px] font-black tracking-widest flex items-center gap-2">
-                                        <Sparkles className="w-3 h-3" />
-                                        MAIS POPULAR
-                                    </div>
-                                )}
-
-                                {/* Credits Amount */}
-                                <div className="text-center mb-6">
-                                    <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-[#EAE4D5] to-[#F2F2F2] rounded-full mb-4">
-                                        <div className="text-center leading-none">
-                                            <span className="text-3xl font-black block">{pkg.amount}</span>
-                                            <span className="text-[9px] font-black uppercase tracking-widest text-[#7A756A] block -mt-0.5">créditos</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Price */}
-                                <div className="text-center mb-6">
-                                    <div className="flex items-baseline justify-center gap-1">
-                                        <span className="text-[#7A756A] text-lg">R$</span>
-                                        <span className="text-5xl font-black">{pkg.price}</span>
-                                    </div>
-                                    <p className="text-[#7A756A] text-[10px] font-bold mt-2">
-                                        R$ {getPricePerCredit(pkg.price, pkg.amount)} por crédito
-                                    </p>
-                                </div>
-
-                                {/* Description */}
-                                <div className="flex-1 mb-8">
-                                    <p className="text-center text-sm font-bold text-[#7A756A] mb-6">
-                                        {pkg.description}
-                                    </p>
-
-                                    {/* Features based on package tier */}
-                                    <div className="space-y-3">
-                                        {/* All packages */}
-                                        <div className="flex items-center text-[11px] font-bold">
-                                            <CheckCircle className="w-4 h-4 mr-3 text-emerald-500 shrink-0" />
-                                            <span>Resolução até 4K Ultra HD</span>
-                                        </div>
-                                        <div className="flex items-center text-[11px] font-bold">
-                                            <CheckCircle className="w-4 h-4 mr-3 text-emerald-500 shrink-0" />
-                                            <span>Sem marca d'água</span>
-                                        </div>
-                                        <div className="flex items-center text-[11px] font-bold">
-                                            <CheckCircle className="w-4 h-4 mr-3 text-emerald-500 shrink-0" />
-                                            <span>Créditos nunca expiram</span>
-                                        </div>
-
-                                        {/* Professional and Office */}
-                                        {i >= 1 && (
-                                            <div className="flex items-center text-[11px] font-bold">
-                                                <CheckCircle className="w-4 h-4 mr-3 text-emerald-500 shrink-0" />
-                                                <span>Suporte prioritário</span>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {/* CTA Button */}
-                                <button
-                                    onClick={() => onBuyCredits(pkg)}
-                                    className={`w-full py-5 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all ${isBestValue
-                                        ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:shadow-lg hover:shadow-emerald-500/30 hover:scale-[1.02]'
-                                        : isPopular
-                                            ? 'bg-black text-white hover:bg-zinc-800'
-                                            : 'bg-[#EAE4D5] text-black border border-[#B6B09F]/30 hover:border-black hover:bg-black hover:text-white'
+                                <CardSpotlight
+                                    className={`h-full flex flex-col p-8 md:p-10 ${isPopular
+                                        ? 'bg-neutral-900 border-neutral-800 text-white hover:border-neutral-700'
+                                        : 'bg-white text-neutral-900'
                                         }`}
+                                    color={isPopular ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.05)"}
                                 >
-                                    Comprar Agora
-                                </button>
-                            </div>
+                                    {/* Popular Badge */}
+                                    {isPopular && (
+                                        <div className="absolute top-0 right-0 bg-emerald-500 text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-bl-xl">
+                                            Mais Popular
+                                        </div>
+                                    )}
+
+                                    {/* Header */}
+                                    <div className="mb-8">
+                                        <h3 className={`text-sm font-bold uppercase tracking-widest mb-2 ${isPopular ? 'text-neutral-400' : 'text-neutral-500'}`}>
+                                            {pkg.name || "Pacote"}
+                                        </h3>
+                                        <div className="flex items-baseline gap-1">
+                                            <span className="text-4xl font-black tracking-tight">R$ {pkg.price}</span>
+                                            <span className={`text-sm font-medium ${isPopular ? 'text-neutral-400' : 'text-neutral-500'}`}>/ único</span>
+                                        </div>
+                                        <p className={`text-sm font-medium mt-2 ${isPopular ? 'text-emerald-400' : 'text-emerald-600'}`}>
+                                            R$ {getPricePerCredit(pkg.price, pkg.amount)} por crédito
+                                        </p>
+                                    </div>
+
+                                    {/* Credits Amount */}
+                                    <div className={`mb-8 p-4 rounded-2xl border ${isPopular
+                                        ? 'bg-neutral-800 border-neutral-700'
+                                        : 'bg-neutral-50 border-neutral-100'
+                                        }`}>
+                                        <div className="flex items-center justify-between mb-2">
+                                            <span className={`text-sm font-bold ${isPopular ? 'text-neutral-300' : 'text-neutral-600'}`}>Você recebe</span>
+                                            <span className={`text-2xl font-black ${isPopular ? 'text-white' : 'text-neutral-900'}`}>{pkg.amount} créditos</span>
+                                        </div>
+                                        <div className={`h-2 rounded-full overflow-hidden ${isPopular ? 'bg-neutral-700' : 'bg-neutral-200'}`}>
+                                            <div style={{ width: '100%' }} className="h-full bg-gradient-to-r from-emerald-500 to-teal-400" />
+                                        </div>
+                                    </div>
+
+                                    {/* Features */}
+                                    <div className="flex-1 mb-8">
+                                        <ul className="space-y-4">
+                                            {[
+                                                'Resolução até 4K',
+                                                'Uso comercial liberado',
+                                                'Suporte prioritário',
+                                                'Atualizações gratuitas',
+                                            ].map((feature, idx) => (
+                                                <li key={idx} className="flex items-start gap-3 text-sm">
+                                                    <div className={`mt-0.5 rounded-full p-0.5 ${isPopular ? 'bg-emerald-500/20 text-emerald-400' : 'bg-neutral-100 text-neutral-600'}`}>
+                                                        <Check className="w-3 h-3" />
+                                                    </div>
+                                                    <span className={isPopular ? 'text-neutral-300' : 'text-neutral-600'}>{feature}</span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+
+                                    {/* Action */}
+                                    <Button
+                                        onClick={() => onBuyCredits(pkg)}
+                                        className={`w-full h-12 rounded-xl font-bold uppercase tracking-wide text-xs transition-all duration-300 ${isPopular
+                                            ? 'bg-white text-neutral-900 hover:bg-neutral-100'
+                                            : 'bg-neutral-900 text-white hover:bg-neutral-800 shadow-xl shadow-neutral-900/10'
+                                            }`}
+                                    >
+                                        Comprar Créditos
+                                    </Button>
+
+                                    {/* Footer Info */}
+                                    <div className="mt-6 pt-6 border-t border-neutral-200/10 text-center">
+                                        <p className={`text-[10px] font-medium ${isPopular ? 'text-neutral-500' : 'text-neutral-400'}`}>
+                                            Pagamento único via PIX ou Cartão
+                                        </p>
+                                    </div>
+                                </CardSpotlight>
+                            </motion.div>
                         );
                     })}
-                </div>
-
-                {/* Trust Badges */}
-                <div className="bg-white rounded-[25px] p-8 md:p-10 border border-[#B6B09F]/20">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
-                        <div className="text-center">
-                            <div className="w-12 h-12 bg-[#EAE4D5] rounded-xl flex items-center justify-center mx-auto mb-3">
-                                <Clock className="w-6 h-6" />
-                            </div>
-                            <p className="text-[10px] font-black uppercase tracking-widest">Nunca Expiram</p>
-                            <p className="text-[9px] text-[#7A756A] mt-1">Use quando quiser</p>
-                        </div>
-                        <div className="text-center">
-                            <div className="w-12 h-12 bg-[#EAE4D5] rounded-xl flex items-center justify-center mx-auto mb-3">
-                                <Image className="w-6 h-6" />
-                            </div>
-                            <p className="text-[10px] font-black uppercase tracking-widest">Alta Qualidade</p>
-                            <p className="text-[9px] text-[#7A756A] mt-1">Até 4K Ultra HD</p>
-                        </div>
-                        <div className="text-center">
-                            <div className="w-12 h-12 bg-[#EAE4D5] rounded-xl flex items-center justify-center mx-auto mb-3">
-                                <Zap className="w-6 h-6" />
-                            </div>
-                            <p className="text-[10px] font-black uppercase tracking-widest">Resultado Rápido</p>
-                            <p className="text-[9px] text-[#7A756A] mt-1">Renders em segundos</p>
-                        </div>
-                        <div className="text-center">
-                            <div className="w-12 h-12 bg-[#EAE4D5] rounded-xl flex items-center justify-center mx-auto mb-3">
-                                <Shield className="w-6 h-6" />
-                            </div>
-                            <p className="text-[10px] font-black uppercase tracking-widest">Pagamento Seguro</p>
-                            <p className="text-[9px] text-[#7A756A] mt-1">PIX ou Cartão</p>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Money Back Guarantee */}
-                <div className="text-center mt-10">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#7A756A]">
-                        🔒 Satisfação garantida ou seu dinheiro de volta em até 7 dias
-                    </p>
                 </div>
             </div>
         </section>
     );
 };
-// Updated

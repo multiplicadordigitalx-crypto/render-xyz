@@ -27,7 +27,7 @@ export const Header: React.FC<HeaderProps> = ({ onAuth }) => {
 
     return (
         <header
-            className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-[#EAE4D5]/80 backdrop-blur-md py-4 shadow-sm' : 'bg-transparent py-6'
+            className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-white/80 backdrop-blur-md py-4 shadow-sm' : 'bg-transparent py-6'
                 }`}
         >
             <div className="max-w-7xl mx-auto px-4 md:px-8 flex items-center justify-between">
@@ -75,12 +75,12 @@ export const Header: React.FC<HeaderProps> = ({ onAuth }) => {
 
             {/* Mobile Menu Overlay */}
             {mobileMenuOpen && (
-                <div className="md:hidden absolute top-full left-0 right-0 bg-[#EAE4D5] border-b border-[#B6B09F]/20 p-4 flex flex-col space-y-4 shadow-xl">
+                <div className="md:hidden absolute top-full left-0 right-0 bg-white border-b border-neutral-200 p-4 flex flex-col space-y-4 shadow-xl">
                     <button onClick={() => scrollToSection('demo')} className="text-left py-2 font-bold uppercase tracking-widest">Galeria</button>
                     <button onClick={() => scrollToSection('how-it-works')} className="text-left py-2 font-bold uppercase tracking-widest">Como Funciona</button>
                     <button onClick={() => scrollToSection('pricing')} className="text-left py-2 font-bold uppercase tracking-widest">Preços</button>
                     <button onClick={() => scrollToSection('faq')} className="text-left py-2 font-bold uppercase tracking-widest">FAQ</button>
-                    <hr className="border-[#B6B09F]/20" />
+                    <hr className="border-neutral-200" />
                     <button onClick={() => { setMobileMenuOpen(false); onAuth('login'); }} className="text-left py-2 font-black uppercase tracking-widest">Entrar</button>
                     <button onClick={() => { setMobileMenuOpen(false); onAuth('register'); }} className="py-3 bg-black text-white rounded-xl font-black uppercase tracking-widest text-center shadow-lg">Começar Agora</button>
                 </div>

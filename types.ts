@@ -18,13 +18,14 @@ export interface PricingPlan {
   externalId?: string;
 }
 
-export type RenderStyle = 'Dia' | 'Noite' | 'Fim de Tarde' | 'Nublado';
+export type RenderStyle = 'Dia' | 'Noite' | 'Fim de Tarde' | 'Nublado' | 'Interior';
 export type RenderResolution = '1K' | '2K' | '4K';
 
 export interface RenderHistoryItem {
   id: string;
   url: string;
   style: RenderStyle;
+  originalUrl?: string; // URL da imagem original (antes)
   timestamp: number;
 }
 
@@ -64,4 +65,13 @@ export interface PortfolioItem {
   title: string;
   category?: string;
   createdAt: number;
+}
+
+export interface CreditTransaction {
+  id: string;
+  userId: string;
+  amount: number;
+  type: 'usage' | 'purchase' | 'bonus';
+  description: string;
+  timestamp: number;
 }

@@ -5,8 +5,8 @@ import { Link } from 'react-router-dom';
 
 export const Footer: React.FC = () => {
     return (
-        <footer className="py-16 md:py-24 px-4 border-t border-[#B6B09F]/20 bg-[#EAE4D5]">
-            <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center text-[#7A756A] text-[9px] md:text-[10px] font-black uppercase tracking-widest">
+        <footer className="py-16 md:py-24 px-4 border-t border-neutral-200 bg-neutral-100">
+            <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center text-neutral-500 text-[9px] md:text-[10px] font-black uppercase tracking-widest">
                 <Link to="/" className="flex items-center mb-8 md:mb-0 hover:opacity-80 transition-opacity">
                     <img src="/assets/logo.png" alt="Render XYZ" className="h-6 md:h-8 grayscale hover:grayscale-0 transition-all" />
                 </Link>

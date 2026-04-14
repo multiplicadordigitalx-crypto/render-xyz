@@ -5,6 +5,7 @@ import { CpfModal } from '../components/CpfModal';
 import { AppUser, CreditPackage, LandingSettings, PricingPlan, RenderHistoryItem, RenderStyle } from '../types';
 import { LogOut, User, Coins, Plus, ShieldCheck, Download, Trash2, Menu, Key } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
 
 interface DashboardProps {
     user: AppUser;
@@ -28,14 +29,51 @@ export const DashboardPage: React.FC<DashboardProps> = ({
     const [showCpfModal, setShowCpfModal] = useState(false);
     const [cpfBlocking, setCpfBlocking] = useState(false);
 
+    // Helper to fetch image blob (handles CORS/Proxy)
+    const fetchImageBlob = async (url: string): Promise<Blob> => {
+        // Use the local proxy if running locally or the deployed one
+        const proxyUrl = `/api/proxy-image?url=${encodeURIComponent(url)}`;
+
+        try {
+            const response = await fetch(proxyUrl);
+            if (!response.ok) throw new Error('Falha no proxy de imagem');
+            return await response.blob();
+        } catch (e) {
+            console.error("Proxy failed, trying direct fetch (fallback)", e);
+            const response = await fetch(url);
+            return await response.blob();
+        }
+    };
+
     // Helper for download
-    const downloadHistoryImage = (url: string, style: RenderStyle) => {
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `renderxyz-render-${style.toLowerCase().replace(/\s+/g, '-')}.png`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+    const downloadHistoryImage = async (url: string, style: RenderStyle) => {
+        const loadingToast = toast.loading('Preparando download...');
+        try {
+            const blob = await fetchImageBlob(url);
+            const objectUrl = window.URL.createObjectURL(blob);
+
+            const link = document.createElement('a');
+            link.href = objectUrl;
+            link.download = `renderxyz-render-${style.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            window.URL.revokeObjectURL(objectUrl);
+            toast.success('Download concluído!', { id: loadingToast });
+        } catch (error) {
+            console.error("Erro no download:", error);
+            toast.error("Falha ao baixar imagem.", { id: loadingToast });
+
+            // Fallback to simple link method if blob fails
+            const link = document.createElement('a');
+            link.href = url;
+            link.target = '_blank';
+            link.download = `renderxyz-render-${style}.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
     };
 
     const [manualKey, setManualKey] = useState("");
@@ -53,11 +91,11 @@ export const DashboardPage: React.FC<DashboardProps> = ({
         };
 
         return (
-            <div className="min-h-screen bg-[#EAE4D5] flex items-center justify-center p-4">
-                <div className="max-w-xl w-full bg-[#F2F2F2] border border-[#B6B09F]/30 rounded-[35px] p-8 md:p-12 text-center shadow-2xl">
+            <div className="min-h-screen bg-neutral-100 flex items-center justify-center p-4">
+                <div className="max-w-xl w-full bg-white border border-neutral-200 rounded-[35px] p-8 md:p-12 text-center shadow-2xl">
                     <div className="w-16 h-16 bg-black rounded-2xl flex items-center justify-center mx-auto mb-8"><Key className="text-white w-8 h-8" /></div>
                     <h2 className="text-2xl md:text-4xl font-black uppercase mb-4 tracking-tighter">Ativação</h2>
-                    <p className="text-[#7A756A] text-xs font-bold uppercase tracking-widest mb-10">Vincule uma chave API Studio para iniciar.</p>
+                    <p className="text-neutral-500 text-xs font-bold uppercase tracking-widest mb-10">Vincule uma chave API Studio para iniciar.</p>
 
                     <div className="space-y-3">
                         <button onClick={handleOpenSelectKey} className="w-full py-4 bg-black text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-xl hover:bg-zinc-800 transition-all flex items-center justify-center gap-2">
@@ -91,14 +129,14 @@ export const DashboardPage: React.FC<DashboardProps> = ({
                         <p className="text-[9px] text-gray-400 mt-2">A chave será salva no seu navegador (Local Storage).</p>
                     </div>
 
-                    <button onClick={onLogout} className="mt-8 text-[9px] font-black uppercase tracking-widest text-[#7A756A] hover:text-black">Sair</button>
+                    <button onClick={onLogout} className="mt-8 text-[9px] font-black uppercase tracking-widest text-neutral-500 hover:text-black">Sair</button>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-[#dcd7c9] text-black flex flex-col overflow-y-auto md:overflow-hidden">
+        <div className="min-h-screen bg-neutral-200 text-black flex flex-col overflow-y-auto md:overflow-hidden">
             {/* CPF Warning Bar */}
             {user.cpf === "" && (
                 <div
@@ -113,20 +151,20 @@ export const DashboardPage: React.FC<DashboardProps> = ({
             )}
 
             {/* Studio Header */}
-            <header className="h-14 border-b border-[#B6B09F]/20 bg-[#EAE4D5] flex items-center justify-between px-4 z-40 shrink-0">
+            <header className="h-14 border-b border-neutral-200 bg-white flex items-center justify-between px-4 z-40 shrink-0">
                 <div className="flex items-center space-x-4">
                     <a href="/dashboard" className="flex items-center hover:opacity-80 transition-opacity">
                         <img src="/assets/logo.png" alt="Render XYZ" className="h-5 md:h-6" />
                     </a>
-                    <div className="h-4 w-px bg-[#B6B09F]/30" />
-                    <span className="text-[10px] font-black uppercase tracking-widest text-[#7A756A]">Studio Pro</span>
+                    <div className="h-4 w-px bg-neutral-300" />
+                    <span className="text-[10px] font-black uppercase tracking-widest text-neutral-500">Studio Pro</span>
                 </div>
 
                 <div className="flex items-center space-x-4">
-                    <div className="flex items-center bg-[#F2F2F2] border border-[#B6B09F]/20 px-3 py-1.5 rounded-lg">
-                        <Coins className="w-3 h-3 mr-2 text-[#7A756A]" />
+                    <div className="flex items-center bg-neutral-100 border border-neutral-200 px-3 py-1.5 rounded-lg">
+                        <Coins className="w-3 h-3 mr-2 text-neutral-500" />
                         <span className="text-xs font-black">{credits}</span>
-                        <span className="text-[10px] font-black text-[#7A756A] ml-1">CRÉDITOS</span>
+                        <span className="text-[10px] font-black text-neutral-500 ml-1">CRÉDITOS</span>
                         <button onClick={() => navigate('/planos')} className="ml-3 bg-black text-white p-0.5 rounded hover:bg-zinc-800 transition-all"><Plus className="w-3 h-3" /></button>
                     </div>
 
@@ -134,7 +172,7 @@ export const DashboardPage: React.FC<DashboardProps> = ({
                         {user.role === 'admin' && (
                             <button
                                 onClick={() => navigate('/admin')}
-                                className="p-2 hover:bg-[#B6B09F]/20 rounded-lg transition-all text-[#7A756A] hover:text-black"
+                                className="p-2 hover:bg-neutral-100 rounded-lg transition-all text-neutral-500 hover:text-black"
                                 title="Painel Admin"
                             >
                                 <ShieldCheck className="w-4 h-4" />
@@ -142,12 +180,12 @@ export const DashboardPage: React.FC<DashboardProps> = ({
                         )}
                         <button
                             onClick={() => navigate('/perfil')}
-                            className="p-2 hover:bg-[#B6B09F]/20 rounded-lg transition-all text-[#7A756A] hover:text-black"
+                            className="p-2 hover:bg-neutral-100 rounded-lg transition-all text-neutral-500 hover:text-black"
                             title="Perfil"
                         >
                             <User className="w-4 h-4" />
                         </button>
-                        <button onClick={onLogout} className="p-2 hover:bg-[#B6B09F]/20 rounded-lg transition-all text-[#7A756A] hover:text-red-600" title="Sair"><LogOut className="w-4 h-4" /></button>
+                        <button onClick={onLogout} className="p-2 hover:bg-neutral-100 rounded-lg transition-all text-neutral-500 hover:text-red-600" title="Sair"><LogOut className="w-4 h-4" /></button>
                     </div>
                 </div>
             </header>

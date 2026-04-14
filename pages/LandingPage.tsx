@@ -2,12 +2,13 @@ import React from 'react';
 import { useScrollReveal } from '../services/scrollReveal';
 import { Header } from '../components/landing/Header';
 import { Hero } from '../components/landing/Hero';
-import { DemoSlider } from '../components/landing/DemoSlider';
-import { HowItWorks } from '../components/landing/HowItWorks';
+import { InterestSection } from '../components/landing/InterestSection';
+import { Features } from '../components/landing/Features';
+import { CapabilitiesSection } from '../components/landing/CapabilitiesSection';
+import { ComparisonSection } from '../components/landing/ComparisonSection';
 import { Testimonials } from '../components/landing/Testimonials';
 import { Pricing } from '../components/landing/Pricing';
 import { FAQ } from '../components/landing/FAQ';
-import { CTA } from '../components/landing/CTA';
 import { Footer } from '../components/landing/Footer';
 import { CreditPackage, LandingSettings } from '../types';
 
@@ -21,29 +22,36 @@ interface LandingPageProps {
 export const LandingPage: React.FC<LandingPageProps> = ({ onAuth, creditPackages, onBuyCredits, landingSettings }) => {
     useScrollReveal([landingSettings]);
     return (
-        <div className="min-h-screen bg-[#F2F2F2] text-black overflow-x-hidden">
+        <div className="min-h-screen bg-white text-neutral-900 overflow-x-hidden font-sans">
             <Header onAuth={onAuth} />
 
+            {/* Attention */}
             <Hero
                 onStartNow={() => onAuth('register')}
                 onSeeInAction={() => { document.getElementById('demo')?.scrollIntoView({ behavior: 'smooth' }) }}
             />
-            <DemoSlider showcaseBefore={landingSettings.showcaseBefore} showcaseAfter={landingSettings.showcaseAfter} />
-            <HowItWorks heroVideoUrl={landingSettings.heroVideoUrl} heroVideoPoster={landingSettings.heroVideoPoster} />
+
+            {/* Interest */}
+            <InterestSection
+                heroVideoUrl={landingSettings.heroVideoUrl}
+                heroVideoPoster={landingSettings.heroVideoPoster}
+            />
+            <Features />
+            <CapabilitiesSection />
+
+            {/* Desire */}
+            <ComparisonSection />
+
             <Testimonials />
+
+            {/* Action */}
             <Pricing
                 creditPackages={creditPackages}
                 onBuyCredits={onBuyCredits}
             />
-            <FAQ items={[
-                { q: "Já tentei V-Ray e Lumion e achei difícil. Por que a Render XYZ é diferente?", a: "Ferramentas tradicionais exigem que você seja um técnico. A Render XYZ usa IA para 'ler' seu projeto como um humano, eliminando sliders e configurações complexas." },
-                { q: "E se eu não gostar do resultado?", a: "Sem risco. Se a IA não entregar o prometido, você pode regenerar ou solicitar o estorno dos créditos. Sua satisfação é nossa prioridade." },
-                { q: "Preciso de um computador potente?", a: "Não! Todo o processamento pesado acontece em nossos servidores com GPUs H100. Você pode renderizar até do celular." },
-                { q: "Quanto tempo leva para gerar um render?", a: "A maioria dos renders é gerada em menos de 60 segundos, permitindo que você itere rapidamente sobre seus designs." },
-                { q: "Posso usar as imagens comercialmente?", a: "Sim! Todos os renders gerados com seus créditos pertencem 100% a você para uso comercial irrestrito." },
-                { q: "Os créditos expiram?", a: "Não! Seus créditos são vitalícios e você pode usar quando quiser." },
-            ]} />
-            <CTA onStartNow={() => onAuth('register')} />
+
+            <FAQ />
+
             <Footer />
         </div>
     );

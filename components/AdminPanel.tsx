@@ -18,6 +18,7 @@ import {
 import { doc, updateDoc, collection, getDocs, setDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { PricingPlan, CreditPackage, AppUser, LandingSettings } from '../types';
+import { storageService } from '../services/storageService';
 
 interface AdminPanelProps {
     landingSettings: LandingSettings;
@@ -44,6 +45,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedUserForCredits, setSelectedUserForCredits] = useState<AppUser | null>(null);
     const [creditAmount, setCreditAmount] = useState('');
+    const [pendingUploads, setPendingUploads] = useState<Partial<Record<keyof LandingSettings, File>>>({});
+    const [isSaving, setIsSaving] = useState(false);
 
     const handleCreditOperation = async (type: 'add' | 'remove') => {
         if (!selectedUserForCredits || !creditAmount) return;
@@ -71,11 +74,15 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, key: keyof LandingSettings) => {
         const file = e.target.files?.[0];
         if (file) {
+            // Create a preview immediately
             const reader = new FileReader();
             reader.onload = () => {
                 setTempLanding(prev => ({ ...prev, [key]: reader.result as string }));
             };
             reader.readAsDataURL(file);
+
+            // Store file for upload later
+            setPendingUploads(prev => ({ ...prev, [key]: file }));
         }
     };
 
@@ -86,18 +93,75 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     };
 
     const handleSaveAdmin = async () => {
+        setIsSaving(true);
         try {
+            console.log("Starting save...", { pendingKeys: Object.keys(pendingUploads) });
+
+            // Upload pending images first
+            let updatedLanding = { ...tempLanding };
+
+            // Iterate through pending uploads and upload them
+            const uploadPromises = Object.entries(pendingUploads).map(async ([key, file]) => {
+                if (file) {
+                    try {
+                        console.log(`Uploading file for key: ${key}, size: ${(file as File).size}`);
+                        const downloadUrl = await storageService.uploadImage(file as File, 'landing-assets');
+                        console.log(`Uploaded ${key} successfully: ${downloadUrl}`);
+                        return { key: key as keyof LandingSettings, url: downloadUrl };
+                    } catch (error) {
+                        console.error(`Failed to upload ${key}:`, error);
+                        // If upload fails, we MUST throw to prevent saving base64 to DB
+                        throw new Error(`Falha ao fazer upload de ${key}: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+                    }
+                }
+                return null;
+            });
+
+            const uploadedFiles = await Promise.all(uploadPromises);
+            console.log("Uploads completed:", uploadedFiles);
+
+            // Update the landing settings with the new URLs
+            uploadedFiles.forEach(result => {
+                if (result) {
+                    console.log(`Updating ${result.key} with URL: ${result.url}`);
+                    updatedLanding = {
+                        ...updatedLanding,
+                        [result.key]: result.url
+                    };
+                }
+            });
+
+            // CRITICAL CHECK: Ensure no base64 strings remain in updatedLanding
+            const bigDataKeys = Object.entries(updatedLanding).filter(([_, value]) =>
+                typeof value === 'string' && value.startsWith('data:') && value.length > 1000
+            );
+
+            if (bigDataKeys.length > 0) {
+                console.error("Payload too large! Found base64 strings:", bigDataKeys.map(k => k[0]));
+                throw new Error(`Erro: Imagem/Vídeo não foi processado corretamente. Tente selecionar o arquivo novamente. chaves: ${bigDataKeys.map(k => k[0]).join(', ')}`);
+            }
+
+            console.log("Saving to Firestore...", updatedLanding);
+
             await setDoc(doc(db, "settings", "global"), {
-                landing: tempLanding,
+                landing: updatedLanding,
                 credits: tempCreditPackages
             }, { merge: true });
 
-            setLandingSettings(tempLanding);
+            setLandingSettings(updatedLanding);
+            setTempLanding(updatedLanding); // Update temp state to reflect saved URLs
             setCreditPackages(tempCreditPackages);
+            setPendingUploads({}); // Clear pending uploads
+
+            // Show success feedback logic could be improved here (e.g. toast) instead of immediate close
+            // For now, let's just close
             onClose();
+            alert("Configurações salvas com sucesso!");
         } catch (error) {
             console.error("Error saving global settings:", error);
-            alert("Erro ao salvar configurações no Firestore.");
+            alert(`Erro ao salvar configurações: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -121,28 +185,28 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     return (
         <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-xl flex items-center justify-center p-2 md:p-8">
             <div className="bg-[#F2F2F2] w-full max-w-6xl h-full max-h-[95vh] rounded-[30px] md:rounded-[40px] shadow-2xl overflow-hidden flex flex-col">
-                <div className="p-4 md:p-8 border-b border-[#B6B09F]/20 flex justify-between items-center bg-white/50">
+                <div className="p-4 md:p-8 border-b border-neutral-200 flex justify-between items-center bg-white/50">
                     <a href="/" className="flex items-center space-x-3 md:space-x-4 hover:opacity-80 transition-opacity">
                         <img src="/assets/logo.png" alt="Render XYZ" className="h-8 md:h-12" />
-                        <div className="hidden sm:block border-l border-[#B6B09F]/20 pl-4">
+                        <div className="hidden sm:block border-l border-neutral-300 pl-4">
                             <h2 className="text-sm md:text-lg font-black uppercase tracking-tighter">Control</h2>
-                            <p className="text-[8px] md:text-[9px] font-black text-[#7A756A] uppercase tracking-[0.2em]">Gestão</p>
+                            <p className="text-[8px] md:text-[9px] font-black text-neutral-500 uppercase tracking-[0.2em]">Gestão</p>
                         </div>
                     </a>
-                    <button onClick={onClose} className="p-3 md:p-4 bg-[#EAE4D5] rounded-full hover:bg-zinc-200 transition-all"><X className="w-5 h-5 md:w-6 md:h-6" /></button>
+                    <button onClick={onClose} className="p-3 md:p-4 bg-neutral-100 rounded-full hover:bg-zinc-200 transition-all"><X className="w-5 h-5 md:w-6 md:h-6" /></button>
                 </div>
                 <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
-                    <div className="w-full md:w-64 border-b md:border-b-0 md:border-r border-[#B6B09F]/20 p-2 md:p-6 flex flex-row md:flex-col space-x-2 md:space-x-0 md:space-y-2 bg-[#EAE4D5]/20 overflow-x-auto whitespace-nowrap">
-                        <button onClick={() => setActiveTab('stats')} className={`flex items-center space-x-3 p-3 md:p-4 rounded-xl font-black text-[9px] md:text-[10px] uppercase tracking-widest ${activeTab === 'stats' ? 'bg-black text-white' : 'text-[#7A756A] hover:bg-black/5'}`}>
+                    <div className="w-full md:w-64 border-b md:border-b-0 md:border-r border-neutral-200 p-2 md:p-6 flex flex-row md:flex-col space-x-2 md:space-x-0 md:space-y-2 bg-neutral-50 overflow-x-auto whitespace-nowrap">
+                        <button onClick={() => setActiveTab('stats')} className={`flex items-center space-x-3 p-3 md:p-4 rounded-xl font-black text-[9px] md:text-[10px] uppercase tracking-widest ${activeTab === 'stats' ? 'bg-black text-white' : 'text-neutral-500 hover:bg-black/5'}`}>
                             <BarChart3 className="w-4 h-4" /><span>Estatísticas</span>
                         </button>
-                        <button onClick={() => setActiveTab('users')} className={`flex items-center space-x-3 p-3 md:p-4 rounded-xl font-black text-[9px] md:text-[10px] uppercase tracking-widest ${activeTab === 'users' ? 'bg-black text-white' : 'text-[#7A756A] hover:bg-black/5'}`}>
+                        <button onClick={() => setActiveTab('users')} className={`flex items-center space-x-3 p-3 md:p-4 rounded-xl font-black text-[9px] md:text-[10px] uppercase tracking-widest ${activeTab === 'users' ? 'bg-black text-white' : 'text-neutral-500 hover:bg-black/5'}`}>
                             <Users className="w-4 h-4" /><span>Usuários</span>
                         </button>
-                        <button onClick={() => setActiveTab('pricing')} className={`flex items-center space-x-3 p-3 md:p-4 rounded-xl font-black text-[9px] md:text-[10px] uppercase tracking-widest ${activeTab === 'pricing' ? 'bg-black text-white' : 'text-[#7A756A] hover:bg-black/5'}`}>
+                        <button onClick={() => setActiveTab('pricing')} className={`flex items-center space-x-3 p-3 md:p-4 rounded-xl font-black text-[9px] md:text-[10px] uppercase tracking-widest ${activeTab === 'pricing' ? 'bg-black text-white' : 'text-neutral-500 hover:bg-black/5'}`}>
                             <DollarSign className="w-4 h-4" /><span>Preços</span>
                         </button>
-                        <button onClick={() => setActiveTab('content')} className={`flex items-center space-x-3 p-3 md:p-4 rounded-xl font-black text-[9px] md:text-[10px] uppercase tracking-widest ${activeTab === 'content' ? 'bg-black text-white' : 'text-[#7A756A] hover:bg-black/5'}`}>
+                        <button onClick={() => setActiveTab('content')} className={`flex items-center space-x-3 p-3 md:p-4 rounded-xl font-black text-[9px] md:text-[10px] uppercase tracking-widest ${activeTab === 'content' ? 'bg-black text-white' : 'text-neutral-500 hover:bg-black/5'}`}>
                             <Layers className="w-4 h-4" /><span>Landing</span>
                         </button>
                     </div>
@@ -154,8 +218,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                     <h3 className="text-xl font-black uppercase tracking-tight flex items-center"><Coins className="w-5 h-5 mr-3" /> Pacotes de Créditos</h3>
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                         {tempCreditPackages.map((pkg, idx) => (
-                                            <div key={idx} className="bg-white p-6 rounded-3xl border border-[#B6B09F]/20">
-                                                <label className="text-[9px] font-black uppercase tracking-widest text-[#7A756A] block mb-2">{pkg.amount} Créditos</label>
+                                            <div key={idx} className="bg-white p-6 rounded-3xl border border-neutral-200">
+                                                <label className="text-[9px] font-black uppercase tracking-widest text-neutral-500 block mb-2">{pkg.amount} Créditos</label>
                                                 <div className="flex items-center bg-[#F2F2F2] px-4 py-3 rounded-xl">
                                                     <span className="font-bold text-xs mr-2">R$</span>
                                                     <input type="text" value={pkg.price} onChange={(e) => handleCreditPriceChange(idx, e.target.value)} className="bg-transparent w-full text-xs font-black focus:outline-none" />
@@ -164,7 +228,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                         ))}
                                     </div>
                                 </div>
-                                <button onClick={handleSaveAdmin} className="w-full py-6 bg-black text-white rounded-[30px] font-black text-xs uppercase tracking-[0.3em] flex items-center justify-center shadow-xl"><Save className="w-5 h-5 mr-3" /> Salvar Configurações</button>
+                                <button
+                                    onClick={handleSaveAdmin}
+                                    disabled={isSaving}
+                                    className={`w-full py-6 bg-black text-white rounded-[30px] font-black text-xs uppercase tracking-[0.3em] flex items-center justify-center shadow-xl ${isSaving ? 'opacity-70 cursor-not-allowed' : ''}`}
+                                >
+                                    <Save className="w-5 h-5 mr-3" /> {isSaving ? 'SALVANDO...' : 'SALVAR CONFIGURAÇÕES'}
+                                </button>
                             </div>
                         )}
                         {activeTab === 'content' && (
@@ -172,29 +242,29 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                 <div className="space-y-8">
                                     <h3 className="text-xl font-black uppercase tracking-tight flex items-center"><ImageIconLucide className="w-5 h-5 mr-3" /> Gerenciar Ativos da Landing</h3>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                        <div className="bg-white p-6 md:p-8 rounded-[30px] border border-[#B6B09F]/20 shadow-sm space-y-4">
-                                            <label className="text-[9px] font-black uppercase tracking-widest text-[#7A756A] block">Slider: Imagem Antes (Anexo)</label>
+                                        <div className="bg-white p-6 md:p-8 rounded-[30px] border border-neutral-200 shadow-sm space-y-4">
+                                            <label className="text-[9px] font-black uppercase tracking-widest text-neutral-500 block">Slider: Imagem Antes (Anexo)</label>
                                             <input type="file" ref={fileInputBeforeRef} onChange={(e) => handleFileUpload(e, 'showcaseBefore')} className="hidden" accept="image/*" />
-                                            <button onClick={() => fileInputBeforeRef.current?.click()} className="w-full py-4 bg-[#F2F2F2] border-2 border-dashed border-[#B6B09F]/30 rounded-2xl flex items-center justify-center space-x-3 hover:border-black transition-all">
+                                            <button onClick={() => fileInputBeforeRef.current?.click()} className="w-full py-4 bg-[#F2F2F2] border-2 border-dashed border-neutral-200 rounded-2xl flex items-center justify-center space-x-3 hover:border-black transition-all">
                                                 <Upload className="w-5 h-5" /> <span className="text-[10px] font-black uppercase tracking-widest">Anexar Imagem</span>
                                             </button>
-                                            <div className="aspect-video rounded-xl overflow-hidden border border-[#B6B09F]/10 bg-[#F2F2F2] group relative">
+                                            <div className="aspect-video rounded-xl overflow-hidden border border-neutral-200 bg-[#F2F2F2] group relative">
                                                 <img src={tempLanding.showcaseBefore} alt="Preview Before" className="w-full h-full object-cover" />
                                             </div>
                                         </div>
-                                        <div className="bg-white p-6 md:p-8 rounded-[30px] border border-[#B6B09F]/20 shadow-sm space-y-4">
-                                            <label className="text-[9px] font-black uppercase tracking-widest text-[#7A756A] block">Slider: Imagem Depois (Anexo)</label>
+                                        <div className="bg-white p-6 md:p-8 rounded-[30px] border border-neutral-200 shadow-sm space-y-4">
+                                            <label className="text-[9px] font-black uppercase tracking-widest text-neutral-500 block">Slider: Imagem Depois (Anexo)</label>
                                             <input type="file" ref={fileInputAfterRef} onChange={(e) => handleFileUpload(e, 'showcaseAfter')} className="hidden" accept="image/*" />
-                                            <button onClick={() => fileInputAfterRef.current?.click()} className="w-full py-4 bg-[#F2F2F2] border-2 border-dashed border-[#B6B09F]/30 rounded-2xl flex items-center justify-center space-x-3 hover:border-black transition-all">
+                                            <button onClick={() => fileInputAfterRef.current?.click()} className="w-full py-4 bg-[#F2F2F2] border-2 border-dashed border-neutral-200 rounded-2xl flex items-center justify-center space-x-3 hover:border-black transition-all">
                                                 <Upload className="w-5 h-5" /> <span className="text-[10px] font-black uppercase tracking-widest">Anexar Imagem</span>
                                             </button>
-                                            <div className="aspect-video rounded-xl overflow-hidden border border-[#B6B09F]/10 bg-[#F2F2F2]">
+                                            <div className="aspect-video rounded-xl overflow-hidden border border-neutral-200 bg-[#F2F2F2]">
                                                 <img src={tempLanding.showcaseAfter} alt="Preview After" className="w-full h-full object-cover" />
                                             </div>
                                         </div>
-                                        <div className="bg-white p-6 md:p-8 rounded-[30px] border border-[#B6B09F]/20 shadow-sm space-y-6">
+                                        <div className="bg-white p-6 md:p-8 rounded-[30px] border border-neutral-200 shadow-sm space-y-6">
                                             <div>
-                                                <label className="text-[9px] font-black uppercase tracking-widest text-[#7A756A] block mb-2">Fluxo: Vídeo MP4 (Direto ou URL)</label>
+                                                <label className="text-[9px] font-black uppercase tracking-widest text-neutral-500 block mb-2">Fluxo: Vídeo MP4 (Direto ou URL)</label>
                                                 <div className="space-y-4">
                                                     <div className="flex flex-col space-y-2">
                                                         <input
@@ -204,21 +274,21 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                                             onChange={(e) => setTempLanding(prev => ({ ...prev, heroVideoUrl: e.target.value }))}
                                                             className="w-full py-4 px-6 bg-[#F2F2F2] rounded-2xl text-[11px] font-bold focus:outline-none border border-transparent focus:border-black transition-all"
                                                         />
-                                                        <p className="text-[8px] font-black text-[#7A756A] uppercase tracking-widest pl-2">YouTube: use o link de compartilhamento ou da barra de endereços</p>
+                                                        <p className="text-[8px] font-black text-neutral-500 uppercase tracking-widest pl-2">YouTube: use o link de compartilhamento ou da barra de endereços</p>
                                                     </div>
 
                                                     <div className="relative">
                                                         <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex items-center px-4 pointer-events-none">
-                                                            <div className="flex-1 border-t border-[#B6B09F]/20"></div>
-                                                            <span className="mx-4 text-[8px] font-black text-[#7A756A]">OU ANEXAR ARQUIVO</span>
-                                                            <div className="flex-1 border-t border-[#B6B09F]/20"></div>
+                                                            <div className="flex-1 border-t border-neutral-200"></div>
+                                                            <span className="mx-4 text-[8px] font-black text-neutral-500">OU ANEXAR ARQUIVO</span>
+                                                            <div className="flex-1 border-t border-neutral-200"></div>
                                                         </div>
                                                         <div className="h-8"></div>
                                                     </div>
 
                                                     <input type="file" ref={fileInputVideoRef} onChange={(e) => handleFileUpload(e, 'heroVideoUrl')} className="hidden" accept="video/mp4" />
-                                                    <button onClick={() => fileInputVideoRef.current?.click()} className="w-full py-4 bg-[#F2F2F2] border-2 border-dashed border-[#B6B09F]/30 rounded-2xl flex items-center justify-center space-x-3 hover:border-black transition-all group">
-                                                        <Upload className="w-5 h-5 text-[#7A756A] group-hover:text-black transition-colors" />
+                                                    <button onClick={() => fileInputVideoRef.current?.click()} className="w-full py-4 bg-[#F2F2F2] border-2 border-dashed border-neutral-300 rounded-2xl flex items-center justify-center space-x-3 hover:border-black transition-all group">
+                                                        <Upload className="w-5 h-5 text-neutral-500 group-hover:text-black transition-colors" />
                                                         <span className="text-[10px] font-black uppercase tracking-widest">Selecionar Arquivo MP4</span>
                                                     </button>
                                                     <p className="text-[8px] font-black text-amber-600 uppercase tracking-widest text-center">Aviso: Arquivos {'>'} 1MB podem não salvar devido ao limite do banco de dados.</p>
@@ -239,41 +309,47 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                                         )}
                                                     </div>
                                                 ) : (
-                                                    <div className="text-[9px] font-black text-[#7A756A] uppercase text-center px-4">Preview indisponível</div>
+                                                    <div className="text-[9px] font-black text-neutral-500 uppercase text-center px-4">Preview indisponível</div>
                                                 )}
                                                 <div className="absolute top-4 left-1/2 -translate-x-1/2 w-12 h-1 bg-black/20 rounded-full" />
                                             </div>
                                         </div>
-                                        <div className="bg-white p-6 md:p-8 rounded-[30px] border border-[#B6B09F]/20 shadow-sm space-y-4">
-                                            <label className="text-[9px] font-black uppercase tracking-widest text-[#7A756A] block">Hero: Poster do Vídeo (Anexo)</label>
+                                        <div className="bg-white p-6 md:p-8 rounded-[30px] border border-neutral-200 shadow-sm space-y-4">
+                                            <label className="text-[9px] font-black uppercase tracking-widest text-neutral-500 block">Hero: Poster do Vídeo (Anexo)</label>
                                             <input type="file" ref={fileInputPosterRef} onChange={(e) => handleFileUpload(e, 'heroVideoPoster')} className="hidden" accept="image/*" />
-                                            <button onClick={() => fileInputPosterRef.current?.click()} className="w-full py-4 bg-[#F2F2F2] border-2 border-dashed border-[#B6B09F]/30 rounded-2xl flex items-center justify-center space-x-3 hover:border-black transition-all">
+                                            <button onClick={() => fileInputPosterRef.current?.click()} className="w-full py-4 bg-[#F2F2F2] border-2 border-dashed border-neutral-300 rounded-2xl flex items-center justify-center space-x-3 hover:border-black transition-all">
                                                 <ImageIconLucide className="w-5 h-5" /> <span className="text-[10px] font-black uppercase tracking-widest">Anexar Poster</span>
                                             </button>
-                                            <div className="aspect-video rounded-xl overflow-hidden border border-[#B6B09F]/10 bg-[#F2F2F2]">
+                                            <div className="aspect-video rounded-xl overflow-hidden border border-neutral-200 bg-[#F2F2F2]">
                                                 <img src={tempLanding.heroVideoPoster} alt="Preview Poster" className="w-full h-full object-cover" />
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                                <button onClick={handleSaveAdmin} className="w-full py-6 bg-black text-white rounded-[30px] font-black text-xs uppercase tracking-[0.3em] flex items-center justify-center shadow-xl"><Save className="w-5 h-5 mr-3" /> Salvar Conteúdo da Landing</button>
+                                <button
+                                    onClick={handleSaveAdmin}
+                                    disabled={isSaving}
+                                    className={`w-full py-6 bg-black text-white rounded-[30px] font-black text-xs uppercase tracking-[0.3em] flex items-center justify-center shadow-xl ${isSaving ? 'opacity-70 cursor-not-allowed' : ''}`}
+                                >
+                                    <Save className="w-5 h-5 mr-3" /> {isSaving ? 'SALVANDO...' : 'SALVAR CONTEÚDO DA LANDING'}
+                                </button>
                             </div>
                         )}
                         {activeTab === 'stats' && <div className="text-center p-20 opacity-20"><BarChart3 className="w-20 h-20 mx-auto mb-4" /><p className="font-black uppercase tracking-widest text-xs">Aguardando dados de tráfego</p></div>}
                         {activeTab === 'users' && (
-                            <div className="bg-white rounded-[30px] border border-[#B6B09F]/20 overflow-hidden shadow-sm relative">
+                            <div className="bg-white rounded-[30px] border border-neutral-200 overflow-hidden shadow-sm relative">
                                 <table className="w-full text-left">
-                                    <thead className="bg-[#F2F2F2] border-b border-[#B6B09F]/10">
+                                    <thead className="bg-[#F2F2F2] border-b border-neutral-100">
                                         <tr>
-                                            <th className="px-6 py-5 text-[9px] font-black uppercase tracking-[0.3em] text-[#7A756A]">Usuário</th>
-                                            <th className="px-6 py-5 text-[9px] font-black uppercase tracking-[0.3em] text-[#7A756A]">Créditos</th>
-                                            <th className="px-6 py-5 text-[9px] font-black uppercase tracking-[0.3em] text-[#7A756A] text-right">Gerenciar Saldo</th>
+                                            <th className="px-6 py-5 text-[9px] font-black uppercase tracking-[0.3em] text-neutral-500">Usuário</th>
+                                            <th className="px-6 py-5 text-[9px] font-black uppercase tracking-[0.3em] text-neutral-500">Créditos</th>
+                                            <th className="px-6 py-5 text-[9px] font-black uppercase tracking-[0.3em] text-neutral-500 text-right">Gerenciar Saldo</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-[#B6B09F]/10">
+                                    <tbody className="divide-y divide-neutral-100">
                                         {filteredUsers.map((u) => (
                                             <tr key={u.id}>
-                                                <td className="px-6 py-6"><p className="text-xs font-black uppercase">{u.name}</p><p className="text-[9px] text-[#7A756A]">{u.email}</p></td>
+                                                <td className="px-6 py-6"><p className="text-xs font-black uppercase">{u.name}</p><p className="text-[9px] text-neutral-400">{u.email}</p></td>
                                                 <td className="px-6 py-6 font-black">{u.credits}</td>
                                                 <td className="px-6 py-6 text-right">
                                                     <button
@@ -291,21 +367,21 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                 {/* Credit Management Modal Overlay */}
                                 {selectedUserForCredits && (
                                     <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-20 animate-in fade-in">
-                                        <div className="bg-white border border-[#B6B09F]/20 shadow-2xl rounded-3xl p-8 max-w-md w-full mx-4">
+                                        <div className="bg-white border border-neutral-200 shadow-2xl rounded-3xl p-8 max-w-md w-full mx-4">
                                             <div className="text-center mb-6">
                                                 <div className="w-12 h-12 bg-[#F2F2F2] rounded-full flex items-center justify-center mx-auto mb-3">
-                                                    <Coins className="w-6 h-6 text-[#7A756A]" />
+                                                    <Coins className="w-6 h-6 text-neutral-500" />
                                                 </div>
                                                 <h3 className="text-lg font-black uppercase tracking-tight">Gerenciar Créditos</h3>
-                                                <p className="text-xs text-[#7A756A] font-bold mt-1">{selectedUserForCredits.name}</p>
-                                                <p className="text-[10px] text-[#7A756A] uppercase tracking-widest mt-2 bg-[#F2F2F2] py-1 px-3 rounded-full inline-block">
+                                                <p className="text-xs text-neutral-500 font-bold mt-1">{selectedUserForCredits.name}</p>
+                                                <p className="text-[10px] text-neutral-500 uppercase tracking-widest mt-2 bg-[#F2F2F2] py-1 px-3 rounded-full inline-block">
                                                     Saldo Atual: <span className="text-black font-black">{selectedUserForCredits.credits}</span>
                                                 </p>
                                             </div>
 
                                             <div className="space-y-4">
                                                 <div>
-                                                    <label className="text-[9px] font-black uppercase tracking-widest text-[#7A756A] block mb-2">Quantidade para Ajustar</label>
+                                                    <label className="text-[9px] font-black uppercase tracking-widest text-neutral-500 block mb-2">Quantidade para Ajustar</label>
                                                     <input
                                                         type="number"
                                                         value={creditAmount}
@@ -334,7 +410,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
                                                 <button
                                                     onClick={() => setSelectedUserForCredits(null)}
-                                                    className="w-full py-3 text-[#7A756A] font-black text-[10px] uppercase tracking-widest hover:bg-[#F2F2F2] rounded-xl transition-colors mt-2"
+                                                    className="w-full py-3 text-neutral-500 font-black text-[10px] uppercase tracking-widest hover:bg-[#F2F2F2] rounded-xl transition-colors mt-2"
                                                 >
                                                     Cancelar
                                                 </button>
@@ -347,6 +423,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
     );
 };

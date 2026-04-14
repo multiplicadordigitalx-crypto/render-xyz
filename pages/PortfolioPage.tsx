@@ -42,25 +42,25 @@ export const PortfolioPage: React.FC = () => {
 
             <div className="max-w-7xl mx-auto">
                 <div className="text-center mb-16 space-y-4">
-                    <span className="inline-block px-3 py-1 rounded-full bg-black/5 text-[10px] font-black uppercase tracking-widest text-[#7A756A]">
+                    <span className="inline-block px-3 py-1 rounded-full bg-black/5 text-[10px] font-black uppercase tracking-widest text-neutral-500">
                         Nossos Trabalhos
                     </span>
                     <h1 className="text-4xl md:text-5xl font-black uppercase tracking-tighter">
-                        Portfólio <span className="text-[#7A756A]">Render XYZ</span>
+                        Portfólio <span className="text-neutral-500">Render XYZ</span>
                     </h1>
-                    <p className="max-w-xl mx-auto text-sm text-[#7A756A] font-medium leading-relaxed">
+                    <p className="max-w-xl mx-auto text-sm text-neutral-500 font-medium leading-relaxed">
                         Explore uma seleção de imagens geradas por nossa inteligência artificial para arquitetos e designers.
                     </p>
                 </div>
 
                 {loading ? (
                     <div className="flex justify-center py-20">
-                        <div className="w-12 h-12 border-4 border-[#B6B09F]/30 border-t-black rounded-full animate-spin" />
+                        <div className="w-12 h-12 border-4 border-neutral-200 border-t-black rounded-full animate-spin" />
                     </div>
                 ) : items.length === 0 ? (
                     <div className="text-center py-20 opacity-40">
-                        <Grid className="w-16 h-16 mx-auto mb-4 text-[#7A756A]" />
-                        <p className="font-black uppercase tracking-widest text-xs text-[#7A756A]">Em breve</p>
+                        <Grid className="w-16 h-16 mx-auto mb-4 text-neutral-500" />
+                        <p className="font-black uppercase tracking-widest text-xs text-neutral-500">Em breve</p>
                     </div>
                 ) : (
                     <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
