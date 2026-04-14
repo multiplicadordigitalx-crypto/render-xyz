@@ -185,7 +185,11 @@ export const renderImage = async (
   }
 
   if (!generatedImageBase64) {
-    if (lastError.includes("API_KEY_SERVICE_BLOCKED") || lastError.includes("403")) {
+    if (lastError.includes("API_KEY_SERVICE_BLOCKED") || lastError.includes("403") || lastError.includes("disabled")) {
+      const isActuallyDisabled = lastError.includes("not been used") || lastError.includes("disabled");
+      if (isActuallyDisabled) {
+        throw new Error("API DESATIVADA: A 'Generative Language API' não está ativada no seu projeto do Google Cloud. Ative-a no console do Google.");
+      }
       throw new Error("CHAVE BLOQUEADA: Sua chave de API do Google foi bloqueada ou o limite foi atingido. Verifique o Google AI Studio.");
     }
 
