@@ -139,7 +139,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onLogout }) => {
                                                             </div>
                                                             <p className="text-[8px] font-bold text-neutral-400 uppercase">
                                                                 {new Date(tx.timestamp).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}
-                                                                {tx.modelUsed && ` • Modelo: ${tx.modelUsed}`}
+                                                                {user.role === 'admin' && tx.modelUsed && ` • Modelo: ${tx.modelUsed}`}
                                                             </p>
                                                             {tx.errorMsg && <p className="text-[8px] mt-1 text-red-500 font-bold truncate max-w-[200px]" title={tx.errorMsg}>{tx.errorMsg}</p>}
                                                         </div>
