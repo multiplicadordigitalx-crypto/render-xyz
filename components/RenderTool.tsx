@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Upload, Wand2, Download, RotateCcw, AlertCircle, CheckCircle2, Coins, ShieldCheck, Lock, Maximize2, Image as ImageIcon, Zap, Layers, ShoppingCart } from 'lucide-react';
-import { RenderStyle, RenderResolution, UserPlan } from '../types';
+import { Upload, Wand2, Download, RotateCcw, AlertCircle, CheckCircle2, Coins, ShieldCheck, Lock, Maximize2, Image as ImageIcon, Zap, Layers, ShoppingCart, Monitor, Smartphone } from 'lucide-react';
+import { RenderStyle, RenderResolution, UserPlan, RenderOrientation } from '../types';
 import { renderImage } from '../services/geminiService';
 import { storageService } from '../services/storageService';
 import { toast } from 'react-hot-toast';
@@ -44,6 +44,7 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, onRend
   const [mimeType, setMimeType] = useState<string>('');
   const [style, setStyle] = useState<RenderStyle>('Dia');
   const [resolution, setResolution] = useState<RenderResolution>('2K');
+  const [orientation, setOrientation] = useState<RenderOrientation>('Horizontal');
   const [isRendering, setIsRendering] = useState(false);
   const [result, setResult] = useState<string | null>(null);
 
@@ -101,7 +102,7 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, onRend
 
   const selectedRes = RESOLUTIONS.find(r => r.label === resolution) || RESOLUTIONS[0];
 
-  const processBatchImage = async (file: File, batchStyle: RenderStyle, batchResolution: RenderResolution) => {
+  const processBatchImage = async (file: File, batchStyle: RenderStyle, batchResolution: RenderResolution, batchOrientation: RenderOrientation) => {
     // Determine cost based on resolution
     const resConfig = RESOLUTIONS.find(r => r.label === batchResolution) || RESOLUTIONS[0];
     const cost = resConfig.cost;
@@ -116,7 +117,7 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, onRend
     // BatchProcessor handles its own logic, maybe we skip originalUrl for batch for now or update it later if needed.
     // The current BatchProcessor doesn't seem to support originalUrl callback yet, so we leave it as is for now.)
 
-    const rendered = await renderImage(base64, type, batchStyle, batchResolution);
+    const rendered = await renderImage(base64, type, batchStyle, batchResolution, batchOrientation);
     const response = await fetch(rendered);
     const blob = await response.blob();
     const filename = `render-${Date.now()}-${Math.random().toString(36).substr(2, 5)}.png`;
@@ -166,7 +167,7 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, onRend
 
     try {
       // 1. Start Rendering
-      const renderPromise = renderImage(image, mimeType, style, resolution);
+      const renderPromise = renderImage(image, mimeType, style, resolution, orientation);
 
       // 2. Upload Original Image (Parallel)
       const uploadOriginalPromise = (async () => {
@@ -325,6 +326,37 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, onRend
               ))}
             </div>
           </div>
+
+          <div className="animate-in fade-in duration-500 delay-100">
+            <label className="text-[10px] font-black uppercase tracking-widest text-[#000] mb-3 flex items-center">
+              <ImageIcon className="w-3 h-3 mr-2" />
+              Formato da Cena
+            </label>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setOrientation('Horizontal')}
+                className={`flex-1 py-3 px-2 rounded-xl text-[9px] font-black transition-all uppercase tracking-widest border flex flex-col items-center justify-center gap-2 ${orientation === 'Horizontal'
+                  ? 'bg-black text-white border-black shadow-lg scale-105'
+                  : 'bg-white text-neutral-500 border-transparent hover:border-neutral-200 hover:bg-white/80'
+                  }`}
+              >
+                <Monitor className="w-5 h-5 mb-1" />
+                <span>Horizontal</span>
+                <span className="opacity-50 text-[7px]">16:9 • Desktop</span>
+              </button>
+              <button
+                onClick={() => setOrientation('Vertical')}
+                className={`flex-1 py-3 px-2 rounded-xl text-[9px] font-black transition-all uppercase tracking-widest border flex flex-col items-center justify-center gap-2 ${orientation === 'Vertical'
+                  ? 'bg-black text-white border-black shadow-lg scale-105'
+                  : 'bg-white text-neutral-500 border-transparent hover:border-neutral-200 hover:bg-white/80'
+                  }`}
+              >
+                <Smartphone className="w-5 h-5 mb-1" />
+                <span>Vertical</span>
+                <span className="opacity-50 text-[7px]">9:16 • Reels/Stories</span>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -332,11 +364,12 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, onRend
       <div className="w-full md:flex-1 bg-neutral-100 relative flex flex-col min-h-[400px] md:h-auto shrink-0 overflow-y-auto">
         {mode === 'batch' ? (
           <div className="absolute inset-0 p-8 flex flex-col bg-neutral-100 overflow-hidden">
-            <BatchProcessor
+              <BatchProcessor
               onRender={processBatchImage}
               isProcessing={isRendering}
               style={style}
               resolution={resolution}
+              orientation={orientation}
               credits={credits}
               costPerRender={selectedRes.cost}
             />

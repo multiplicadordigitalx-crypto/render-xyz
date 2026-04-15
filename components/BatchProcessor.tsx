@@ -1,14 +1,15 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Upload, X, Loader2, CheckCircle2, Image as ImageIcon, AlertCircle, Coins, ShoppingCart } from 'lucide-react';
-import { RenderStyle } from '../types';
+import { RenderStyle, RenderOrientation } from '../types';
 import { toast } from 'react-hot-toast';
 
 interface BatchProcessorProps {
-    onRender: (file: File, style: RenderStyle, resolution: any) => Promise<void>;
+    onRender: (file: File, style: RenderStyle, resolution: any, orientation: RenderOrientation) => Promise<void>;
     isProcessing: boolean;
     style: RenderStyle;
     resolution: any;
+    orientation: RenderOrientation;
     credits: number;
     costPerRender: number;
 }
@@ -28,6 +29,7 @@ export const BatchProcessor: React.FC<BatchProcessorProps> = ({
     isProcessing: globalProcessing,
     style,
     resolution,
+    orientation,
     credits,
     costPerRender
 }) => {
@@ -85,7 +87,7 @@ export const BatchProcessor: React.FC<BatchProcessorProps> = ({
             updateItemStatus(item.id, 'processing');
 
             try {
-                await onRender(item.file, style, resolution);
+                await onRender(item.file, style, resolution, orientation);
                 updateItemStatus(item.id, 'completed');
             } catch (error) {
                 console.error("Error processing batch item:", error);

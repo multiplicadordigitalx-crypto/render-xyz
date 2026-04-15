@@ -20,6 +20,7 @@ export interface PricingPlan {
 
 export type RenderStyle = 'Dia' | 'Noite' | 'Fim de Tarde' | 'Nublado' | 'Interior';
 export type RenderResolution = '1K' | '2K' | '4K';
+export type RenderOrientation = 'Horizontal' | 'Vertical';
 
 export interface RenderHistoryItem {
   id: string;

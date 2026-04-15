@@ -1,6 +1,5 @@
-
 import { GoogleGenAI } from "@google/genai";
-import { RenderStyle, RenderResolution } from "../types";
+import { RenderStyle, RenderResolution, RenderOrientation } from "../types";
 
 export const MOCK_MODE = false;
 
@@ -56,28 +55,28 @@ const upscaleImage = (base64Data: string, scaleFactor: number): Promise<string> 
 };
 
 /**
- * Resizes and center-crops an image to 1920x1080 (16:9).
- * This ensures the AI always sees a standard Full HD framing.
+ * Resizes and center-crops an image.
+ * This ensures the AI always sees a standard 16:9 or 9:16 framing.
  */
-const compressImageForAI = (base64Data: string): Promise<string> => {
+const compressImageForAI = (base64Data: string, orientation: RenderOrientation): Promise<string> => {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => {
-      const targetWidth = 1920;
-      const targetHeight = 1080;
+      const targetWidth = orientation === 'Vertical' ? 1080 : 1920;
+      const targetHeight = orientation === 'Vertical' ? 1920 : 1080;
       const targetRatio = targetWidth / targetHeight;
       const originalRatio = img.width / img.height;
 
       let drawWidth, drawHeight, offsetX, offsetY;
 
       if (originalRatio > targetRatio) {
-        // Source is wider than 16:9
+        // Source is wider than target ratio
         drawHeight = img.height;
         drawWidth = img.height * targetRatio;
         offsetX = (img.width - drawWidth) / 2;
         offsetY = 0;
       } else {
-        // Source is taller than 16:9
+        // Source is taller than target ratio
         drawWidth = img.width;
         drawHeight = img.width / targetRatio;
         offsetX = 0;
@@ -106,7 +105,8 @@ export const renderImage = async (
   base64Image: string,
   mimeType: string,
   style: RenderStyle,
-  resolution: RenderResolution = '1K'
+  resolution: RenderResolution = '1K',
+  orientation: RenderOrientation = 'Horizontal'
 ): Promise<string> => {
   if (MOCK_MODE) {
     await new Promise(resolve => setTimeout(resolve, 3000));
@@ -175,7 +175,7 @@ export const renderImage = async (
   const keysToTry = [geminiKey].filter(k => k && !k.includes("YOUR_AB")) as string[];
   
   // Pre-process image: Resize and compress to avoid 503/Payload Too Large errors
-  const optimizedImageBase64 = await compressImageForAI(base64Image);
+  const optimizedImageBase64 = await compressImageForAI(base64Image, orientation);
   const imageData = optimizedImageBase64.split(',')[1];
 
   let generatedImageBase64: string | null = null;
