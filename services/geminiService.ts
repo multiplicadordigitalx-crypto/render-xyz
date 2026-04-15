@@ -4,10 +4,10 @@ import { RenderStyle, RenderResolution } from "../types";
 
 export const MOCK_MODE = false;
 
-const RESOLUTION_CONFIG: Record<RenderResolution, { tier: string; scaleFactor: number }> = {
-  '1K': { tier: '1K', scaleFactor: 1 },
-  '2K': { tier: '2K', scaleFactor: 1 }, // Already high-res from Google, no manual upscale
-  '4K': { tier: '4K', scaleFactor: 1 }, // Already ultra-res from Google
+const RESOLUTION_CONFIG: Record<RenderResolution, { targetWidth: number; scaleFactor: number }> = {
+  '1K': { targetWidth: 1024, scaleFactor: 1 },
+  '2K': { targetWidth: 2048, scaleFactor: 2 },
+  '4K': { targetWidth: 4096, scaleFactor: 4 },
 };
 /**
  * Upscale an image using Canvas API with high-quality interpolation.
@@ -188,15 +188,12 @@ export const renderImage = async (
     for (const modelName of modelsToTry) {
       try {
         const isPremium = premiumModels.includes(modelName);
-        const resConfig = RESOLUTION_CONFIG[resolution];
-        
-        const config: any = { 
-          responseModalities: ['Text', 'Image'],
-          imageConfig: {
-            aspectRatio: '16:9',
-            imageSize: resConfig.tier
-          }
-        };
+        const config: any = { responseModalities: ['Text', 'Image'] };
+
+        // Only use native 4K if explicitly a premium model
+        if (isPremium && resolution === '4K') {
+          config.imageConfig = { imageSize: '4K' };
+        }
 
         const response = await aiInstance.models.generateContent({
           model: modelName,
