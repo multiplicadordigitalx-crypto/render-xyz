@@ -190,11 +190,6 @@ export const renderImage = async (
         const isPremium = premiumModels.includes(modelName);
         const config: any = { responseModalities: ['Text', 'Image'] };
 
-        // Only use native 4K if explicitly a premium model
-        if (isPremium && resolution === '4K') {
-          config.imageConfig = { imageSize: '4K' };
-        }
-
         const response = await aiInstance.models.generateContent({
           model: modelName,
           contents: {
@@ -252,7 +247,8 @@ export const renderImage = async (
   // --- Post-Processing: Upscale if needed ---
   const resConfig = RESOLUTION_CONFIG[resolution];
 
-  if (resConfig.scaleFactor > 1 && !usedPremiumModel) {
+  // Apply upscale if scaleFactor > 1 directly. The native config was causing 503 errors.
+  if (resConfig.scaleFactor > 1) {
     try {
       generatedImageBase64 = await upscaleImage(generatedImageBase64, resConfig.scaleFactor);
     } catch (upscaleError) {
