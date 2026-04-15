@@ -41,7 +41,8 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onLogout }) => {
 
     return (
         <div className="min-h-screen bg-[#F2F2F2] p-4 md:p-8 flex items-center justify-center">
-            <div className="max-w-4xl w-full"> {/* Increased max-width for side-by-side or better flow */}
+            <div className="max-w-6xl w-full mx-auto"> {/* Increased max-width for better flow on desktop */}
+
                 <button onClick={() => navigate(-1)} className="mb-6 flex items-center text-sm font-bold text-gray-500 hover:text-black transition-colors">
                     <ArrowLeft className="w-4 h-4 mr-2" /> Voltar
                 </button>
