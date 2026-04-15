@@ -47,11 +47,11 @@ export const InterestSection: React.FC<InterestSectionProps> = ({ heroVideoUrl, 
                     </div>
 
                     {/* Visual Content - The Video Hook */}
-                    <div className="order-1 lg:order-2 relative">
+                    <div className="order-1 lg:order-2 relative w-full">
                         {/* Decorative elements behind */}
-                        <div className="absolute -inset-4 bg-gradient-to-tr from-neutral-200 to-transparent rounded-[50px] opacity-50 blur-2xl" />
+                        <div className="absolute -inset-4 bg-gradient-to-tr from-neutral-200 to-transparent rounded-[40px] opacity-50 blur-2xl" />
 
-                        <div className="relative aspect-[9/16] max-w-[360px] mx-auto bg-black rounded-[40px] overflow-hidden shadow-2xl border-[8px] border-white ring-1 ring-neutral-200">
+                        <div className="relative aspect-video w-full max-w-2xl mx-auto bg-black rounded-3xl overflow-hidden shadow-2xl border-[6px] border-white ring-1 ring-neutral-200">
                             <VideoPlayer url={heroVideoUrl} poster={heroVideoPoster} />
 
                             {/* Overlay Badge */}
