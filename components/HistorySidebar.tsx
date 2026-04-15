@@ -1,7 +1,8 @@
 import React from 'react';
 import { RenderHistoryItem, RenderStyle } from '../types';
-import { Download, Trash2, Clock, RotateCcw, X, Wand2 } from 'lucide-react';
+import { Download, Trash2, Clock, RotateCcw, X, Wand2, Columns, Crop as CropIcon } from 'lucide-react';
 import { BeforeAfterSlider } from './BeforeAfterSlider';
+import { ImageCropperModal } from './ImageCropperModal';
 
 interface HistorySidebarProps {
     history: RenderHistoryItem[];
@@ -14,6 +15,17 @@ interface HistorySidebarProps {
 
 export const HistorySidebar: React.FC<HistorySidebarProps> = ({ history, onSelect, onDelete, onDownload, onRefine, isAdmin = false }) => {
     const [selectedImage, setSelectedImage] = React.useState<RenderHistoryItem | null>(null);
+    const [showCompare, setShowCompare] = React.useState(false);
+    const [isCropOpen, setIsCropOpen] = React.useState(false);
+
+    const downloadBase64 = (base64: string, filename: string) => {
+        const link = document.createElement('a');
+        link.href = base64;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
 
     return (
         <div className="w-full bg-white border-t border-neutral-200 flex flex-col shadow-[0_-10px_30px_-15px_rgba(0,0,0,0.05)] z-20">
@@ -36,7 +48,10 @@ export const HistorySidebar: React.FC<HistorySidebarProps> = ({ history, onSelec
                             <div key={item.id} className="group relative w-64 bg-[#F2F2F2] rounded-xl overflow-hidden border border-neutral-200 hover:border-black transition-all flex-none shadow-sm hover:shadow-md">
                                 <div
                                     className="aspect-video cursor-pointer"
-                                    onClick={() => setSelectedImage(item)}
+                                    onClick={() => {
+                                        setShowCompare(false);
+                                        setSelectedImage(item);
+                                    }}
                                 >
                                     <img src={item.url} alt="Render" className="w-full h-full object-cover" />
                                 </div>
@@ -91,7 +106,7 @@ export const HistorySidebar: React.FC<HistorySidebarProps> = ({ history, onSelec
                     {/* Main Content */}
                     <div className="flex flex-col items-center max-w-5xl w-full h-full" onClick={(e) => e.stopPropagation()}>
                         <div className="relative flex-1 w-full h-0 flex items-center justify-center min-h-0">
-                            {selectedImage.originalUrl ? (
+                            {selectedImage.originalUrl && showCompare ? (
                                 <BeforeAfterSlider
                                     before={selectedImage.originalUrl}
                                     after={selectedImage.url}
@@ -106,8 +121,26 @@ export const HistorySidebar: React.FC<HistorySidebarProps> = ({ history, onSelec
                             )}
                         </div>
 
-                        {/* Bottom Actions */}
-                        <div className="mt-8 flex gap-4 shrink-0">
+                         {/* Bottom Actions */}
+                        <div className="mt-8 flex flex-wrap justify-center gap-4 shrink-0">
+                            {selectedImage.originalUrl && (
+                                <button
+                                    onClick={() => setShowCompare(!showCompare)}
+                                    className={`px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg transition-all flex items-center ${showCompare ? 'bg-black text-white' : 'bg-white text-neutral-600 hover:bg-gray-200 border border-black/5'}`}
+                                >
+                                    <Columns className="w-4 h-4 mr-2" />
+                                    {showCompare ? 'Ver Render' : 'Comparar Antes e Depois'}
+                                </button>
+                            )}
+
+                            <button
+                                onClick={() => setIsCropOpen(true)}
+                                className="px-6 py-3 bg-white text-neutral-800 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg hover:bg-gray-200 transition-all border border-black/5 flex items-center"
+                            >
+                                <CropIcon className="w-4 h-4 mr-2" />
+                                Cortar
+                            </button>
+
                             <button
                                 onClick={() => { if (onRefine) onRefine(selectedImage); setSelectedImage(null); }}
                                 className="px-6 py-3 bg-amber-500 text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-lg hover:bg-amber-600 transition-all flex items-center"
@@ -126,6 +159,18 @@ export const HistorySidebar: React.FC<HistorySidebarProps> = ({ history, onSelec
                         <p className="text-white/30 text-[9px] uppercase tracking-widest mt-4 font-bold">Clique no X para fechar</p>
                     </div>
                 </div>
+            )}
+
+            {/* Crop Modal for History Items */}
+            {isCropOpen && selectedImage && (
+                <ImageCropperModal
+                    imageUrl={selectedImage.url}
+                    onClose={() => setIsCropOpen(false)}
+                    onCropComplete={(croppedBase64) => {
+                        downloadBase64(croppedBase64, `render-custom-crop-${Date.now()}.png`);
+                        setIsCropOpen(false);
+                    }}
+                />
             )}
         </div>
     );
