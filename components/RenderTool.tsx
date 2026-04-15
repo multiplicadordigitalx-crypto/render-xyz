@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Upload, Wand2, Download, RotateCcw, AlertCircle, CheckCircle2, Coins, ShieldCheck, Lock, Maximize2, Image as ImageIcon, Zap, Layers, ShoppingCart, Monitor, Smartphone } from 'lucide-react';
+import { Upload, Wand2, Download, RotateCcw, AlertCircle, CheckCircle2, Coins, ShieldCheck, Lock, Maximize2, Image as ImageIcon, Zap, Layers, ShoppingCart, Monitor, Smartphone, Crop as CropIcon, Columns, FileOutput } from 'lucide-react';
 import { RenderStyle, RenderResolution, UserPlan, RenderOrientation } from '../types';
+import { ImageCropperModal } from './ImageCropperModal';
 import { renderImage } from '../services/geminiService';
 import { storageService } from '../services/storageService';
 import { toast } from 'react-hot-toast';
@@ -50,6 +51,8 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, onRend
 
   const [error, setError] = useState<string | null>(null);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+  const [isCropOpen, setIsCropOpen] = useState(false);
+  const [showCompare, setShowCompare] = useState(false);
   const navigate = useNavigate();
 
   // Helper to fetch image blob
@@ -382,15 +385,13 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, onRend
                   className="flex-1 flex items-center justify-center overflow-hidden cursor-zoom-in group p-4"
                   onClick={() => setIsLightboxOpen(true)}
                 >
-                  {image && (
+                  {showCompare && image ? (
                     <BeforeAfterSlider
                       before={image}
                       after={result}
                       className="w-full h-full rounded-2xl shadow-2xl"
                     />
-                  )}
-                  {/* Fallback if image is somehow missing, though it shouldn't be */}
-                  {!image && (
+                  ) : (
                     <img src={result} alt="Resultado" className="max-w-full max-h-full object-contain shadow-2xl rounded-lg" />
                   )}
 
@@ -399,10 +400,26 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, onRend
                   </div>
                 </div>
                 <div className="mt-4 flex flex-wrap justify-center gap-4">
-                  <button onClick={() => { setResult(null); setImage(null); setFileName(''); }} className="px-6 py-3 bg-white text-black rounded-xl font-black text-xs uppercase tracking-widest shadow-lg hover:bg-gray-50 transition-all border border-black/5">Novo Render</button>
+                  <button onClick={() => { setResult(null); setImage(null); setFileName(''); setShowCompare(false); }} className="px-6 py-3 bg-white text-black rounded-xl font-black text-xs uppercase tracking-widest shadow-lg hover:bg-gray-50 transition-all border border-black/5">Novo Render</button>
+                  
+                  {image && (
+                    <button 
+                      onClick={() => setShowCompare(!showCompare)} 
+                      className={`px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg transition-all flex items-center ${showCompare ? 'bg-black text-white' : 'bg-white text-neutral-600 hover:bg-gray-50 border border-black/5'}`}
+                    >
+                      {showCompare ? <FileOutput className="w-4 h-4 mr-2" /> : <Columns className="w-4 h-4 mr-2" />}
+                      {showCompare ? 'Ocultar Comparação' : 'Comparar'}
+                    </button>
+                  )}
+
+                  <button onClick={() => setIsCropOpen(true)} className="px-6 py-3 bg-white text-neutral-800 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg hover:bg-gray-50 transition-all border border-black/5 flex items-center">
+                    <CropIcon className="w-4 h-4 mr-2" /> Cortar
+                  </button>
+                  
                   <button onClick={handleRefine} className="px-6 py-3 bg-amber-500 text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-lg hover:bg-amber-600 transition-all flex items-center">
                     <Wand2 className="w-4 h-4 mr-2" /> Refinar Render
                   </button>
+                  
                   <button onClick={downloadResult} className="px-8 py-3 bg-black text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-lg flex items-center hover:bg-neutral-800 transition-all">
                     <Download className="w-4 h-4 mr-2" /> Download
                   </button>
@@ -564,6 +581,20 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, onRend
 
           <p className="text-white/50 text-[10px] uppercase tracking-widest mt-6 font-bold">Clique fora para fechar</p>
         </div>
+      )}
+
+      {/* Crop Modal */}
+      {isCropOpen && result && (
+        <ImageCropperModal
+          imageUrl={result}
+          onClose={() => setIsCropOpen(false)}
+          onCropComplete={(croppedBase64) => {
+             // Quando salva o crop, nós atualizamos o visual com a nova imagem e saímos da visualização da comparação caso tiver pra evitar um before x after desigualado nas resoluções
+             setResult(croppedBase64);
+             setShowCompare(false);
+             setIsCropOpen(false);
+          }}
+        />
       )}
     </div>
   );

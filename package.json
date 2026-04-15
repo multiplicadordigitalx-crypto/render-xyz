@@ -32,6 +32,7 @@
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "react-hot-toast": "^2.6.0",
+    "react-image-crop": "^11.0.10",
     "react-router-dom": "^7.13.0",
     "resend": "^6.11.0",
     "stripe": "^20.3.0",
