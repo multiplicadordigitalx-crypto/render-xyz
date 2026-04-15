@@ -383,17 +383,12 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, onRend
               <div className="relative w-full h-full flex flex-col">
                 <div
                   className="flex-1 flex items-center justify-center overflow-hidden cursor-zoom-in group p-4"
-                  onClick={() => setIsLightboxOpen(true)}
+                  onClick={() => {
+                    setShowCompare(false);
+                    setIsLightboxOpen(true);
+                  }}
                 >
-                  {showCompare && image ? (
-                    <BeforeAfterSlider
-                      before={image}
-                      after={result}
-                      className="w-full h-full rounded-2xl shadow-2xl"
-                    />
-                  ) : (
-                    <img src={result} alt="Resultado" className="max-w-full max-h-full object-contain shadow-2xl rounded-lg" />
-                  )}
+                  <img src={result} alt="Resultado" className="max-w-full max-h-full object-contain shadow-2xl rounded-lg" />
 
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors flex items-center justify-center pointer-events-none">
                     <Maximize2 className="text-white opacity-0 group-hover:opacity-100 w-12 h-12 transition-opacity drop-shadow-md" />
@@ -404,11 +399,13 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, onRend
                   
                   {image && (
                     <button 
-                      onClick={() => setShowCompare(!showCompare)} 
-                      className={`px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg transition-all flex items-center ${showCompare ? 'bg-black text-white' : 'bg-white text-neutral-600 hover:bg-gray-50 border border-black/5'}`}
+                      onClick={() => {
+                        setShowCompare(true);
+                        setIsLightboxOpen(true);
+                      }} 
+                      className="px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg transition-all flex items-center bg-white text-neutral-600 hover:bg-gray-50 border border-black/5"
                     >
-                      {showCompare ? <FileOutput className="w-4 h-4 mr-2" /> : <Columns className="w-4 h-4 mr-2" />}
-                      {showCompare ? 'Ocultar Comparação' : 'Comparar'}
+                      <Columns className="w-4 h-4 mr-2" /> Comparar
                     </button>
                   )}
 
@@ -564,7 +561,7 @@ export const RenderTool: React.FC<RenderToolProps> = ({ onRenderComplete, onRend
           </div>
 
           <div className="w-full max-w-6xl h-full max-h-[85vh] flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
-            {image ? (
+            {image && showCompare ? (
               <BeforeAfterSlider
                 before={image}
                 after={result}

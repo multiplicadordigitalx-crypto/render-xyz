@@ -147,6 +147,7 @@ export const ImageCropperModal: React.FC<ImageCropperModalProps> = ({ imageUrl, 
               ref={imgRef}
               alt="Crop"
               src={imageUrl}
+              crossOrigin="anonymous"
               onLoad={onImageLoad}
               className="max-h-[60vh] max-w-full object-contain shadow-2xl"
             />
